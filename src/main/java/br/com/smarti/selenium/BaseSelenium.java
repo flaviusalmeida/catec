@@ -64,13 +64,13 @@ public abstract class BaseSelenium {
 	options.setBinary("/app/.apt/usr/bin/google-chrome");
 
 	options.addArguments("--no-sandbox");
-	options.addArguments("--headless");
+//	options.addArguments("--headless");
 	options.setExperimentalOption("useAutomationExtension", false);
 	options.addArguments("disable-infobars"); // disabling infobars
 	options.addArguments("--disable-extensions"); // disabling extensions
 	options.addArguments("--disable-gpu"); // applicable to windows os only
 	options.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
-	options.addArguments("--lang=pt");
+	options.addArguments("--lang=en");
 	options.merge(capabilities);
 
 	return new ChromeDriver(options);
