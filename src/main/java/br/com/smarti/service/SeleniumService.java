@@ -1,10 +1,13 @@
 package br.com.smarti.service;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.Select;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +27,26 @@ public class SeleniumService extends BaseSelenium {
 	setup();
 
 	driver.get(url);
+	try {
+	    Thread.sleep(8000);
+	} catch (InterruptedException e) {
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
+	}
 
+	Map<String, Object> params = new HashMap<>();
+	params.put("latitude", -3.731862);
+	params.put("longitude", -38.526669);
+	params.put("accuracy", 1);
+
+	((ChromeDriver) driver).executeCdpCommand("Emulation.setGeolocationOverride", params);
+
+	try {
+	    Thread.sleep(3000);
+	} catch (InterruptedException e) {
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
+	}
 	List<WebElement> privacidade = driver.findElements(By.xpath(popup));
 	if (!privacidade.isEmpty()) {
 	    privacidade.get(0).click();
