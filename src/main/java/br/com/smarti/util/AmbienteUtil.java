@@ -2,7 +2,7 @@ package br.com.smarti.util;
 
 public class AmbienteUtil {
 
-    private static final String EVN = "DPRODEV";
+    private static final String EVN = "PROD";
 
     public static boolean isProduction() {
 	return EVN.equalsIgnoreCase("PROD");
