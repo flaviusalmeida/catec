@@ -26,7 +26,6 @@ public class SeleniumService extends BaseSelenium {
 
 	setup();
 
-	driver.get(url);
 	try {
 	    Thread.sleep(8000);
 	} catch (InterruptedException e) {
@@ -47,6 +46,9 @@ public class SeleniumService extends BaseSelenium {
 	    // TODO Auto-generated catch block
 	    e.printStackTrace();
 	}
+
+	driver.get(url);
+
 	List<WebElement> privacidade = driver.findElements(By.xpath(popup));
 	if (!privacidade.isEmpty()) {
 	    privacidade.get(0).click();
