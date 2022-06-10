@@ -12,6 +12,7 @@ import org.springframework.util.ResourceUtils;
 
 import br.com.smarti.exceptions.FileException;
 import br.com.smarti.exceptions.SeleniumException;
+import br.com.smarti.util.AmbienteUtil;
 
 public abstract class BaseSelenium {
 
@@ -27,6 +28,16 @@ public abstract class BaseSelenium {
     }
 
     private ChromeDriver getDriver() throws FileNotFoundException {
+	if (AmbienteUtil.isDevelopment()) {
+	    return getDriverDevelopment();
+	} else if (AmbienteUtil.isProduction()) {
+	    return getDriverProduction();
+	} else {
+	    throw new SeleniumException("Ambiente do sistema nao reconhecido.");
+	}
+    }
+
+    private ChromeDriver getDriverDevelopment() throws FileNotFoundException {
 	ChromeOptions capabilities = new ChromeOptions();
 
 	ChromeDriverService service = new ChromeDriverService.Builder().usingDriverExecutable(findFile()).build();
@@ -41,6 +52,27 @@ public abstract class BaseSelenium {
 
 	options.merge(capabilities);
 	return new ChromeDriver(service, options);
+    }
+
+    private ChromeDriver getDriverProduction() {
+	System.setProperty("GOOGLE_CHROME_BIN", "/app/.apt/usr/bin/google-chrome");
+	System.setProperty("CHROMEDRIVER_PATH", "/app/.chromedriver/bin/chromedriver");
+
+	ChromeOptions capabilities = new ChromeOptions();
+
+	ChromeOptions options = new ChromeOptions();
+	options.setBinary("/app/.apt/usr/bin/google-chrome");
+
+	options.addArguments("--no-sandbox");
+	options.addArguments("--headless");
+	options.setExperimentalOption("useAutomationExtension", false);
+	options.addArguments("disable-infobars"); // disabling infobars
+	options.addArguments("--disable-extensions"); // disabling extensions
+	options.addArguments("--disable-gpu"); // applicable to windows os only
+	options.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
+	options.merge(capabilities);
+
+	return new ChromeDriver(options);
     }
 
     private File findFile() throws FileException {
