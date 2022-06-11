@@ -79,11 +79,11 @@ public class SeleniumService extends BaseSelenium {
 	}
     }
 
-    public int getTemperatura(String temperatura) {
+    public long getTemperatura(String temperatura) {
 	return fahrenheitToCelsius(parseInt(removeLetras(temperatura)));
     }
 
-    public int getVento(String vento) {
+    public long getVento(String vento) {
 	return milhasToKm(parseInt(removeLetras(vento)));
     }
 
