@@ -36,8 +36,6 @@ public class ClimaController {
     public ResponseEntity<InputStreamResource> consultarClima(Model model, @ModelAttribute("form") Form form)
 	    throws FileNotFoundException {
 
-	System.out.println(form.getUrl());
-
 	File dados = seleniumService.capturaDadosClimaticos(form.getUrl());
 
 	return DownloadUtil.preparaDownload(dados, "Dados climaticos.csv");

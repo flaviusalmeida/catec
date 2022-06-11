@@ -1,13 +1,15 @@
 package br.com.smarti.service;
 
+import static br.com.smarti.util.ConversaoUtil.fahrenheitToCelsius;
+import static br.com.smarti.util.ConversaoUtil.milhasToKm;
+import static br.com.smarti.util.StringUtil.removeLetras;
+import static java.lang.Integer.parseInt;
+
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.Select;
 import org.springframework.stereotype.Service;
 
@@ -25,27 +27,6 @@ public class SeleniumService extends BaseSelenium {
     public File capturaDadosClimaticos(String url) {
 
 	setup();
-
-	try {
-	    Thread.sleep(8000);
-	} catch (InterruptedException e) {
-	    // TODO Auto-generated catch block
-	    e.printStackTrace();
-	}
-
-	Map<String, Object> params = new HashMap<>();
-	params.put("latitude", -3.731862);
-	params.put("longitude", -38.526669);
-	params.put("accuracy", 1);
-
-	((ChromeDriver) driver).executeCdpCommand("Emulation.setGeolocationOverride", params);
-
-	try {
-	    Thread.sleep(3000);
-	} catch (InterruptedException e) {
-	    // TODO Auto-generated catch block
-	    e.printStackTrace();
-	}
 
 	driver.get(url);
 
@@ -65,7 +46,7 @@ public class SeleniumService extends BaseSelenium {
 	return resultFile;
     }
 
-    private static void obterDadosTabela(StringBuilder result) {
+    private void obterDadosTabela(StringBuilder result) {
 	try {
 	    Select selectDias = new Select(driver.findElement(By.id(select_dias)));
 	    List<WebElement> optionsDias = selectDias.getOptions();
@@ -82,15 +63,13 @@ public class SeleniumService extends BaseSelenium {
 
 		for (int j = 1; j <= numLinhas; j++) {
 		    String hora = driver.findElement(By.xpath(linhas_tabela + "[" + j + "]/th")).getText();
-		    hora = hora.substring(0, 5);
 
 		    String temperatura = driver.findElement(By.xpath(linhas_tabela + "[" + j + "]/td[2]")).getText();
-		    temperatura = temperatura.replace(" °C", "");
 
 		    String vento = driver.findElement(By.xpath(linhas_tabela + "[" + j + "]/td[5]")).getText();
-		    vento = vento.replace(" km/h", "");
 
-		    result.append(dia + ";" + hora + ";" + temperatura + ";" + vento + "\n");
+		    result.append(dia + ";" + getHora(hora) + ";" + getTemperatura(temperatura) + ";" + getVento(vento)
+			    + "\n");
 
 		}
 	    }
@@ -98,6 +77,19 @@ public class SeleniumService extends BaseSelenium {
 	    e.printStackTrace();
 	    throw new SeleniumException("Erro ao tentar obter os dados da tabela.");
 	}
+    }
+
+    public int getTemperatura(String temperatura) {
+	return fahrenheitToCelsius(parseInt(removeLetras(temperatura)));
+    }
+
+    public int getVento(String vento) {
+	return milhasToKm(parseInt(removeLetras(vento)));
+    }
+
+    public String getHora(String hora) {
+	return hora.substring(0, 5);
+
     }
 
 }
