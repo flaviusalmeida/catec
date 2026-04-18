@@ -1,0 +1,9 @@
+.require-auth-loading {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #e8ecf2 0%, #f4f6f9 45%, #eef1f6 100%);
+  color: #002d4b;
+  font-size: 1rem;
+}

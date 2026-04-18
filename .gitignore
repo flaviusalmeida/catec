@@ -1,0 +1,40 @@
+# Secrets e ambiente local
+.env
+.env.local
+.env.*.local
+*.pem
+
+# Análise, planos, tarefas e documentação de projeto (não versionar)
+Analise Projeto/
+
+# Java / Maven / Gradle
+catec-backend/target/
+*.class
+*.jar
+!**/.mvn/wrapper/maven-wrapper.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*
+
+# Node / frontend
+catec-frontend/node_modules/
+catec-frontend/dist/
+catec-frontend/.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDEs e OS
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# Logs e cobertura
+*.log
+coverage/
+.nyc_output/

@@ -1,0 +1,16 @@
+# Perfil local: PostgreSQL do docker-compose na raiz do repositório (veja README e .env.example).
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/catec}
+    username: ${SPRING_DATASOURCE_USERNAME:catec}
+    password: ${SPRING_DATASOURCE_PASSWORD:catec}
+    driver-class-name: org.postgresql.Driver
+
+management:
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver: warn

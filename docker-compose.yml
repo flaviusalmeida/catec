@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: catec-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-catec}
+      POSTGRES_USER: ${POSTGRES_USER:-catec}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-catec}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - catec_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-catec} -d ${POSTGRES_DB:-catec}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  catec_pgdata:

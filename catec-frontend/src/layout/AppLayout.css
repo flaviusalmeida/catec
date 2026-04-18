@@ -1,0 +1,180 @@
+.app-shell {
+  min-height: 100dvh;
+  display: flex;
+  background: linear-gradient(165deg, #e4eaf2 0%, #eef2f8 40%, #e8edf5 100%);
+}
+
+.app-shell-sidebar {
+  width: 248px;
+  flex-shrink: 0;
+  background: #fff;
+  box-shadow: 4px 0 32px rgba(15, 23, 42, 0.07);
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0 1.25rem;
+  border-right: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.app-shell-brand {
+  padding: 0 1rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.app-shell-logo {
+  display: block;
+  width: 100%;
+  max-width: 160px;
+  height: auto;
+  margin: 0 auto;
+}
+
+.app-shell-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.1rem 0.75rem;
+  flex: 1;
+}
+
+.app-shell-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  color: #334155;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.app-shell-nav-link:hover {
+  background: #eff6ff;
+  color: #002d4b;
+}
+
+.app-shell-nav-link.active {
+  background: linear-gradient(135deg, #002d4b 0%, #003d63 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(0, 45, 75, 0.35);
+}
+
+.app-shell-nav-link.active .app-shell-nav-icon {
+  opacity: 1;
+}
+
+.app-shell-nav-icon {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.app-shell-footer {
+  padding: 0 0.85rem;
+  margin-top: auto;
+}
+
+.app-shell-user-card {
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.65rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.app-shell-user-name {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.app-shell-user-email {
+  margin: 0.2rem 0 0;
+  font-size: 0.7rem;
+  color: #64748b;
+  word-break: break-all;
+  line-height: 1.25;
+}
+
+.app-shell-logout {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+}
+
+.app-shell-logout:hover {
+  color: #991b1b;
+  background: #fef2f2;
+}
+
+.app-shell-main {
+  flex: 1;
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 2.25rem);
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .app-shell-sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  .app-shell-brand {
+    border-bottom: none;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .app-shell-logo {
+    max-width: 120px;
+    margin: 0;
+  }
+
+  .app-shell-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex: 1;
+    padding: 0.5rem;
+  }
+
+  .app-shell-footer {
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+    gap: 0.65rem;
+    padding: 0.5rem 0.75rem 0;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .app-shell-user-card {
+    flex: 1;
+    margin-bottom: 0;
+    min-width: 0;
+  }
+
+  .app-shell-logout {
+    width: auto;
+    align-self: center;
+    padding: 0.45rem 0.85rem;
+  }
+}
