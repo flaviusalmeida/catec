@@ -289,9 +289,26 @@
   letter-spacing: 0.05em;
 }
 
-.clientes-th-actions,
-.clientes-td-actions {
-  text-align: right;
+.clientes-table th:nth-child(1) {
+  width: 32%;
+}
+.clientes-table th:nth-child(2) {
+  width: 12%;
+}
+.clientes-table th:nth-child(3) {
+  width: 22%;
+}
+.clientes-table th:nth-child(4) {
+  width: 22%;
+}
+.clientes-table th:nth-child(5) {
+  width: 12%;
+}
+
+/* Especificidade acima de `.clientes-table th, td { text-align: left }` */
+.clientes-table th.clientes-th-actions,
+.clientes-table td.clientes-td-actions {
+  text-align: center;
 }
 
 .clientes-table-data-row {
