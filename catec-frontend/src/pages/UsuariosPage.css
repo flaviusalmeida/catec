@@ -313,11 +313,30 @@
   top: 1.25rem;
   right: 1.25rem;
   z-index: 70;
-  width: min(28rem, calc(100vw - 2rem));
+  width: min(22rem, calc(100vw - 2rem));
 }
 
 .usuarios-alert--toast {
+  padding: 0.62rem 0.78rem;
+  font-size: 0.84rem;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
+}
+
+.usuarios-alert-dismiss--icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 1.05rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.usuarios-alert-dismiss--icon:hover {
+  background: rgba(20, 83, 45, 0.12);
 }
 
 /* —— Tabela —— */
@@ -788,7 +807,7 @@
   .usuarios-toast-wrap {
     top: 0.9rem;
     right: 0.9rem;
-    width: calc(100vw - 1.8rem);
+    width: min(20rem, calc(100vw - 1.8rem));
   }
 }
 

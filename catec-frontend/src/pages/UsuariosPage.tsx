@@ -337,8 +337,14 @@ export default function UsuariosPage() {
         <div className="usuarios-toast-wrap" role="status" aria-live="polite">
           <div className="usuarios-alert usuarios-alert--success usuarios-alert--toast">
             <span>{sucesso}</span>
-            <button type="button" className="usuarios-alert-dismiss" onClick={() => setSucesso(null)}>
-              Fechar
+            <button
+              type="button"
+              className="usuarios-alert-dismiss usuarios-alert-dismiss--icon"
+              onClick={() => setSucesso(null)}
+              aria-label="Fechar notificação"
+              title="Fechar"
+            >
+              ×
             </button>
           </div>
         </div>
