@@ -127,6 +127,75 @@
   padding: clamp(1.25rem, 3vw, 2.25rem);
 }
 
+.app-shell-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.48);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  z-index: 60;
+}
+
+.app-shell-confirm-modal {
+  width: min(420px, 100%);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.24);
+  padding: 1rem;
+}
+
+.app-shell-confirm-title {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.app-shell-confirm-copy {
+  margin: 0.6rem 0 0;
+  color: #334155;
+  font-size: 0.92rem;
+}
+
+.app-shell-confirm-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.app-shell-confirm-cancel,
+.app-shell-confirm-submit {
+  border-radius: 10px;
+  padding: 0.55rem 0.95rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.app-shell-confirm-cancel {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+}
+
+.app-shell-confirm-cancel:hover {
+  background: #f8fafc;
+}
+
+.app-shell-confirm-submit {
+  border: 1px solid #7f1d1d;
+  background: #991b1b;
+  color: #ffffff;
+}
+
+.app-shell-confirm-submit:hover {
+  background: #7f1d1d;
+}
+
 @media (max-width: 720px) {
   .app-shell {
     flex-direction: column;
@@ -176,5 +245,14 @@
     width: auto;
     align-self: center;
     padding: 0.45rem 0.85rem;
+  }
+
+  .app-shell-confirm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .app-shell-confirm-cancel,
+  .app-shell-confirm-submit {
+    width: 100%;
   }
 }

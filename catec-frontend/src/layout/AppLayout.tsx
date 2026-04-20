@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import "./AppLayout.css";
@@ -25,6 +26,7 @@ function IconUsers({ className }: { className?: string }) {
 export default function AppLayout() {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const [confirmarSaidaAberto, setConfirmarSaidaAberto] = useState(false);
 
   function handleLogout() {
     logout();
@@ -54,7 +56,7 @@ export default function AppLayout() {
             <p className="app-shell-user-name">{user?.nome}</p>
             <p className="app-shell-user-email">{user?.email}</p>
           </div>
-          <button type="button" className="app-shell-logout" onClick={handleLogout}>
+          <button type="button" className="app-shell-logout" onClick={() => setConfirmarSaidaAberto(true)}>
             Sair
           </button>
         </div>
@@ -62,6 +64,24 @@ export default function AppLayout() {
       <main className="app-shell-main">
         <Outlet />
       </main>
+      {confirmarSaidaAberto ? (
+        <div className="app-shell-confirm-backdrop" role="presentation" onClick={() => setConfirmarSaidaAberto(false)}>
+          <div className="app-shell-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmar-saida-titulo" onClick={(e) => e.stopPropagation()}>
+            <h2 id="confirmar-saida-titulo" className="app-shell-confirm-title">
+              Confirmar saida
+            </h2>
+            <p className="app-shell-confirm-copy">Deseja realmente sair da sessao?</p>
+            <div className="app-shell-confirm-actions">
+              <button type="button" className="app-shell-confirm-cancel" onClick={() => setConfirmarSaidaAberto(false)}>
+                Cancelar
+              </button>
+              <button type="button" className="app-shell-confirm-submit" onClick={handleLogout}>
+                Sair
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
