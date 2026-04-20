@@ -5,6 +5,7 @@ import { useAuth } from "../auth/AuthContext";
 import FieldControl from "../components/form/FieldControl";
 import PrimaryCtaButton from "../components/buttons/PrimaryCtaButton";
 import DataTableSection from "../components/layout/DataTableSection";
+import FormDialog from "../components/layout/FormDialog";
 import FiltersCard from "../components/layout/FiltersCard";
 import PageToolbar from "../components/layout/PageToolbar";
 import RowEditButton from "../components/table/RowEditButton";
@@ -382,20 +383,16 @@ export default function ClientesPage() {
         </DataTableSection>
       </div>
 
-      {modalAberto ? (
-        <div
-          className="clientes-modal-backdrop"
-          role="presentation"
-          onClick={() => {
-            if (salvando || excluindoId != null) return;
-            setModalAberto(false);
-            setConfirmarRemocaoId(null);
-          }}
-        >
-          <div className="clientes-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="clientes-modal-titulo">
-            <h2 id="clientes-modal-titulo" className="clientes-modal-title">
-              {modo === "criar" ? "Novo cliente" : "Editar cliente"}
-            </h2>
+      <FormDialog
+        open={modalAberto}
+        titleId="clientes-modal-titulo"
+        title={modo === "criar" ? "Novo cliente" : "Editar cliente"}
+        onBackdropClick={() => {
+          if (salvando || excluindoId != null) return;
+          setModalAberto(false);
+          setConfirmarRemocaoId(null);
+        }}
+      >
             {erro ? <div className="clientes-alert clientes-alert--error">{erro}</div> : null}
 
             <div className="clientes-modal-section">
@@ -570,9 +567,7 @@ export default function ClientesPage() {
                 {salvando ? "Salvando..." : "Salvar"}
               </button>
             </div>
-          </div>
-        </div>
-      ) : null}
+      </FormDialog>
 
       {confirmarRemocaoId != null ? (
         <div className="clientes-modal-backdrop" role="presentation" onClick={() => excluindoId == null && setConfirmarRemocaoId(null)}>

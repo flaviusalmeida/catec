@@ -1,0 +1,28 @@
+.form-dialog__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 50;
+  overflow-y: auto;
+}
+
+.form-dialog__panel {
+  width: 100%;
+  max-width: 460px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.15rem 1.25rem 1.25rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+}
+
+.form-dialog__title {
+  margin: 0 0 0.65rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #001a2e;
+}
