@@ -1,4 +1,6 @@
-/* Larguras da tabela de projetos (base: `admin-crud-table`). */
+/* Larguras da tabela de projetos (base: `admin-crud-table`).
+ * A coluna de ações precisa caber o `RowEditButton` (min-width ~5.5rem + padding);
+ * porcentagem demasiado baixa provoca overflow-x na `DataTableSection`. */
 .projetos-data-table th:nth-child(1) {
   width: 28%;
 }
@@ -9,32 +11,69 @@
   width: 18%;
 }
 .projetos-data-table th:nth-child(4) {
-  width: 14%;
+  width: 20%;
 }
 .projetos-data-table th:nth-child(5) {
-  width: 18%;
+  width: 12%;
 }
 
-.projetos-status {
-  display: inline-block;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  line-height: 1.3;
+.projetos-data-table .admin-crud-table__th-actions,
+.projetos-data-table .admin-crud-table__td-actions {
+  text-align: right;
 }
 
-.projetos-status--criado {
-  background: rgba(100, 116, 139, 0.18);
-  color: #334155;
+.projetos-data-table .admin-crud-table__td-actions {
+  padding-left: 0.5rem;
+  padding-right: 0.65rem;
 }
 
-.projetos-status--adm {
-  background: rgba(234, 179, 8, 0.22);
-  color: #854d0e;
+/* —— Modal Novo / Editar projeto: espaçamento vertical uniforme —— */
+.projetos-form-dialog .projetos-modal-ident-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-.projetos-status--proposta {
-  background: rgba(34, 197, 94, 0.18);
-  color: #166534;
+/* Evita somar `margin-top` do rótulo ao `gap` entre Cliente → Título → (blocos seguintes). */
+.projetos-form-dialog .projetos-modal-ident-stack > .form-field .form-field__label,
+.projetos-form-dialog .projetos-modal-escopo-block .form-field__label {
+  margin-top: 0;
+}
+
+.projetos-form-dialog .projetos-modal-ident-stack > .cliente-autocomplete .form-field__label {
+  margin-top: 0.3rem;
+}
+
+/* Campo Descrição (mesmo passo vertical que entre campos na secção Identificação). */
+.projetos-form-dialog .projetos-modal-escopo-block {
+  margin-top: 0.75rem;
+}
+
+/* Linha entre «Contacto do cliente» e «Descrição» (novo com cliente / edição). */
+.projetos-form-dialog .projetos-modal-escopo-block--after-contato {
+  padding-top: 0.75rem;
+  border-top: 1px solid #eef2f6;
+}
+
+.projetos-form-dialog .modal-footer {
+  margin-top: 0.65rem;
+  padding-top: 0.6rem;
+}
+
+/* Textarea um pouco mais baixa no modal (evita “bloco” vazio excessivo). */
+.projetos-form-dialog .clientes-textarea.field-control--modal {
+  min-height: 4.75rem;
+  resize: vertical;
+}
+
+/* `admin-crud-table__filter-msg` tem padding alto para tabelas; no modal fica desproporcional. */
+.projetos-form-dialog .admin-crud-table__filter-msg {
+  padding: 0.45rem 0 0;
+  margin: 0;
+  text-align: left;
+}
+
+.projetos-contato-linha {
+  margin: 0.25rem 0;
+  font-size: 0.9375rem;
 }

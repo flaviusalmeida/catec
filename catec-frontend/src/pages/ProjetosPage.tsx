@@ -2,6 +2,8 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "rea
 import { useLocation, useNavigate } from "react-router-dom";
 import { apiFetch } from "../api/http";
 import { useAuth } from "../auth/AuthContext";
+import ClienteAutocomplete from "../components/projeto/ClienteAutocomplete";
+import ProjetoStatusBadge from "../components/projeto/ProjetoStatusBadge";
 import GhostButton from "../components/buttons/GhostButton";
 import PrimaryButton from "../components/buttons/PrimaryButton";
 import FieldControl from "../components/form/FieldControl";
@@ -10,7 +12,6 @@ import DataTableSection from "../components/layout/DataTableSection";
 import FiltersCard from "../components/layout/FiltersCard";
 import FormDialog from "../components/layout/FormDialog";
 import ModalFooter from "../components/layout/ModalFooter";
-import ModalFormGrid from "../components/layout/ModalFormGrid";
 import ModalSection from "../components/layout/ModalSection";
 import PageToolbar from "../components/layout/PageToolbar";
 import RowEditButton from "../components/table/RowEditButton";
@@ -18,7 +19,6 @@ import AccessDeniedCard from "../components/ui/AccessDeniedCard";
 import InlineAlert from "../components/ui/InlineAlert";
 import ToastAlert from "../components/ui/ToastAlert";
 import "../styles/admin-crud-table.css";
-import { onlyDigits } from "../utils/digitsOnly";
 import { formatTelefoneBrasil } from "../utils/telefoneBrasil";
 import type { ClienteResumo, Projeto, ProjetoStatus } from "./projetoTypes";
 import { STATUS_PROJETO_ROTULO } from "./projetoTypes";
@@ -29,20 +29,18 @@ type Modo = "criar" | "editar";
 
 type FormState = {
   clienteId: string;
+  clienteBusca: string;
   titulo: string;
   escopo: string;
-  emailContato: string;
-  telefone: string;
   status: ProjetoStatus;
 };
 
 function emptyForm(): FormState {
   return {
     clienteId: "",
+    clienteBusca: "",
     titulo: "",
     escopo: "",
-    emailContato: "",
-    telefone: "",
     status: "CRIADO",
   };
 }
@@ -50,18 +48,11 @@ function emptyForm(): FormState {
 function formFromProjeto(p: Projeto): FormState {
   return {
     clienteId: String(p.clienteId),
+    clienteBusca: p.clienteNome,
     titulo: p.titulo,
     escopo: p.escopo,
-    emailContato: p.emailContato,
-    telefone: p.telefoneContato ? formatTelefoneBrasil(p.telefoneContato) : "",
     status: p.status,
   };
-}
-
-function statusBadgeClass(s: ProjetoStatus): string {
-  if (s === "CRIADO") return "projetos-status projetos-status--criado";
-  if (s === "AGUARDANDO_ADM") return "projetos-status projetos-status--adm";
-  return "projetos-status projetos-status--proposta";
 }
 
 function podeEditarCampos(p: Projeto | null, userId: number | undefined, isAdmin: boolean): boolean {
@@ -70,12 +61,28 @@ function podeEditarCampos(p: Projeto | null, userId: number | undefined, isAdmin
   return p.criadoPorId === userId && p.status === "CRIADO";
 }
 
+function previewContatoCliente(
+  modo: Modo,
+  editando: Projeto | null,
+  clienteSelecionado: ClienteResumo | null,
+): ClienteResumo | null {
+  if (clienteSelecionado) return clienteSelecionado;
+  if (modo === "editar" && editando) {
+    return {
+      id: editando.clienteId,
+      razaoSocialOuNome: editando.clienteNome,
+      email: editando.emailContato,
+      telefone: editando.telefoneContato,
+    };
+  }
+  return null;
+}
+
 export default function ProjetosPage() {
   const { user, isAdmin, podeGerirProjetos, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [lista, setLista] = useState<Projeto[]>([]);
-  const [clientesResumo, setClientesResumo] = useState<ClienteResumo[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState<string | null>(null);
@@ -88,8 +95,15 @@ export default function ProjetosPage() {
   const [modo, setModo] = useState<Modo>("criar");
   const [editando, setEditando] = useState<Projeto | null>(null);
   const [form, setForm] = useState<FormState>(() => emptyForm());
+  const [clienteSelecionado, setClienteSelecionado] = useState<ClienteResumo | null>(null);
+  const [erroAutocompleteCliente, setErroAutocompleteCliente] = useState<string | null>(null);
   const [modalErro, setModalErro] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
+
+  const previewCliente = useMemo(
+    () => previewContatoCliente(modo, editando, clienteSelecionado),
+    [modo, editando, clienteSelecionado],
+  );
 
   const listaFiltrada = useMemo(() => {
     const t = deferredTitulo.trim().toLowerCase();
@@ -99,23 +113,6 @@ export default function ProjetosPage() {
       return true;
     });
   }, [deferredTitulo, filtroStatus, lista]);
-
-  const carregarClientesResumo = useCallback(async () => {
-    try {
-      const res = await apiFetch("/api/v1/clientes-resumo");
-      if (res.status === 401) {
-        logout();
-        navigate("/login", { replace: true });
-        return;
-      }
-      if (!res.ok) {
-        return;
-      }
-      setClientesResumo((await res.json()) as ClienteResumo[]);
-    } catch {
-      /* ignorar: modal pode abrir sem combo se falhar */
-    }
-  }, [logout, navigate]);
 
   const carregarProjetos = useCallback(async () => {
     setCarregando(true);
@@ -170,27 +167,23 @@ export default function ProjetosPage() {
     setFiltroStatus("");
   }
 
-  async function garantirClientesResumo() {
-    if (clientesResumo.length === 0) {
-      await carregarClientesResumo();
-    }
-  }
-
-  async function abrirNovo() {
+  function abrirNovo() {
     setModo("criar");
     setEditando(null);
     setForm(emptyForm());
+    setClienteSelecionado(null);
     setModalErro(null);
-    await garantirClientesResumo();
+    setErroAutocompleteCliente(null);
     setModalAberto(true);
   }
 
-  async function abrirEditar(p: Projeto) {
+  function abrirEditar(p: Projeto) {
     setModo("editar");
     setEditando(p);
     setForm(formFromProjeto(p));
+    setClienteSelecionado(null);
     setModalErro(null);
-    await garantirClientesResumo();
+    setErroAutocompleteCliente(null);
     setModalAberto(true);
   }
 
@@ -198,19 +191,15 @@ export default function ProjetosPage() {
     setModalErro(null);
     const titulo = form.titulo.trim();
     const escopo = form.escopo.trim();
-    const email = form.emailContato.trim();
-    if (!titulo || !escopo || !email) {
-      setModalErro("Preencha título, escopo e e-mail de contacto.");
+    if (!titulo || !escopo) {
+      setModalErro("Preencha título e escopo.");
       return;
     }
     const cid = Number.parseInt(form.clienteId, 10);
     if (modo === "criar" && (Number.isNaN(cid) || cid < 1)) {
-      setModalErro("Selecione um cliente.");
+      setModalErro("Selecione um cliente na pesquisa.");
       return;
     }
-
-    const telefoneDigits = onlyDigits(form.telefone);
-    const telefonePayload = telefoneDigits.length > 0 ? telefoneDigits : null;
 
     setSalvando(true);
     try {
@@ -221,8 +210,6 @@ export default function ProjetosPage() {
             clienteId: cid,
             titulo,
             escopo,
-            emailContato: email,
-            telefoneContato: telefonePayload,
           }),
         });
         if (res.status === 401) {
@@ -249,8 +236,6 @@ export default function ProjetosPage() {
       if (podeCampos) {
         body.titulo = titulo;
         body.escopo = escopo;
-        body.emailContato = email;
-        body.telefoneContato = telefonePayload;
       }
       if (isAdmin) {
         body.clienteId = Number.isNaN(cid) ? editando.clienteId : cid;
@@ -322,7 +307,7 @@ export default function ProjetosPage() {
           title="Projetos"
           subtitle="Demandas iniciais vinculadas a cliente."
           actions={
-            <PrimaryButton variant="toolbar" onClick={() => void abrirNovo()}>
+            <PrimaryButton variant="toolbar" onClick={abrirNovo}>
               Novo projeto
             </PrimaryButton>
           }
@@ -347,7 +332,7 @@ export default function ProjetosPage() {
           </div>
           <div>
             <label className="filters-card__label" htmlFor="flt-proj-status">
-              Estado
+              Status
             </label>
             <FieldControl
               as="select"
@@ -378,7 +363,7 @@ export default function ProjetosPage() {
               <tr>
                 <th scope="col">Título</th>
                 <th scope="col">Cliente</th>
-                <th scope="col">Estado</th>
+                <th scope="col">Status</th>
                 <th scope="col">Criado por</th>
                 <th scope="col" className="admin-crud-table__th-actions">
                   Ações
@@ -399,19 +384,16 @@ export default function ProjetosPage() {
                   <tr
                     key={p.id}
                     className={`admin-crud-table__row${idx % 2 === 1 ? " admin-crud-table__row--alt" : ""}`}
-                    onClick={() => void abrirEditar(p)}
+                    onClick={() => abrirEditar(p)}
                   >
                     <td className="admin-crud-table__cell-primary">{p.titulo}</td>
                     <td>{p.clienteNome}</td>
                     <td>
-                      <span className={statusBadgeClass(p.status)}>{STATUS_PROJETO_ROTULO[p.status]}</span>
+                      <ProjetoStatusBadge status={p.status} />
                     </td>
                     <td className="admin-crud-table__cell-muted">{p.criadoPorNome}</td>
                     <td className="admin-crud-table__td-actions">
-                      <RowEditButton
-                        ariaLabel={`Abrir ${p.titulo}`}
-                        onClick={() => void abrirEditar(p)}
-                      />
+                      <RowEditButton ariaLabel={`Abrir ${p.titulo}`} onClick={() => abrirEditar(p)} />
                     </td>
                   </tr>
                 ))
@@ -424,12 +406,9 @@ export default function ProjetosPage() {
       <FormDialog
         open={modalAberto}
         titleId="projetos-modal-titulo"
+        panelClassName="projetos-form-dialog"
         title={
-          modo === "criar"
-            ? "Novo projeto"
-            : somenteLeitura
-              ? "Ver projeto"
-              : "Editar projeto"
+          modo === "criar" ? "Novo projeto" : somenteLeitura ? "Ver projeto" : "Editar projeto"
         }
         onBackdropClick={() => {
           if (salvando) return;
@@ -439,34 +418,31 @@ export default function ProjetosPage() {
         {modalErro ? <InlineAlert variant="error">{modalErro}</InlineAlert> : null}
         {somenteLeitura ? (
           <p className="admin-crud-table__filter-msg" role="status">
-            Esta demanda já seguiu o fluxo. Só o administrativo pode alterar estado e dados.
+            Esta demanda já seguiu o fluxo. Só o administrativo pode alterar status e dados.
           </p>
         ) : null}
 
         <ModalSection title="Identificação" titleId="proj-modal-ident">
-          <ModalFormGrid balanced>
-            <FormField label="Cliente" htmlFor="pf-cliente" required={modo === "criar"}>
-              <FieldControl
-                as="select"
-                id="pf-cliente"
-                value={form.clienteId}
-                onChange={(e) => setForm((f) => ({ ...f, clienteId: e.target.value }))}
-                className="clientes-select"
-                variant="modal"
-                disabled={salvando || (modo === "editar" && !isAdmin) || somenteLeitura}
-                required={modo === "criar"}
-                aria-required={modo === "criar"}
-              >
-                {modo === "criar" ? (
-                  <option value="">Selecione…</option>
-                ) : null}
-                {clientesResumo.map((c) => (
-                  <option key={c.id} value={String(c.id)}>
-                    {c.razaoSocialOuNome}
-                  </option>
-                ))}
-              </FieldControl>
-            </FormField>
+          <div className="projetos-modal-ident-stack">
+            <ClienteAutocomplete
+              label="Cliente"
+              required={modo === "criar"}
+              disabled={salvando || (modo === "editar" && !isAdmin) || somenteLeitura}
+              valueId={form.clienteId}
+              inputValue={form.clienteBusca}
+              onInputValueChange={(clienteBusca) => setForm((f) => ({ ...f, clienteBusca }))}
+              onSelect={(c) => {
+                setClienteSelecionado(c);
+                setForm((f) => ({ ...f, clienteId: String(c.id), clienteBusca: c.razaoSocialOuNome }));
+              }}
+              clearable={modo === "criar"}
+              onClear={() => {
+                setClienteSelecionado(null);
+                setForm((f) => ({ ...f, clienteId: "", clienteBusca: "" }));
+              }}
+              fetchError={erroAutocompleteCliente}
+              onFetchError={setErroAutocompleteCliente}
+            />
             <FormField label="Título" htmlFor="pf-titulo" required>
               <FieldControl
                 id="pf-titulo"
@@ -479,11 +455,37 @@ export default function ProjetosPage() {
                 aria-required="true"
               />
             </FormField>
-          </ModalFormGrid>
+          </div>
         </ModalSection>
 
-        <ModalSection title="Escopo" titleId="proj-modal-escopo">
-          <FormField label="Descrição do pedido" htmlFor="pf-escopo" required>
+        {previewCliente ? (
+          <ModalSection title="Contacto do cliente" titleId="proj-modal-contato-ro">
+            {!previewCliente.email?.trim() ? (
+              <InlineAlert variant="error">
+                Este cliente não tem e-mail no cadastro. Complete o cadastro do cliente antes de guardar a demanda.
+              </InlineAlert>
+            ) : (
+              <>
+                <p className="projetos-contato-linha">
+                  <strong>E-mail:</strong> {previewCliente.email}
+                </p>
+                <p className="projetos-contato-linha">
+                  <strong>Telefone:</strong>{" "}
+                  {previewCliente.telefone ? formatTelefoneBrasil(previewCliente.telefone) : "—"}
+                </p>
+              </>
+            )}
+          </ModalSection>
+        ) : null}
+
+        <div
+          className={
+            previewCliente
+              ? "projetos-modal-escopo-block projetos-modal-escopo-block--after-contato"
+              : "projetos-modal-escopo-block"
+          }
+        >
+          <FormField label="Descrição" htmlFor="pf-escopo" required>
             <FieldControl
               as="textarea"
               id="pf-escopo"
@@ -496,46 +498,11 @@ export default function ProjetosPage() {
               aria-required="true"
             />
           </FormField>
-        </ModalSection>
-
-        <ModalSection title="Contacto inicial" titleId="proj-modal-contato">
-          <ModalFormGrid balanced>
-            <FormField label="E-mail" htmlFor="pf-email" required>
-              <FieldControl
-                id="pf-email"
-                type="email"
-                value={form.emailContato}
-                onChange={(e) => setForm((f) => ({ ...f, emailContato: e.target.value }))}
-                className="clientes-input"
-                variant="modal"
-                disabled={salvando || (!camposEditaveis && modo === "editar")}
-                required
-                aria-required="true"
-              />
-            </FormField>
-            <FormField label="Telefone" htmlFor="pf-tel">
-              <FieldControl
-                id="pf-tel"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                value={form.telefone}
-                onChange={(e) => {
-                  const d = onlyDigits(e.target.value).slice(0, 11);
-                  setForm((f) => ({ ...f, telefone: d ? formatTelefoneBrasil(d) : "" }));
-                }}
-                className="clientes-input"
-                variant="modal"
-                disabled={salvando || (!camposEditaveis && modo === "editar")}
-                placeholder="(00) 00000-0000"
-              />
-            </FormField>
-          </ModalFormGrid>
-        </ModalSection>
+        </div>
 
         {modo === "editar" && isAdmin ? (
-          <ModalSection title="Estado do fluxo" titleId="proj-modal-status">
-            <FormField label="Estado" htmlFor="pf-status">
+          <ModalSection title="Status do fluxo" titleId="proj-modal-status">
+            <FormField label="Status" htmlFor="pf-status">
               <FieldControl
                 as="select"
                 id="pf-status"
@@ -550,9 +517,6 @@ export default function ProjetosPage() {
                 <option value="EM_PROPOSTA">{STATUS_PROJETO_ROTULO.EM_PROPOSTA}</option>
               </FieldControl>
             </FormField>
-            <p className="admin-crud-table__filter-msg" role="note">
-              Transições válidas: Criado → Aguardando administrativo → Em proposta. Alterações inválidas são rejeitadas pelo servidor.
-            </p>
           </ModalSection>
         ) : null}
 

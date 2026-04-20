@@ -1,7 +1,14 @@
 import type { ReactNode } from "react";
 import "./StatusBadge.css";
 
-export type StatusBadgeVariant = "ativo" | "inativo" | "pendente";
+export type StatusBadgeVariant =
+  | "ativo"
+  | "inativo"
+  | "pendente"
+  /** Fluxo de projeto (listagens admin). */
+  | "workflow_criado"
+  | "workflow_aguardando"
+  | "workflow_em_proposta";
 
 export type StatusBadgeProps = {
   variant: StatusBadgeVariant;

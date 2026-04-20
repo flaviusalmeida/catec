@@ -1,3 +1,4 @@
 package br.com.catec.api.v1.cliente;
 
-public record ClienteResumoResponse(Long id, String razaoSocialOuNome) {}
+/** Resumo para autocomplete e vínculo a projeto; contacto espelha o cadastro do cliente. */
+public record ClienteResumoResponse(Long id, String razaoSocialOuNome, String email, String telefone) {}

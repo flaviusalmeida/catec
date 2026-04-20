@@ -64,8 +64,7 @@ public class ProjetoService {
         p.setCliente(cliente);
         p.setTitulo(req.titulo().trim());
         p.setEscopo(req.escopo().trim());
-        p.setEmailContato(req.emailContato().trim().toLowerCase(Locale.ROOT));
-        p.setTelefoneContato(normalizarTelefoneOpcional(req.telefoneContato()));
+        aplicarContatoDoCliente(cliente, p);
         p.setCriadoPor(criador);
         p.setStatus(ProjetoStatus.CRIADO);
         p.setCriadoEm(agora);
@@ -119,21 +118,13 @@ public class ProjetoService {
             }
             p.setEscopo(e);
         }
-        if (req.emailContato() != null) {
-            String em = req.emailContato().trim().toLowerCase(Locale.ROOT);
-            if (em.isEmpty()) {
-                throw badRequest("E-mail de contacto não pode ser vazio.");
-            }
-            p.setEmailContato(em);
-        }
-        if (req.telefoneContato() != null) {
-            p.setTelefoneContato(normalizarTelefoneOpcional(req.telefoneContato()));
-        }
 
         if (admin && req.status() != null && req.status() != p.getStatus()) {
             validarTransicao(p.getStatus(), req.status());
             p.setStatus(req.status());
         }
+
+        aplicarContatoDoCliente(p.getCliente(), p);
 
         p.setAtualizadoEm(agora);
         return toResponse(projetoRepository.save(p));
@@ -185,20 +176,56 @@ public class ProjetoService {
         return false;
     }
 
+    /** Copia e-mail e telefone do cadastro do cliente para o projeto (obrigatório e-mail no cliente). */
+    private void aplicarContatoDoCliente(Cliente cliente, Projeto p) {
+        String em = cliente.getEmail();
+        if (em == null || em.isBlank()) {
+            throw badRequest(
+                    "O cliente selecionado não tem e-mail cadastrado. Atualize o cadastro do cliente antes de registar a demanda.");
+        }
+        p.setEmailContato(em.trim().toLowerCase(Locale.ROOT));
+        p.setTelefoneContato(normalizarTelefoneOpcional(cliente.getTelefone()));
+    }
+
     private ProjetoResponse toResponse(Projeto p) {
+        Cliente c = p.getCliente();
         return new ProjetoResponse(
                 p.getId(),
-                p.getCliente().getId(),
-                p.getCliente().getRazaoSocialOuNome(),
+                c.getId(),
+                c.getRazaoSocialOuNome(),
                 p.getTitulo(),
                 p.getEscopo(),
-                p.getEmailContato(),
-                p.getTelefoneContato(),
+                emailContatoParaResposta(c, p),
+                telefoneContatoParaResposta(c, p),
                 p.getCriadoPor().getId(),
                 p.getCriadoPor().getNome(),
                 p.getStatus(),
                 p.getCriadoEm(),
                 p.getAtualizadoEm());
+    }
+
+    /**
+     * E-mail mostrado na API: cadastro atual do cliente, com fallback ao valor gravado na demanda (ex.: cliente sem
+     * e-mail hoje).
+     */
+    private static String emailContatoParaResposta(Cliente c, Projeto p) {
+        String em = c.getEmail();
+        if (em != null && !em.isBlank()) {
+            return em.trim().toLowerCase(Locale.ROOT);
+        }
+        return p.getEmailContato();
+    }
+
+    /**
+     * Telefone mostrado na API: cadastro atual do cliente, com fallback ao valor gravado na demanda (ex.: projetos
+     * antigos ou antes de sincronizar).
+     */
+    private static String telefoneContatoParaResposta(Cliente c, Projeto p) {
+        String tel = c.getTelefone();
+        if (tel != null && !tel.isBlank()) {
+            return tel;
+        }
+        return p.getTelefoneContato();
     }
 
     /** Telefone opcional: vazio ou null grava null; caso contrário 10–11 dígitos (DDD + número). */

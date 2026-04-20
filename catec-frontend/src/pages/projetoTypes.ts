@@ -18,6 +18,8 @@ export type Projeto = {
 export type ClienteResumo = {
   id: number;
   razaoSocialOuNome: string;
+  email: string | null;
+  telefone: string | null;
 };
 
 export const STATUS_PROJETO_ROTULO: Record<ProjetoStatus, string> = {

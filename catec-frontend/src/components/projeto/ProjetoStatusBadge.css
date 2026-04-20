@@ -1,0 +1,11 @@
+/* Rótulos de projeto são frases; evita caixa alta da pill genérica. */
+.projeto-status-badge {
+  text-transform: none;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.25;
+  max-width: 11rem;
+}

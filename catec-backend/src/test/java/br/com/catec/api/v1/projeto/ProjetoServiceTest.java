@@ -50,7 +50,7 @@ class ProjetoServiceTest {
         Projeto p = projeto(1L, ProjetoStatus.CRIADO, 10L, 1L);
         when(projetoRepository.findById(1L)).thenReturn(Optional.of(p));
 
-        var req = new ProjetoUpdateRequest(null, null, null, null, null, ProjetoStatus.EM_PROPOSTA);
+        var req = new ProjetoUpdateRequest(null, null, null, ProjetoStatus.EM_PROPOSTA);
 
         ResponseStatusException ex =
                 assertThrows(ResponseStatusException.class, () -> service.atualizar(1L, req, adminPrincipal()));
@@ -65,7 +65,7 @@ class ProjetoServiceTest {
         when(projetoRepository.findById(1L)).thenReturn(Optional.of(p));
         when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        var req = new ProjetoUpdateRequest(null, null, null, null, null, ProjetoStatus.AGUARDANDO_ADM);
+        var req = new ProjetoUpdateRequest(null, null, null, ProjetoStatus.AGUARDANDO_ADM);
 
         ProjetoResponse out = service.atualizar(1L, req, adminPrincipal());
 
@@ -78,7 +78,7 @@ class ProjetoServiceTest {
         Projeto p = projeto(1L, ProjetoStatus.CRIADO, 99L, 1L);
         when(projetoRepository.findById(1L)).thenReturn(Optional.of(p));
 
-        var req = new ProjetoUpdateRequest(null, "Novo", "Esc", "a@b.com", null, null);
+        var req = new ProjetoUpdateRequest(null, "Novo", "Esc", null);
         var colabOutro = colabPrincipal(2L);
 
         ResponseStatusException ex =
@@ -122,6 +122,8 @@ class ProjetoServiceTest {
         ReflectionTestUtils.setField(c, "id", clienteId);
         c.setTipoPessoa(TipoPessoa.PJ);
         c.setRazaoSocialOuNome("Cliente SA");
+        c.setEmail("cliente@test.com");
+        c.setTelefone("11988887777");
         c.setCriadoEm(Instant.now());
         c.setAtualizadoEm(Instant.now());
 

@@ -68,7 +68,7 @@ class ProjetoControllerMockMvcTest {
 
     @Test
     void criar_quandoPayloadValido_deveRetornar201() throws Exception {
-        var body = new ProjetoCreateRequest(1L, "Título", "Escopo", "mail@cliente.com", "11988887777");
+        var body = new ProjetoCreateRequest(1L, "Título", "Escopo");
         var res = new ProjetoResponse(
                 10L,
                 1L,
@@ -98,7 +98,7 @@ class ProjetoControllerMockMvcTest {
 
     @Test
     void atualizar_quandoAdmin_deveRetornar200() throws Exception {
-        var body = new ProjetoUpdateRequest(null, null, null, null, null, ProjetoStatus.AGUARDANDO_ADM);
+        var body = new ProjetoUpdateRequest(null, null, null, ProjetoStatus.AGUARDANDO_ADM);
         var res = new ProjetoResponse(
                 5L,
                 1L,
