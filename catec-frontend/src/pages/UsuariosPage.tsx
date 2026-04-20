@@ -11,11 +11,14 @@ import DataTableSection from "../components/layout/DataTableSection";
 import FiltersCard from "../components/layout/FiltersCard";
 import FormDialog from "../components/layout/FormDialog";
 import ModalFooter from "../components/layout/ModalFooter";
+import ModalFormGrid from "../components/layout/ModalFormGrid";
 import ModalSection from "../components/layout/ModalSection";
 import PageToolbar from "../components/layout/PageToolbar";
 import RowEditButton from "../components/table/RowEditButton";
 import AccessDeniedCard from "../components/ui/AccessDeniedCard";
 import InlineAlert from "../components/ui/InlineAlert";
+import LabeledSwitch from "../components/ui/LabeledSwitch";
+import StatusBadge, { StatusBadgeGroup } from "../components/ui/StatusBadge";
 import ToastAlert from "../components/ui/ToastAlert";
 import "../styles/admin-crud-table.css";
 import "./UsuariosPage.css";
@@ -353,7 +356,7 @@ export default function UsuariosPage() {
 
         <FiltersCard headingId="usuarios-filtros-heading" onClear={limparFiltros}>
           <div>
-            <label className="usuarios-filter-label" htmlFor="flt-nome">
+            <label className="filters-card__label" htmlFor="flt-nome">
               Nome
             </label>
             <FieldControl
@@ -366,7 +369,7 @@ export default function UsuariosPage() {
             />
           </div>
           <div>
-            <label className="usuarios-filter-label" htmlFor="flt-email">
+            <label className="filters-card__label" htmlFor="flt-email">
               E-mail
             </label>
             <FieldControl
@@ -380,7 +383,7 @@ export default function UsuariosPage() {
             />
           </div>
           <div>
-            <label className="usuarios-filter-label" htmlFor="flt-perfil">
+            <label className="filters-card__label" htmlFor="flt-perfil">
               Perfil
             </label>
             <FieldControl
@@ -399,7 +402,7 @@ export default function UsuariosPage() {
             </FieldControl>
           </div>
           <div>
-            <label className="usuarios-filter-label" htmlFor="flt-status">
+            <label className="filters-card__label" htmlFor="flt-status">
               Status
             </label>
             <FieldControl
@@ -456,15 +459,15 @@ export default function UsuariosPage() {
                     <td className="admin-crud-table__cell-muted">{u.email}</td>
                     <td className="usuarios-perfis">{u.perfis.join(", ")}</td>
                     <td>
-                      <div className="usuarios-status-badges">
+                      <StatusBadgeGroup>
                         {u.requerTrocaSenha ? (
-                          <span className="usuarios-badge usuarios-badge--pendente">Troca senha</span>
+                          <StatusBadge variant="pendente">Troca senha</StatusBadge>
                         ) : u.ativo ? (
-                          <span className="usuarios-badge usuarios-badge--ativo">Ativo</span>
+                          <StatusBadge variant="ativo">Ativo</StatusBadge>
                         ) : (
-                          <span className="usuarios-badge usuarios-badge--inativo">Inativo</span>
+                          <StatusBadge variant="inativo">Inativo</StatusBadge>
                         )}
-                      </div>
+                      </StatusBadgeGroup>
                     </td>
                     <td className="admin-crud-table__td-actions">
                       <RowEditButton ariaLabel={`Editar ${u.nome}`} onClick={() => abrirEditar(u)} />
@@ -490,25 +493,27 @@ export default function UsuariosPage() {
         {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
 
         <ModalSection title="Dados básicos" titleId="usuario-modal-sec-basico">
-          <FormField label="Nome" htmlFor="uf-nome">
-            <FieldControl
-              id="uf-nome"
-              value={form.nome}
-              onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-              variant="modal"
-              disabled={salvando}
-            />
-          </FormField>
-          <FormField label="E-mail" htmlFor="uf-email">
-            <FieldControl
-              id="uf-email"
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-              variant="modal"
-              disabled={salvando}
-            />
-          </FormField>
+          <ModalFormGrid balanced>
+            <FormField label="Nome" htmlFor="uf-nome">
+              <FieldControl
+                id="uf-nome"
+                value={form.nome}
+                onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
+                variant="modal"
+                disabled={salvando}
+              />
+            </FormField>
+            <FormField label="E-mail" htmlFor="uf-email">
+              <FieldControl
+                id="uf-email"
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                variant="modal"
+                disabled={salvando}
+              />
+            </FormField>
+          </ModalFormGrid>
           <FormField label="Telefone" htmlFor="uf-tel">
             <FieldControl
               id="uf-tel"
@@ -529,23 +534,16 @@ export default function UsuariosPage() {
           ) : (
             <>
               {!contaPendenteTrocaSenha ? (
-                <label className="usuarios-toggle" htmlFor="uf-ativo">
-                  <input
-                    id="uf-ativo"
-                    type="checkbox"
-                    className="usuarios-toggle-input"
-                    checked={form.ativo}
-                    onChange={(e) => {
-                      setForm((f) => ({ ...f, ativo: e.target.checked }));
-                      setConfirmarResetAberto(false);
-                    }}
-                    disabled={salvando}
-                  />
-                  <span className="usuarios-toggle-ui" aria-hidden />
-                  <span className="usuarios-toggle-copy">
-                    <span className="usuarios-toggle-title">Conta ativa</span>
-                  </span>
-                </label>
+                <LabeledSwitch
+                  id="uf-ativo"
+                  label="Conta ativa"
+                  checked={form.ativo}
+                  onChange={(checked) => {
+                    setForm((f) => ({ ...f, ativo: checked }));
+                    setConfirmarResetAberto(false);
+                  }}
+                  disabled={salvando}
+                />
               ) : null}
               {form.ativo ? (
                 <button

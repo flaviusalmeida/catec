@@ -279,7 +279,7 @@ export default function ClientesPage() {
       <div className="clientes-page-inner clientes-page-stack">
         <PageToolbar
           title="Clientes"
-          subtitle="Gestão de clientes"
+          subtitle="Gestão de clientes."
           actions={
             <PrimaryButton variant="toolbar" onClick={abrirCriar}>
               Novo cliente
@@ -291,7 +291,7 @@ export default function ClientesPage() {
 
         <FiltersCard headingId="clientes-filtros-heading" onClear={limparFiltros}>
           <div>
-            <label className="clientes-filter-label" htmlFor="flt-cliente-nome">
+            <label className="filters-card__label" htmlFor="flt-cliente-nome">
               Nome / Razão social
             </label>
             <FieldControl
@@ -305,7 +305,7 @@ export default function ClientesPage() {
             />
           </div>
           <div>
-            <label className="clientes-filter-label" htmlFor="flt-cliente-documento">
+            <label className="filters-card__label" htmlFor="flt-cliente-documento">
               Documento
             </label>
             <FieldControl
@@ -319,7 +319,7 @@ export default function ClientesPage() {
             />
           </div>
           <div>
-            <label className="clientes-filter-label" htmlFor="flt-cliente-tipo">
+            <label className="filters-card__label" htmlFor="flt-cliente-tipo">
               Tipo
             </label>
             <FieldControl

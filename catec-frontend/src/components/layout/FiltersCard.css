@@ -26,6 +26,17 @@
   color: #64748b;
 }
 
+/** Rótulo de campo dentro do cartão de filtros (use com `htmlFor` + `FieldControl`). */
+.filters-card__label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+  margin-bottom: 0.3rem;
+}
+
 .filters-card__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
