@@ -4,6 +4,7 @@ import { apiFetch } from "../api/http";
 import { useAuth } from "../auth/AuthContext";
 import FieldControl from "../components/form/FieldControl";
 import PrimaryCtaButton from "../components/buttons/PrimaryCtaButton";
+import PageToolbar from "../components/layout/PageToolbar";
 import RowEditButton from "../components/table/RowEditButton";
 import "./ClientesPage.css";
 
@@ -269,13 +270,11 @@ export default function ClientesPage() {
       ) : null}
 
       <div className="clientes-page-inner clientes-page-stack">
-        <header className="clientes-toolbar">
-          <div className="clientes-toolbar-text">
-            <h1 className="clientes-title">Clientes</h1>
-            <p className="clientes-subtitle">Gestão de clientes</p>
-          </div>
-          <PrimaryCtaButton onClick={abrirCriar}>Novo cliente</PrimaryCtaButton>
-        </header>
+        <PageToolbar
+          title="Clientes"
+          subtitle="Gestão de clientes"
+          actions={<PrimaryCtaButton onClick={abrirCriar}>Novo cliente</PrimaryCtaButton>}
+        />
 
         {erro && !modalAberto ? <div className="clientes-alert clientes-alert--error">{erro}</div> : null}
 
