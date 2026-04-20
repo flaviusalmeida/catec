@@ -6,6 +6,8 @@ import FieldControl from "../components/form/FieldControl";
 import PrimaryCtaButton from "../components/buttons/PrimaryCtaButton";
 import DataTableSection from "../components/layout/DataTableSection";
 import ConfirmDialog from "../components/layout/ConfirmDialog";
+import InlineAlert from "../components/ui/InlineAlert";
+import ToastAlert from "../components/ui/ToastAlert";
 import FormDialog from "../components/layout/FormDialog";
 import FiltersCard from "../components/layout/FiltersCard";
 import PageToolbar from "../components/layout/PageToolbar";
@@ -256,22 +258,15 @@ export default function ClientesPage() {
 
   return (
     <div className="clientes-page">
-      {sucesso ? (
-        <div className="clientes-toast-wrap" role="status" aria-live="polite">
-          <div className="clientes-alert clientes-alert--success clientes-alert--toast">
-            <span>{sucesso}</span>
-            <button
-              type="button"
-              className="clientes-alert-dismiss clientes-alert-dismiss--icon"
-              onClick={() => setSucesso(null)}
-              aria-label="Fechar notificação"
-              title="Fechar"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <ToastAlert
+        open={Boolean(sucesso)}
+        variant="success"
+        onDismiss={() => setSucesso(null)}
+        dismissAriaLabel="Fechar notificação"
+        dismissTitle="Fechar"
+      >
+        {sucesso}
+      </ToastAlert>
 
       <div className="clientes-page-inner clientes-page-stack">
         <PageToolbar
@@ -280,7 +275,7 @@ export default function ClientesPage() {
           actions={<PrimaryCtaButton onClick={abrirCriar}>Novo cliente</PrimaryCtaButton>}
         />
 
-        {erro && !modalAberto ? <div className="clientes-alert clientes-alert--error">{erro}</div> : null}
+        {erro && !modalAberto ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
 
         <FiltersCard headingId="clientes-filtros-heading" onClear={limparFiltros}>
           <div>
@@ -394,7 +389,7 @@ export default function ClientesPage() {
           setConfirmarRemocaoId(null);
         }}
       >
-            {erro ? <div className="clientes-alert clientes-alert--error">{erro}</div> : null}
+            {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
 
             <div className="clientes-modal-section">
               <h3 className="clientes-modal-section-title">Identificação</h3>
