@@ -1,6 +1,7 @@
 package br.com.catec.api.v1.admin.usuario;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import br.com.catec.domain.usuario.PerfilMacro;
 import jakarta.validation.Validation;
@@ -23,5 +24,23 @@ class UsuarioCreateRequestValidationTest {
     void criacaoComNomeEmailPerfis_semSenha_noPayload_estaValido() {
         var req = new UsuarioCreateRequest("Fulano", "fulano@example.com", null, List.of(PerfilMacro.COLABORADOR));
         assertTrue(validator.validate(req).isEmpty());
+    }
+
+    @Test
+    void criacaoSemNome_deveSerInvalida() {
+        var req = new UsuarioCreateRequest("", "fulano@example.com", null, List.of(PerfilMacro.COLABORADOR));
+        assertFalse(validator.validate(req).isEmpty());
+    }
+
+    @Test
+    void criacaoComEmailInvalido_deveSerInvalida() {
+        var req = new UsuarioCreateRequest("Fulano", "email-invalido", null, List.of(PerfilMacro.COLABORADOR));
+        assertFalse(validator.validate(req).isEmpty());
+    }
+
+    @Test
+    void criacaoSemPerfis_deveSerInvalida() {
+        var req = new UsuarioCreateRequest("Fulano", "fulano@example.com", null, List.of());
+        assertFalse(validator.validate(req).isEmpty());
     }
 }
