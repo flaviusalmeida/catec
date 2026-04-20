@@ -151,6 +151,7 @@ export default function UsuariosPage() {
   const [contaPendenteTrocaSenha, setContaPendenteTrocaSenha] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [resetandoSenha, setResetandoSenha] = useState(false);
+  const [confirmarResetAberto, setConfirmarResetAberto] = useState(false);
 
   const deferredNome = useDeferredValue(filtroNome);
   const deferredEmail = useDeferredValue(filtroEmail);
@@ -213,6 +214,7 @@ export default function UsuariosPage() {
     setModo("criar");
     setEditandoId(null);
     setContaPendenteTrocaSenha(false);
+    setConfirmarResetAberto(false);
     setForm(emptyForm());
     setModalAberto(true);
   }
@@ -223,6 +225,7 @@ export default function UsuariosPage() {
     setModo("editar");
     setEditandoId(u.id);
     setContaPendenteTrocaSenha(u.requerTrocaSenha);
+    setConfirmarResetAberto(false);
     setForm(formFromUsuario(u));
     setModalAberto(true);
   }
@@ -241,13 +244,6 @@ export default function UsuariosPage() {
 
   async function solicitarResetSenha() {
     if (editandoId == null || modo !== "editar") return;
-    if (
-      !window.confirm(
-        "Será gerada uma nova senha provisória, a conta ficará inativa até o próximo acesso e o usuário receberá um e-mail. Continuar?",
-      )
-    ) {
-      return;
-    }
     setResetandoSenha(true);
     setErro(null);
     try {
@@ -260,6 +256,7 @@ export default function UsuariosPage() {
       setSucesso("Nova senha provisória enviada por e-mail.");
       setContaPendenteTrocaSenha(true);
       setForm((f) => ({ ...f, ativo: false }));
+      setConfirmarResetAberto(false);
       await carregar();
     } catch {
       setErro("Falha de rede ao redefinir a senha.");
@@ -336,6 +333,16 @@ export default function UsuariosPage() {
 
   return (
     <div className="usuarios-page">
+      {sucesso ? (
+        <div className="usuarios-toast-wrap" role="status" aria-live="polite">
+          <div className="usuarios-alert usuarios-alert--success usuarios-alert--toast">
+            <span>{sucesso}</span>
+            <button type="button" className="usuarios-alert-dismiss" onClick={() => setSucesso(null)}>
+              Fechar
+            </button>
+          </div>
+        </div>
+      ) : null}
       <div className="usuarios-page-inner usuarios-page-stack">
         <header className="usuarios-toolbar">
           <div className="usuarios-toolbar-text">
@@ -346,15 +353,6 @@ export default function UsuariosPage() {
             Novo usuário
           </button>
         </header>
-
-        {sucesso ? (
-          <div className="usuarios-alert usuarios-alert--success" role="status">
-            <span>{sucesso}</span>
-            <button type="button" className="usuarios-alert-dismiss" onClick={() => setSucesso(null)}>
-              Fechar
-            </button>
-          </div>
-        ) : null}
 
         {erro && !modalAberto ? <div className="usuarios-alert usuarios-alert--error">{erro}</div> : null}
 
@@ -516,7 +514,11 @@ export default function UsuariosPage() {
         <div
           className="usuarios-modal-backdrop"
           role="presentation"
-          onClick={() => !salvando && !resetandoSenha && setModalAberto(false)}
+          onClick={() => {
+            if (salvando || resetandoSenha) return;
+            setModalAberto(false);
+            setConfirmarResetAberto(false);
+          }}
         >
           <div
             className="usuarios-modal"
@@ -581,7 +583,10 @@ export default function UsuariosPage() {
                         type="checkbox"
                         className="usuarios-toggle-input"
                         checked={form.ativo}
-                        onChange={(e) => setForm((f) => ({ ...f, ativo: e.target.checked }))}
+                        onChange={(e) => {
+                          setForm((f) => ({ ...f, ativo: e.target.checked }));
+                          setConfirmarResetAberto(false);
+                        }}
                         disabled={salvando}
                       />
                       <span className="usuarios-toggle-ui" aria-hidden />
@@ -590,14 +595,16 @@ export default function UsuariosPage() {
                       </span>
                     </label>
                   ) : null}
-                  <button
-                    type="button"
-                    className="usuarios-btn-reset-senha"
-                    onClick={() => void solicitarResetSenha()}
-                    disabled={salvando || resetandoSenha}
-                  >
-                    {resetandoSenha ? "A enviar…" : "Redefinir senha"}
-                  </button>
+                  {form.ativo ? (
+                    <button
+                      type="button"
+                      className="usuarios-btn-reset-senha"
+                      onClick={() => setConfirmarResetAberto(true)}
+                      disabled={salvando || resetandoSenha}
+                    >
+                      {resetandoSenha ? "A enviar…" : "Redefinir senha"}
+                    </button>
+                  ) : null}
                 </>
               )}
             </div>
@@ -642,7 +649,10 @@ export default function UsuariosPage() {
               <button
                 type="button"
                 className="usuarios-btn-ghost"
-                onClick={() => setModalAberto(false)}
+                onClick={() => {
+                  setModalAberto(false);
+                  setConfirmarResetAberto(false);
+                }}
                 disabled={salvando || resetandoSenha}
               >
                 Cancelar
@@ -654,6 +664,47 @@ export default function UsuariosPage() {
                 disabled={salvando || resetandoSenha}
               >
                 {salvando ? "Salvando…" : "Salvar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {confirmarResetAberto ? (
+        <div
+          className="usuarios-modal-backdrop"
+          role="presentation"
+          onClick={() => !resetandoSenha && setConfirmarResetAberto(false)}
+        >
+          <div
+            className="usuarios-modal usuarios-modal--confirm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="usuarios-confirm-reset-titulo"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="usuarios-confirm-reset-titulo" className="usuarios-modal-title">
+              Confirmar redefinição
+            </h2>
+            <p className="usuarios-confirm-copy">
+              Será gerada uma nova senha provisória, a conta ficará inativa até o próximo acesso e o usuário receberá
+              um e-mail. Continuar?
+            </p>
+            <div className="usuarios-modal-actions">
+              <button
+                type="button"
+                className="usuarios-btn-ghost"
+                onClick={() => setConfirmarResetAberto(false)}
+                disabled={resetandoSenha}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="usuarios-btn-primary usuarios-btn-danger"
+                onClick={() => void solicitarResetSenha()}
+                disabled={resetandoSenha}
+              >
+                {resetandoSenha ? "A enviar…" : "Confirmar"}
               </button>
             </div>
           </div>
