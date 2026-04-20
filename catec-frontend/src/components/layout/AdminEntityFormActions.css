@@ -1,0 +1,29 @@
+.admin-entity-form-page.admin-entity-form .modal-footer.admin-entity-form-actions {
+  justify-content: flex-end;
+}
+
+.admin-entity-form-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+}
+
+.admin-entity-form-actions__danger ~ .admin-entity-form-actions__main {
+  margin-left: 24px;
+  padding-left: 28px;
+  border-left: 1px solid #e8eef4;
+}
+
+.admin-entity-form-actions__main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.admin-entity-form-actions__danger {
+  flex-shrink: 0;
+}

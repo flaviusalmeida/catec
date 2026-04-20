@@ -1,0 +1,12 @@
+.admin-form-grid-3 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) 5.5rem minmax(7.5rem, 0.85fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+@media (max-width: 700px) {
+  .admin-form-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}

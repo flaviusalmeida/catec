@@ -1,0 +1,34 @@
+.admin-form-section {
+  margin-top: 28px;
+  padding: 26px 28px 28px;
+  width: 100%;
+  max-width: none;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 10px 28px -12px rgba(15, 23, 42, 0.08);
+  box-sizing: border-box;
+}
+
+.admin-entity-form-page.admin-entity-form .admin-form-section:first-of-type {
+  margin-top: 0;
+}
+
+.admin-form-section__title {
+  margin: 0 0 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.6875rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #475569;
+}
+
+@media (max-width: 640px) {
+  .admin-form-section {
+    padding: 20px 18px 22px;
+  }
+}

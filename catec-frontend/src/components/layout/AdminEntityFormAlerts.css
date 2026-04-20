@@ -1,0 +1,12 @@
+.admin-entity-form-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.admin-entity-form-alerts .admin-entity-form-loading {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}

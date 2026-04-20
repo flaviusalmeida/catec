@@ -1,0 +1,6 @@
+.admin-form-divider {
+  margin: 4px 0;
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e8eef4 12%, #e8eef4 88%, transparent);
+}

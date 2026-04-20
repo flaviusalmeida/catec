@@ -1,0 +1,21 @@
+.admin-entity-form-headline {
+  display: contents;
+}
+
+.admin-entity-form-headline__action {
+  font-size: inherit;
+}
+
+.admin-entity-form-headline__sep {
+  font-weight: 600;
+  color: #cbd5e1;
+  font-size: 1.1rem;
+  user-select: none;
+}
+
+.admin-entity-form-headline__entity {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.02em;
+}
