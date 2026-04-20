@@ -1,14 +1,8 @@
 import type { ReactNode } from "react";
 import "./StatusBadge.css";
 
-export type StatusBadgeVariant =
-  | "ativo"
-  | "inativo"
-  | "pendente"
-  /** Fluxo de projeto (listagens admin). */
-  | "workflow_criado"
-  | "workflow_aguardando"
-  | "workflow_em_proposta";
+/** Variantes de cor da pill (padrão da listagem de usuários). */
+export type StatusBadgeVariant = "ativo" | "inativo" | "pendente";
 
 export type StatusBadgeProps = {
   variant: StatusBadgeVariant;
@@ -21,7 +15,7 @@ export function StatusBadgeGroup({ children, className }: { children: ReactNode;
   return <div className={classes}>{children}</div>;
 }
 
-/** Pill de estado (tabelas admin, listagens). */
+/** Pill de estado — padrão único para listagens admin (usuários, projetos, etc.). */
 export default function StatusBadge({ variant, children, className }: StatusBadgeProps) {
   const classes = ["status-badge", `status-badge--${variant}`, className].filter(Boolean).join(" ");
   return <span className={classes}>{children}</span>;

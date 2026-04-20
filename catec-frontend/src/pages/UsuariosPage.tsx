@@ -18,7 +18,7 @@ import RowEditButton from "../components/table/RowEditButton";
 import AccessDeniedCard from "../components/ui/AccessDeniedCard";
 import InlineAlert from "../components/ui/InlineAlert";
 import LabeledSwitch from "../components/ui/LabeledSwitch";
-import StatusBadge, { StatusBadgeGroup } from "../components/ui/StatusBadge";
+import UsuarioStatusBadge from "../components/ui/UsuarioStatusBadge";
 import ToastAlert from "../components/ui/ToastAlert";
 import "../styles/admin-crud-table.css";
 import "./UsuariosPage.css";
@@ -459,15 +459,7 @@ export default function UsuariosPage() {
                     <td className="admin-crud-table__cell-muted">{u.email}</td>
                     <td className="usuarios-perfis">{u.perfis.join(", ")}</td>
                     <td>
-                      <StatusBadgeGroup>
-                        {u.requerTrocaSenha ? (
-                          <StatusBadge variant="pendente">Troca senha</StatusBadge>
-                        ) : u.ativo ? (
-                          <StatusBadge variant="ativo">Ativo</StatusBadge>
-                        ) : (
-                          <StatusBadge variant="inativo">Inativo</StatusBadge>
-                        )}
-                      </StatusBadgeGroup>
+                      <UsuarioStatusBadge requerTrocaSenha={u.requerTrocaSenha} ativo={u.ativo} />
                     </td>
                     <td className="admin-crud-table__td-actions">
                       <RowEditButton ariaLabel={`Editar ${u.nome}`} onClick={() => abrirEditar(u)} />

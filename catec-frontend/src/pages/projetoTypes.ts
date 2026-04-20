@@ -22,8 +22,16 @@ export type ClienteResumo = {
   telefone: string | null;
 };
 
+/** Filtros, modais e textos longos (frase completa). */
 export const STATUS_PROJETO_ROTULO: Record<ProjetoStatus, string> = {
   CRIADO: "Criado",
   AGUARDANDO_ADM: "Aguardando administrativo",
+  EM_PROPOSTA: "Em proposta",
+};
+
+/** Texto da pill na tabela (vira maiúsculas no CSS; manter curto por causa do `nowrap`). */
+export const STATUS_PROJETO_ROTULO_BADGE: Record<ProjetoStatus, string> = {
+  CRIADO: "Criado",
+  AGUARDANDO_ADM: "Aguard. adm.",
   EM_PROPOSTA: "Em proposta",
 };
