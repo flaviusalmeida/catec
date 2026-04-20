@@ -5,6 +5,7 @@ import { useAuth } from "../auth/AuthContext";
 import FieldControl from "../components/form/FieldControl";
 import PrimaryCtaButton from "../components/buttons/PrimaryCtaButton";
 import DataTableSection from "../components/layout/DataTableSection";
+import ConfirmDialog from "../components/layout/ConfirmDialog";
 import FormDialog from "../components/layout/FormDialog";
 import FiltersCard from "../components/layout/FiltersCard";
 import PageToolbar from "../components/layout/PageToolbar";
@@ -569,35 +570,28 @@ export default function ClientesPage() {
             </div>
       </FormDialog>
 
-      {confirmarRemocaoId != null ? (
-        <div className="clientes-modal-backdrop" role="presentation" onClick={() => excluindoId == null && setConfirmarRemocaoId(null)}>
-          <div
-            className="clientes-modal clientes-modal--confirm"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="clientes-confirm-remocao"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 id="clientes-confirm-remocao" className="clientes-modal-title">
-              Confirmar remoção
-            </h2>
-            <p className="clientes-confirm-copy">Esta ação remove o cliente do cadastro. Deseja continuar?</p>
-            <div className="clientes-modal-actions">
-              <button type="button" className="clientes-btn-ghost" onClick={() => setConfirmarRemocaoId(null)} disabled={excluindoId != null}>
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="clientes-btn-primary clientes-btn-danger"
-                onClick={() => void remover(confirmarRemocaoId)}
-                disabled={excluindoId != null}
-              >
-                {excluindoId != null ? "Removendo..." : "Confirmar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <ConfirmDialog
+        open={confirmarRemocaoId != null}
+        titleId="clientes-confirm-remocao"
+        title="Confirmar remoção"
+        description="Esta ação remove o cliente do cadastro. Deseja continuar?"
+        onBackdropClick={() => excluindoId == null && setConfirmarRemocaoId(null)}
+        actions={
+          <>
+            <button type="button" className="clientes-btn-ghost" onClick={() => setConfirmarRemocaoId(null)} disabled={excluindoId != null}>
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="clientes-btn-primary clientes-btn-danger"
+              onClick={() => confirmarRemocaoId != null && void remover(confirmarRemocaoId)}
+              disabled={excluindoId != null}
+            >
+              {excluindoId != null ? "Removendo..." : "Confirmar"}
+            </button>
+          </>
+        }
+      />
     </div>
   );
 }
