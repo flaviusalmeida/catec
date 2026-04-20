@@ -4,6 +4,7 @@ import { apiFetch } from "../api/http";
 import { useAuth } from "../auth/AuthContext";
 import FieldControl from "../components/form/FieldControl";
 import PrimaryCtaButton from "../components/buttons/PrimaryCtaButton";
+import FiltersCard from "../components/layout/FiltersCard";
 import PageToolbar from "../components/layout/PageToolbar";
 import RowEditButton from "../components/table/RowEditButton";
 import "./ClientesPage.css";
@@ -278,63 +279,53 @@ export default function ClientesPage() {
 
         {erro && !modalAberto ? <div className="clientes-alert clientes-alert--error">{erro}</div> : null}
 
-        <section className="clientes-card clientes-card--filters" aria-labelledby="clientes-filtros-heading">
-          <div className="clientes-filters-head">
-            <h2 id="clientes-filtros-heading" className="clientes-filters-title">
-              Filtros
-            </h2>
-            <button type="button" className="clientes-link-clear" onClick={limparFiltros}>
-              Limpar filtros
-            </button>
+        <FiltersCard headingId="clientes-filtros-heading" onClear={limparFiltros}>
+          <div>
+            <label className="clientes-filter-label" htmlFor="flt-cliente-nome">
+              Nome / Razão social
+            </label>
+            <FieldControl
+              id="flt-cliente-nome"
+              value={filtroNome}
+              onChange={(e) => setFiltroNome(e.target.value)}
+              className="clientes-input"
+              variant="compact"
+              placeholder="Buscar por nome"
+              autoComplete="off"
+            />
           </div>
-          <div className="clientes-filters-grid">
-            <div>
-              <label className="clientes-filter-label" htmlFor="flt-cliente-nome">
-                Nome / Razão social
-              </label>
-              <FieldControl
-                id="flt-cliente-nome"
-                value={filtroNome}
-                onChange={(e) => setFiltroNome(e.target.value)}
-                className="clientes-input"
-                variant="compact"
-                placeholder="Buscar por nome"
-                autoComplete="off"
-              />
-            </div>
-            <div>
-              <label className="clientes-filter-label" htmlFor="flt-cliente-documento">
-                Documento
-              </label>
-              <FieldControl
-                id="flt-cliente-documento"
-                value={filtroDocumento}
-                onChange={(e) => setFiltroDocumento(e.target.value)}
-                className="clientes-input"
-                variant="compact"
-                placeholder="Buscar por documento"
-                autoComplete="off"
-              />
-            </div>
-            <div>
-              <label className="clientes-filter-label" htmlFor="flt-cliente-tipo">
-                Tipo
-              </label>
-              <FieldControl
-                as="select"
-                id="flt-cliente-tipo"
-                value={filtroTipo}
-                onChange={(e) => setFiltroTipo(e.target.value as "" | TipoPessoa)}
-                className="clientes-select"
-                variant="compact"
-              >
-                <option value="">Todos</option>
-                <option value="PF">Pessoa Física</option>
-                <option value="PJ">Pessoa Jurídica</option>
-              </FieldControl>
-            </div>
+          <div>
+            <label className="clientes-filter-label" htmlFor="flt-cliente-documento">
+              Documento
+            </label>
+            <FieldControl
+              id="flt-cliente-documento"
+              value={filtroDocumento}
+              onChange={(e) => setFiltroDocumento(e.target.value)}
+              className="clientes-input"
+              variant="compact"
+              placeholder="Buscar por documento"
+              autoComplete="off"
+            />
           </div>
-        </section>
+          <div>
+            <label className="clientes-filter-label" htmlFor="flt-cliente-tipo">
+              Tipo
+            </label>
+            <FieldControl
+              as="select"
+              id="flt-cliente-tipo"
+              value={filtroTipo}
+              onChange={(e) => setFiltroTipo(e.target.value as "" | TipoPessoa)}
+              className="clientes-select"
+              variant="compact"
+            >
+              <option value="">Todos</option>
+              <option value="PF">Pessoa Física</option>
+              <option value="PJ">Pessoa Jurídica</option>
+            </FieldControl>
+          </div>
+        </FiltersCard>
 
         <section className="clientes-card clientes-card--table" aria-busy={carregando}>
           {carregando ? (
