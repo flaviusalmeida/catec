@@ -6,6 +6,7 @@ import FieldControl from "../components/form/FieldControl";
 import PrimaryCtaButton from "../components/buttons/PrimaryCtaButton";
 import DataTableSection from "../components/layout/DataTableSection";
 import ConfirmDialog from "../components/layout/ConfirmDialog";
+import AccessDeniedCard from "../components/ui/AccessDeniedCard";
 import InlineAlert from "../components/ui/InlineAlert";
 import ToastAlert from "../components/ui/ToastAlert";
 import FormDialog from "../components/layout/FormDialog";
@@ -247,10 +248,11 @@ export default function ClientesPage() {
     return (
       <div className="clientes-page">
         <div className="clientes-page-inner">
-          <div className="clientes-card clientes-card--denied">
-            <h1 className="clientes-title">Clientes</h1>
-            <p>Seu perfil não inclui permissão de administrador técnico para esta tela.</p>
-          </div>
+          <AccessDeniedCard
+            titleId="clientes-acesso-negado"
+            title="Clientes"
+            message="Seu perfil não inclui permissão de administrador técnico para esta tela."
+          />
         </div>
       </div>
     );
