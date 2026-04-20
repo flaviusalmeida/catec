@@ -8,8 +8,16 @@
   grid-template-columns: 1fr 1fr;
 }
 
+.modal-form-grid--triple {
+  grid-template-columns: minmax(0, 2fr) minmax(4.5rem, 0.55fr) minmax(0, 1fr);
+}
+
 @media (max-width: 700px) {
   .modal-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-form-grid--triple {
     grid-template-columns: 1fr;
   }
 }

@@ -40,6 +40,12 @@ public class Cliente {
     @Column(name = "endereco_logradouro")
     private String enderecoLogradouro;
 
+    @Column(name = "endereco_numero", length = 20)
+    private String enderecoNumero;
+
+    @Column(name = "endereco_complemento", length = 120)
+    private String enderecoComplemento;
+
     @Column(name = "endereco_cidade")
     private String enderecoCidade;
 
@@ -88,6 +94,14 @@ public class Cliente {
 
     public String getEnderecoLogradouro() {
         return enderecoLogradouro;
+    }
+
+    public String getEnderecoNumero() {
+        return enderecoNumero;
+    }
+
+    public String getEnderecoComplemento() {
+        return enderecoComplemento;
     }
 
     public String getEnderecoCidade() {
@@ -140,6 +154,14 @@ public class Cliente {
 
     public void setEnderecoLogradouro(String enderecoLogradouro) {
         this.enderecoLogradouro = enderecoLogradouro;
+    }
+
+    public void setEnderecoNumero(String enderecoNumero) {
+        this.enderecoNumero = enderecoNumero;
+    }
+
+    public void setEnderecoComplemento(String enderecoComplemento) {
+        this.enderecoComplemento = enderecoComplemento;
     }
 
     public void setEnderecoCidade(String enderecoCidade) {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiFetch } from "../api/http";
 import { useAuth } from "../auth/AuthContext";
@@ -21,6 +21,8 @@ import {
 import AccessDeniedCard from "../components/ui/AccessDeniedCard";
 import InlineAlert from "../components/ui/InlineAlert";
 import ToastAlert from "../components/ui/ToastAlert";
+import { buscarEnderecoPorCep } from "../api/viaCep";
+import { formatCep } from "../utils/cep";
 import { onlyDigits } from "../utils/digitsOnly";
 import { formatDocumentoByTipo, validateClienteObrigatorios } from "../utils/cpfCnpj";
 import { formatTelefoneBrasil } from "../utils/telefoneBrasil";
@@ -45,6 +47,11 @@ export default function ClienteFormPage() {
   const [excluindoId, setExcluindoId] = useState<number | null>(null);
   const [confirmarRemocaoId, setConfirmarRemocaoId] = useState<number | null>(null);
   const [toastObrigatoriedade, setToastObrigatoriedade] = useState<string | null>(null);
+  const [cepLookupErro, setCepLookupErro] = useState<string | null>(null);
+  const [cepBuscando, setCepBuscando] = useState(false);
+  /** Evita nova consulta ao mesmo CEP já aplicado (ex.: vindo do servidor na edição). */
+  const ultimoCepPreenchidoRef = useRef<string | null>(null);
+  const buscaCepAbortRef = useRef<AbortController | null>(null);
 
   const carregarCliente = useCallback(async () => {
     if (editandoId == null || Number.isNaN(editandoId)) return;
@@ -72,6 +79,8 @@ export default function ClienteFormPage() {
       }
       const c = (await res.json()) as Cliente;
       setForm(clienteToFormState(c));
+      const cepCarregado = onlyDigits(c.enderecoCep ?? "");
+      ultimoCepPreenchidoRef.current = cepCarregado.length === 8 ? cepCarregado : null;
     } catch {
       setErro("Falha de rede ao carregar cliente.");
     } finally {
@@ -87,6 +96,9 @@ export default function ClienteFormPage() {
     }
     if (isCreate) {
       setForm(EMPTY_CLIENTE_FORM);
+      ultimoCepPreenchidoRef.current = null;
+      setCepLookupErro(null);
+      setCepBuscando(false);
       setCarregando(false);
       setErro(null);
       return;
@@ -99,6 +111,65 @@ export default function ClienteFormPage() {
     const t = window.setTimeout(() => setToastObrigatoriedade(null), 7000);
     return () => window.clearTimeout(t);
   }, [toastObrigatoriedade]);
+
+  useEffect(() => {
+    const d = onlyDigits(form.enderecoCep);
+    if (d.length !== 8) {
+      buscaCepAbortRef.current?.abort();
+      buscaCepAbortRef.current = null;
+      if (d.length < 8) {
+        ultimoCepPreenchidoRef.current = null;
+      }
+      setCepBuscando(false);
+      setCepLookupErro(null);
+      return;
+    }
+    if (d === ultimoCepPreenchidoRef.current) {
+      setCepLookupErro(null);
+      return;
+    }
+
+    const ac = new AbortController();
+    buscaCepAbortRef.current?.abort();
+    buscaCepAbortRef.current = ac;
+
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        try {
+          setCepBuscando(true);
+          setCepLookupErro(null);
+          const endereco = await buscarEnderecoPorCep(d, ac.signal);
+          if (ac.signal.aborted) return;
+          if (!endereco) {
+            setCepLookupErro("CEP não encontrado.");
+            ultimoCepPreenchidoRef.current = null;
+            return;
+          }
+          ultimoCepPreenchidoRef.current = d;
+          setForm((f) => ({
+            ...f,
+            enderecoCep: formatCep(d),
+            enderecoLogradouro: endereco.logradouro,
+            enderecoCidade: endereco.cidade,
+            enderecoUf: endereco.uf,
+          }));
+        } catch {
+          if (ac.signal.aborted) return;
+          setCepLookupErro("Não foi possível consultar o CEP. Tente novamente.");
+          ultimoCepPreenchidoRef.current = null;
+        } finally {
+          if (!ac.signal.aborted) {
+            setCepBuscando(false);
+          }
+        }
+      })();
+    }, 450);
+
+    return () => {
+      window.clearTimeout(timer);
+      ac.abort();
+    };
+  }, [form.enderecoCep]);
 
   async function salvar() {
     if (idInvalido) return;
@@ -119,6 +190,8 @@ export default function ClienteFormPage() {
         email: form.email.trim(),
         telefone: onlyDigits(form.telefone),
         enderecoLogradouro: form.enderecoLogradouro.trim() || null,
+        enderecoNumero: form.enderecoNumero.trim() || null,
+        enderecoComplemento: form.enderecoComplemento.trim() || null,
         enderecoCidade: form.enderecoCidade.trim() || null,
         enderecoUf: form.enderecoUf.trim().toUpperCase() || null,
         enderecoCep: form.enderecoCep.trim() || null,
@@ -363,14 +436,21 @@ export default function ClienteFormPage() {
                 </ModalFormGrid>
                 <AdminFormDivider />
                 <AdminFormGrid3>
-                  <FormField label="CEP" htmlFor="cf-cep">
+                  <FormField label="CEP" htmlFor="cf-cep" error={cepLookupErro}>
                     <FieldControl
                       id="cf-cep"
+                      inputMode="numeric"
+                      autoComplete="postal-code"
                       value={form.enderecoCep}
-                      onChange={(e) => setForm((f) => ({ ...f, enderecoCep: e.target.value }))}
+                      onChange={(e) => {
+                        const dig = onlyDigits(e.target.value).slice(0, 8);
+                        setForm((f) => ({ ...f, enderecoCep: dig ? formatCep(dig) : "" }));
+                      }}
                       className="clientes-input"
                       variant="modal"
-                      disabled={desabilitadoForm}
+                      disabled={desabilitadoForm || cepBuscando}
+                      placeholder="00000-000"
+                      aria-busy={cepBuscando}
                     />
                   </FormField>
                   <FormField label="Cidade" htmlFor="cf-cidade">
@@ -395,16 +475,44 @@ export default function ClienteFormPage() {
                     />
                   </FormField>
                 </AdminFormGrid3>
-                <FormField label="Logradouro" htmlFor="cf-logradouro">
-                  <FieldControl
-                    id="cf-logradouro"
-                    value={form.enderecoLogradouro}
-                    onChange={(e) => setForm((f) => ({ ...f, enderecoLogradouro: e.target.value }))}
-                    className="clientes-input"
-                    variant="modal"
-                    disabled={desabilitadoForm}
-                  />
-                </FormField>
+                <ModalFormGrid triple>
+                  <FormField label="Logradouro" htmlFor="cf-logradouro">
+                    <FieldControl
+                      id="cf-logradouro"
+                      value={form.enderecoLogradouro}
+                      onChange={(e) => setForm((f) => ({ ...f, enderecoLogradouro: e.target.value }))}
+                      className="clientes-input"
+                      variant="modal"
+                      disabled={desabilitadoForm}
+                      autoComplete="address-line1"
+                    />
+                  </FormField>
+                  <FormField label="Número" htmlFor="cf-numero">
+                    <FieldControl
+                      id="cf-numero"
+                      inputMode="text"
+                      value={form.enderecoNumero}
+                      onChange={(e) => setForm((f) => ({ ...f, enderecoNumero: e.target.value }))}
+                      className="clientes-input"
+                      variant="modal"
+                      disabled={desabilitadoForm}
+                      maxLength={20}
+                      autoComplete="off"
+                    />
+                  </FormField>
+                  <FormField label="Complemento" htmlFor="cf-complemento">
+                    <FieldControl
+                      id="cf-complemento"
+                      value={form.enderecoComplemento}
+                      onChange={(e) => setForm((f) => ({ ...f, enderecoComplemento: e.target.value }))}
+                      className="clientes-input"
+                      variant="modal"
+                      disabled={desabilitadoForm}
+                      maxLength={120}
+                      autoComplete="address-line2"
+                    />
+                  </FormField>
+                </ModalFormGrid>
                 <AdminFormDivider />
                 <FormField label="Observações" htmlFor="cf-observacoes">
                   <FieldControl

@@ -133,6 +133,8 @@ public class AdminClienteService {
         c.setEmail(req.email().trim().toLowerCase(Locale.ROOT));
         c.setTelefone(telefoneDigitos);
         c.setEnderecoLogradouro(blankToNull(req.enderecoLogradouro()));
+        c.setEnderecoNumero(blankToNull(req.enderecoNumero()));
+        c.setEnderecoComplemento(blankToNull(req.enderecoComplemento()));
         c.setEnderecoCidade(blankToNull(req.enderecoCidade()));
         c.setEnderecoUf(upperOrNull(req.enderecoUf()));
         c.setEnderecoCep(blankToNull(req.enderecoCep()));
@@ -150,6 +152,8 @@ public class AdminClienteService {
                 c.getEmail(),
                 c.getTelefone(),
                 c.getEnderecoLogradouro(),
+                c.getEnderecoNumero(),
+                c.getEnderecoComplemento(),
                 c.getEnderecoCidade(),
                 c.getEnderecoUf(),
                 c.getEnderecoCep(),

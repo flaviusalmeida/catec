@@ -12,6 +12,8 @@ public record ClienteResponse(
         String email,
         String telefone,
         String enderecoLogradouro,
+        String enderecoNumero,
+        String enderecoComplemento,
         String enderecoCidade,
         String enderecoUf,
         String enderecoCep,

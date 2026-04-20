@@ -15,6 +15,8 @@ public record ClienteRequest(
         @NotBlank @Size(max = 255) @Pattern(regexp = EmailFormat.REGEX, message = "E-mail inválido.") String email,
         @NotBlank @Size(max = 20) String telefone,
         @Size(max = 255) String enderecoLogradouro,
+        @Size(max = 20) String enderecoNumero,
+        @Size(max = 120) String enderecoComplemento,
         @Size(max = 120) String enderecoCidade,
         @Size(min = 2, max = 2) String enderecoUf,
         @Size(max = 10) String enderecoCep,

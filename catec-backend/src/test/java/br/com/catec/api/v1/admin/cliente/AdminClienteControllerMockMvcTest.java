@@ -86,6 +86,8 @@ class AdminClienteControllerMockMvcTest {
                 null,
                 null,
                 null,
+                null,
+                null,
                 null);
         when(adminClienteService.criar(req)).thenReturn(response(10L, "Cliente C"));
 
@@ -102,7 +104,7 @@ class AdminClienteControllerMockMvcTest {
 
     @Test
     void criar_quandoPayloadInvalido_deveRetornar400() throws Exception {
-        ClienteRequest req = new ClienteRequest(null, "", null, "", "", "", null, null, null, null, null);
+        ClienteRequest req = new ClienteRequest(null, "", null, "", "", "", null, null, null, null, null, null, null);
 
         mockMvc.perform(post("/api/v1/admin/clientes")
                         .with(user(adminPrincipal(1L)))
@@ -122,6 +124,8 @@ class AdminClienteControllerMockMvcTest {
                 "52998224725",
                 "email-sem-arroba",
                 "11988887777",
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -146,6 +150,8 @@ class AdminClienteControllerMockMvcTest {
                 "11444777000161",
                 "pj@catec.local",
                 "1133334444",
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -185,7 +191,22 @@ class AdminClienteControllerMockMvcTest {
 
     private static ClienteResponse response(Long id, String nome) {
         return new ClienteResponse(
-                id, TipoPessoa.PF, nome, null, null, null, null, null, null, null, null, null, Instant.now(), Instant.now());
+                id,
+                TipoPessoa.PF,
+                nome,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                Instant.now(),
+                Instant.now());
     }
 
     private static UsuarioAutenticado adminPrincipal(Long id) {

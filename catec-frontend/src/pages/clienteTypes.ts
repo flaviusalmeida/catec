@@ -1,3 +1,4 @@
+import { formatCep } from "../utils/cep";
 import { onlyDigits } from "../utils/digitsOnly";
 import { formatDocumentoByTipo, type TipoPessoa } from "../utils/cpfCnpj";
 import { formatTelefoneBrasil } from "../utils/telefoneBrasil";
@@ -13,6 +14,8 @@ export type Cliente = {
   email: string | null;
   telefone: string | null;
   enderecoLogradouro: string | null;
+  enderecoNumero: string | null;
+  enderecoComplemento: string | null;
   enderecoCidade: string | null;
   enderecoUf: string | null;
   enderecoCep: string | null;
@@ -27,6 +30,8 @@ export type ClienteFormState = {
   email: string;
   telefone: string;
   enderecoLogradouro: string;
+  enderecoNumero: string;
+  enderecoComplemento: string;
   enderecoCidade: string;
   enderecoUf: string;
   enderecoCep: string;
@@ -41,6 +46,8 @@ export const EMPTY_CLIENTE_FORM: ClienteFormState = {
   email: "",
   telefone: "",
   enderecoLogradouro: "",
+  enderecoNumero: "",
+  enderecoComplemento: "",
   enderecoCidade: "",
   enderecoUf: "",
   enderecoCep: "",
@@ -58,9 +65,14 @@ export function clienteToFormState(c: Cliente): ClienteFormState {
     email: c.email ?? "",
     telefone: telDigits ? formatTelefoneBrasil(telDigits) : "",
     enderecoLogradouro: c.enderecoLogradouro ?? "",
+    enderecoNumero: c.enderecoNumero ?? "",
+    enderecoComplemento: c.enderecoComplemento ?? "",
     enderecoCidade: c.enderecoCidade ?? "",
     enderecoUf: c.enderecoUf ?? "",
-    enderecoCep: c.enderecoCep ?? "",
+    enderecoCep: (() => {
+      const cepD = onlyDigits(c.enderecoCep ?? "");
+      return cepD ? formatCep(cepD) : "";
+    })(),
     observacoes: c.observacoes ?? "",
   };
 }

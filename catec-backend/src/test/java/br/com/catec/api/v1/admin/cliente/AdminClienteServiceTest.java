@@ -71,6 +71,8 @@ class AdminClienteServiceTest {
                 null,
                 null,
                 null,
+                null,
+                null,
                 null);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.criar(req));
@@ -88,6 +90,8 @@ class AdminClienteServiceTest {
                 CPF_VALIDO,
                 "a@b.com",
                 "1198888",
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -113,6 +117,8 @@ class AdminClienteServiceTest {
                 null,
                 null,
                 null,
+                null,
+                null,
                 null);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.criar(req));
@@ -130,6 +136,8 @@ class AdminClienteServiceTest {
                 "529.982.247-25",
                 "maria@teste.com",
                 "11977776666",
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -165,6 +173,9 @@ class AdminClienteServiceTest {
         assertEquals(CPF_VALIDO, response.documento());
         assertEquals("joao@teste.com", response.email());
         assertEquals("11988887777", response.telefone());
+        assertEquals("Rua A", response.enderecoLogradouro());
+        assertEquals("100", response.enderecoNumero());
+        assertEquals("Apto 2", response.enderecoComplemento());
     }
 
     @Test
@@ -199,6 +210,8 @@ class AdminClienteServiceTest {
                 CNPJ_VALIDO,
                 " contato@empresa.com ",
                 "11999998888",
+                null,
+                null,
                 null,
                 null,
                 "rj",
@@ -244,6 +257,8 @@ class AdminClienteServiceTest {
                 " joao@teste.com ",
                 " 11988887777 ",
                 " Rua A ",
+                " 100 ",
+                " Apto 2 ",
                 " Sao Paulo ",
                 "sp",
                 " 12345-000 ",
