@@ -1,35 +1,70 @@
+/**
+ * Estilos alinhados a `UsuariosPage.css` (referencia oficial).
+ *
+ * Na tela de usuarios, filtros usam classes duplas (ex.: `usuarios-input usuarios-input--compact`).
+ * Pela ordem no CSS, o que vale na pratica e:
+ * - input/textarea de filtro: regras finais de `.usuarios-input` (padding maior)
+ * - select de filtro: regras de `.usuarios-select` (padding/fonte do select base)
+ * Modal: `.usuarios-input--modal` (nao ha `.usuarios-select--modal`; select em modal segue as mesmas medidas do input modal)
+ */
+
 .field-control {
   width: 100%;
   box-sizing: border-box;
-  padding: 0.6rem 0.65rem;
-  border-radius: 8px;
   border: 1px solid #cbd5e1;
   background: #f8fafc;
-  font-size: 0.9rem;
   font-family: inherit;
   color: #0f172a;
 }
 
-/* Alinhado ao comportamento visual atual da tela de usuarios. */
-.field-control--compact {
+/* Filtros — mesmo efeito visual de input na listagem de usuarios */
+input.field-control.field-control--compact,
+textarea.field-control.field-control--compact {
   padding: 0.65rem 0.75rem;
-  font-size: 0.9375rem;
   border-radius: 8px;
+  font-size: 0.9375rem;
 }
 
-.field-control--modal {
+/* Filtros — mesmo efeito visual de select na listagem de usuarios */
+select.field-control.field-control--compact {
+  padding: 0.6rem 0.65rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+/* Modal — `.usuarios-input--modal` */
+input.field-control.field-control--modal,
+textarea.field-control.field-control--modal,
+select.field-control.field-control--modal {
   padding: 0.5rem 0.65rem;
+  border-radius: 8px;
   font-size: 0.875rem;
 }
 
-.field-control:focus {
+input.field-control:focus,
+textarea.field-control:focus {
+  outline: none;
+  border-color: #002d4b;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(0, 45, 75, 0.1);
+}
+
+select.field-control:focus {
   outline: none;
   border-color: #002d4b;
   background: #fff;
   box-shadow: 0 0 0 2px rgba(0, 45, 75, 0.12);
 }
 
-.field-control:focus-visible {
+input.field-control:focus-visible,
+textarea.field-control:focus-visible,
+select.field-control:focus-visible {
   outline: 2px solid #002d4b;
   outline-offset: 2px;
+}
+
+input.field-control::placeholder,
+textarea.field-control::placeholder {
+  color: #94a3b8;
+  font-size: 0.8125rem;
 }
