@@ -22,7 +22,7 @@ describe("UsuariosPage", () => {
   });
 
   it("exibe aviso de acesso negado para usuário sem perfil admin", async () => {
-    useAuthMock.mockReturnValue({ isAdmin: false, logout: logoutMock });
+    useAuthMock.mockReturnValue({ isAdmin: false, podeGerirProjetos: false, logout: logoutMock });
 
     render(
       <MemoryRouter>
@@ -35,7 +35,7 @@ describe("UsuariosPage", () => {
   });
 
   it("filtra tabela por nome", async () => {
-    useAuthMock.mockReturnValue({ isAdmin: true, logout: logoutMock });
+    useAuthMock.mockReturnValue({ isAdmin: true, podeGerirProjetos: true, logout: logoutMock });
     apiFetchMock.mockResolvedValue({
       status: 200,
       ok: true,
@@ -81,7 +81,7 @@ describe("UsuariosPage", () => {
   });
 
   it("esconde botão de redefinir senha quando conta editada está inativa", async () => {
-    useAuthMock.mockReturnValue({ isAdmin: true, logout: logoutMock });
+    useAuthMock.mockReturnValue({ isAdmin: true, podeGerirProjetos: true, logout: logoutMock });
     apiFetchMock.mockResolvedValue({
       status: 200,
       ok: true,
@@ -114,7 +114,7 @@ describe("UsuariosPage", () => {
   });
 
   it("abre confirmação customizada e confirma redefinição de senha", async () => {
-    useAuthMock.mockReturnValue({ isAdmin: true, logout: logoutMock });
+    useAuthMock.mockReturnValue({ isAdmin: true, podeGerirProjetos: true, logout: logoutMock });
     apiFetchMock
       .mockResolvedValueOnce({
         status: 200,

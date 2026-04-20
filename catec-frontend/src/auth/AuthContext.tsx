@@ -23,6 +23,8 @@ type AuthContextValue = {
   user: MeUser | null;
   loading: boolean;
   isAdmin: boolean;
+  /** Colaborador ou administrativo: demandas (projeto). */
+  podeGerirProjetos: boolean;
   refreshMe: () => Promise<void>;
   loginWithToken: (accessToken: string) => Promise<void>;
   logout: () => void;
@@ -77,16 +79,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = useMemo(() => user?.perfis?.includes("ADMINISTRATIVO") ?? false, [user]);
 
+  const podeGerirProjetos = useMemo(
+    () =>
+      Boolean(user?.perfis?.includes("COLABORADOR") || user?.perfis?.includes("ADMINISTRATIVO")),
+    [user],
+  );
+
   const value = useMemo(
     () => ({
       user,
       loading,
       isAdmin,
+      podeGerirProjetos,
       refreshMe,
       loginWithToken,
       logout,
     }),
-    [user, loading, isAdmin, refreshMe, loginWithToken, logout],
+    [user, loading, isAdmin, podeGerirProjetos, refreshMe, loginWithToken, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

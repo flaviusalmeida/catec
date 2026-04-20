@@ -8,6 +8,7 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import ClienteFormPage from "./pages/ClienteFormPage";
 import ClientesPage from "./pages/ClientesPage";
+import ProjetosPage from "./pages/ProjetosPage";
 import UsuariosPage from "./pages/UsuariosPage";
 import { getStoredToken } from "./api/http";
 
@@ -54,6 +55,7 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/app/inicio" replace />} />
           <Route path="inicio" element={<HomePage />} />
+          <Route path="projetos" element={<ProjetosPage />} />
           <Route path="clientes/novo" element={<ClienteFormPage />} />
           <Route path="clientes/:id/editar" element={<ClienteFormPage />} />
           <Route path="clientes" element={<ClientesPage />} />

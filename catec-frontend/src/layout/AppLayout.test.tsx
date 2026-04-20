@@ -26,6 +26,7 @@ describe("AppLayout logout confirmation", () => {
     useAuthMock.mockReturnValue({
       user: { nome: "Admin", email: "admin@catec.local" },
       isAdmin: true,
+      podeGerirProjetos: true,
       logout: logoutMock,
     });
   });

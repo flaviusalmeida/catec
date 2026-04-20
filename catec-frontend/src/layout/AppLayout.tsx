@@ -32,8 +32,17 @@ function IconClients({ className }: { className?: string }) {
   );
 }
 
+function IconFolderKanban({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+      <path d="M8 10v6M12 10v6M16 10v6" />
+    </svg>
+  );
+}
+
 export default function AppLayout() {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, podeGerirProjetos } = useAuth();
   const navigate = useNavigate();
   const [confirmarSaidaAberto, setConfirmarSaidaAberto] = useState(false);
 
@@ -53,6 +62,12 @@ export default function AppLayout() {
             <IconHome className="app-shell-nav-icon" />
             <span>Início</span>
           </NavLink>
+          {podeGerirProjetos ? (
+            <NavLink to="/app/projetos" className={({ isActive }) => `app-shell-nav-link${isActive ? " active" : ""}`}>
+              <IconFolderKanban className="app-shell-nav-icon" />
+              <span>Projetos</span>
+            </NavLink>
+          ) : null}
           {isAdmin ? (
             <NavLink to="/app/clientes" className={({ isActive }) => `app-shell-nav-link${isActive ? " active" : ""}`}>
               <IconClients className="app-shell-nav-icon" />
