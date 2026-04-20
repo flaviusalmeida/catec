@@ -1,0 +1,70 @@
+/**
+ * Tabela de listagem CRUD — base compartilhada (zebra, cabeçalho, coluna de ações).
+ * Larguras por coluna e células específicas da entidade ficam na página (ex.: `.clientes-data-table`).
+ */
+.admin-crud-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  table-layout: fixed;
+}
+
+.admin-crud-table thead {
+  background: linear-gradient(180deg, #f1f5f9 0%, #e8eef4 100%);
+}
+
+.admin-crud-table th,
+.admin-crud-table td {
+  text-align: left;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #eef2f6;
+  vertical-align: middle;
+}
+
+.admin-crud-table th {
+  color: #334155;
+  font-weight: 700;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.admin-crud-table__th-actions,
+.admin-crud-table__td-actions {
+  text-align: center;
+}
+
+.admin-crud-table__row {
+  cursor: pointer;
+}
+
+.admin-crud-table__row:hover {
+  background: #f0f9ff;
+}
+
+.admin-crud-table__row--alt {
+  background: #fafbfc;
+}
+
+.admin-crud-table__row--alt:hover {
+  background: #eff6ff;
+}
+
+.admin-crud-table__cell-primary {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.admin-crud-table__cell-muted {
+  color: #64748b;
+  font-size: 0.8125rem;
+  word-break: break-word;
+}
+
+.admin-crud-table__filter-msg {
+  margin: 0;
+  padding: 2.25rem 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #64748b;
+}

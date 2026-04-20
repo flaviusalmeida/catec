@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import ModalFooter from "./ModalFooter";
 import "./ConfirmDialog.css";
 
 export type ConfirmDialogProps = {
@@ -32,7 +33,7 @@ export default function ConfirmDialog({ open, titleId, title, description, onBac
           {title}
         </h2>
         <div className="confirm-dialog__description">{description}</div>
-        <div className="confirm-dialog__actions">{actions}</div>
+        <ModalFooter>{actions}</ModalFooter>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../api/http";
 import { useAuth } from "../auth/AuthContext";
 import FieldControl from "../components/form/FieldControl";
+import FormField from "../components/form/FormField";
 import GhostButton from "../components/buttons/GhostButton";
 import PrimaryButton from "../components/buttons/PrimaryButton";
 import DataTableSection from "../components/layout/DataTableSection";
@@ -11,9 +12,13 @@ import AccessDeniedCard from "../components/ui/AccessDeniedCard";
 import InlineAlert from "../components/ui/InlineAlert";
 import ToastAlert from "../components/ui/ToastAlert";
 import FormDialog from "../components/layout/FormDialog";
+import ModalFooter from "../components/layout/ModalFooter";
+import ModalFormGrid from "../components/layout/ModalFormGrid";
+import ModalSection from "../components/layout/ModalSection";
 import FiltersCard from "../components/layout/FiltersCard";
 import PageToolbar from "../components/layout/PageToolbar";
 import RowEditButton from "../components/table/RowEditButton";
+import "../styles/admin-crud-table.css";
 import "./ClientesPage.css";
 
 type TipoPessoa = "PF" | "PJ";
@@ -340,23 +345,23 @@ export default function ClientesPage() {
           emptyDescription="Ainda não há clientes cadastrados no sistema."
           filterPending={filtrosDigitacaoPendentes}
         >
-          <table className="clientes-table">
+          <table className="admin-crud-table clientes-data-table">
             <thead>
               <tr>
                 <th scope="col">Nome / Razão social</th>
                 <th scope="col">Tipo</th>
                 <th scope="col">Documento</th>
                 <th scope="col">E-mail</th>
-                <th scope="col" className="clientes-th-actions">
+                <th scope="col" className="admin-crud-table__th-actions">
                   Ações
                 </th>
               </tr>
             </thead>
             <tbody>
               {listaFiltrada.length === 0 ? (
-                <tr className="clientes-table-empty-row">
+                <tr className="admin-crud-table__empty-row">
                   <td colSpan={5}>
-                    <p className="clientes-filter-empty" role="status">
+                    <p className="admin-crud-table__filter-msg" role="status">
                       Não há clientes que correspondam aos filtros.
                     </p>
                   </td>
@@ -365,14 +370,14 @@ export default function ClientesPage() {
                 listaFiltrada.map((c, idx) => (
                   <tr
                     key={c.id}
-                    className={`clientes-table-data-row${idx % 2 === 1 ? " clientes-table-data-row--alt" : ""}`}
+                    className={`admin-crud-table__row${idx % 2 === 1 ? " admin-crud-table__row--alt" : ""}`}
                     onClick={() => abrirEditar(c)}
                   >
-                    <td className="clientes-td-nome">{c.razaoSocialOuNome}</td>
+                    <td className="admin-crud-table__cell-primary">{c.razaoSocialOuNome}</td>
                     <td>{c.tipoPessoa}</td>
                     <td>{c.documento ?? "-"}</td>
-                    <td className="clientes-td-email">{c.email ?? "-"}</td>
-                    <td className="clientes-td-actions">
+                    <td className="admin-crud-table__cell-muted">{c.email ?? "-"}</td>
+                    <td className="admin-crud-table__td-actions">
                       <RowEditButton
                         ariaLabel={`Editar ${c.razaoSocialOuNome}`}
                         onClick={() => abrirEditar(c)}
@@ -396,168 +401,151 @@ export default function ClientesPage() {
           setConfirmarRemocaoId(null);
         }}
       >
-            {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
+        {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
 
-            <div className="clientes-modal-section">
-              <h3 className="clientes-modal-section-title">Identificação</h3>
-              <label className="clientes-label" htmlFor="cf-tipo">
-                Tipo de pessoa
-              </label>
-              <FieldControl
-                as="select"
-                id="cf-tipo"
-                value={form.tipoPessoa}
-                onChange={(e) => setForm((f) => ({ ...f, tipoPessoa: e.target.value as TipoPessoa }))}
-                className="clientes-select"
-                variant="modal"
-                disabled={salvando || excluindoId != null}
-              >
-                <option value="PF">Pessoa Física</option>
-                <option value="PJ">Pessoa Jurídica</option>
-              </FieldControl>
-              <label className="clientes-label" htmlFor="cf-razao">
-                Nome / Razão social
-              </label>
-              <FieldControl
-                id="cf-razao"
-                value={form.razaoSocialOuNome}
-                onChange={(e) => setForm((f) => ({ ...f, razaoSocialOuNome: e.target.value }))}
-                className="clientes-input"
-                variant="modal"
-                disabled={salvando || excluindoId != null}
-              />
-              <label className="clientes-label" htmlFor="cf-fantasia">
-                Nome fantasia
-              </label>
-              <FieldControl
-                id="cf-fantasia"
-                value={form.nomeFantasia}
-                onChange={(e) => setForm((f) => ({ ...f, nomeFantasia: e.target.value }))}
-                className="clientes-input"
-                variant="modal"
-                disabled={salvando || excluindoId != null}
-              />
-              <label className="clientes-label" htmlFor="cf-documento">
-                Documento
-              </label>
-              <FieldControl
-                id="cf-documento"
-                value={form.documento}
-                onChange={(e) => setForm((f) => ({ ...f, documento: e.target.value }))}
-                className="clientes-input"
-                variant="modal"
-                disabled={salvando || excluindoId != null}
-              />
-            </div>
+        <ModalSection title="Identificação" titleId="cliente-modal-sec-ident">
+          <FormField label="Tipo de pessoa" htmlFor="cf-tipo">
+            <FieldControl
+              as="select"
+              id="cf-tipo"
+              value={form.tipoPessoa}
+              onChange={(e) => setForm((f) => ({ ...f, tipoPessoa: e.target.value as TipoPessoa }))}
+              className="clientes-select"
+              variant="modal"
+              disabled={salvando || excluindoId != null}
+            >
+              <option value="PF">Pessoa Física</option>
+              <option value="PJ">Pessoa Jurídica</option>
+            </FieldControl>
+          </FormField>
+          <FormField label="Nome / Razão social" htmlFor="cf-razao">
+            <FieldControl
+              id="cf-razao"
+              value={form.razaoSocialOuNome}
+              onChange={(e) => setForm((f) => ({ ...f, razaoSocialOuNome: e.target.value }))}
+              className="clientes-input"
+              variant="modal"
+              disabled={salvando || excluindoId != null}
+            />
+          </FormField>
+          <FormField label="Nome fantasia" htmlFor="cf-fantasia">
+            <FieldControl
+              id="cf-fantasia"
+              value={form.nomeFantasia}
+              onChange={(e) => setForm((f) => ({ ...f, nomeFantasia: e.target.value }))}
+              className="clientes-input"
+              variant="modal"
+              disabled={salvando || excluindoId != null}
+            />
+          </FormField>
+          <FormField label="Documento" htmlFor="cf-documento">
+            <FieldControl
+              id="cf-documento"
+              value={form.documento}
+              onChange={(e) => setForm((f) => ({ ...f, documento: e.target.value }))}
+              className="clientes-input"
+              variant="modal"
+              disabled={salvando || excluindoId != null}
+            />
+          </FormField>
+        </ModalSection>
 
-            <div className="clientes-modal-section">
-              <h3 className="clientes-modal-section-title">Contato e endereço</h3>
-              <label className="clientes-label" htmlFor="cf-email">
-                E-mail
-              </label>
+        <ModalSection title="Contato e endereço" titleId="cliente-modal-sec-contato">
+          <FormField label="E-mail" htmlFor="cf-email">
+            <FieldControl
+              id="cf-email"
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              className="clientes-input"
+              variant="modal"
+              disabled={salvando || excluindoId != null}
+            />
+          </FormField>
+          <FormField label="Telefone" htmlFor="cf-telefone">
+            <FieldControl
+              id="cf-telefone"
+              value={form.telefone}
+              onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
+              className="clientes-input"
+              variant="modal"
+              disabled={salvando || excluindoId != null}
+            />
+          </FormField>
+          <FormField label="Logradouro" htmlFor="cf-logradouro">
+            <FieldControl
+              id="cf-logradouro"
+              value={form.enderecoLogradouro}
+              onChange={(e) => setForm((f) => ({ ...f, enderecoLogradouro: e.target.value }))}
+              className="clientes-input"
+              variant="modal"
+              disabled={salvando || excluindoId != null}
+            />
+          </FormField>
+          <ModalFormGrid>
+            <FormField label="Cidade" htmlFor="cf-cidade">
               <FieldControl
-                id="cf-email"
-                value={form.email}
-                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                id="cf-cidade"
+                value={form.enderecoCidade}
+                onChange={(e) => setForm((f) => ({ ...f, enderecoCidade: e.target.value }))}
                 className="clientes-input"
                 variant="modal"
                 disabled={salvando || excluindoId != null}
               />
-              <label className="clientes-label" htmlFor="cf-telefone">
-                Telefone
-              </label>
+            </FormField>
+            <FormField label="UF" htmlFor="cf-uf">
               <FieldControl
-                id="cf-telefone"
-                value={form.telefone}
-                onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
+                id="cf-uf"
+                value={form.enderecoUf}
+                onChange={(e) => setForm((f) => ({ ...f, enderecoUf: e.target.value }))}
                 className="clientes-input"
                 variant="modal"
                 disabled={salvando || excluindoId != null}
+                maxLength={2}
               />
-              <label className="clientes-label" htmlFor="cf-logradouro">
-                Logradouro
-              </label>
-              <FieldControl
-                id="cf-logradouro"
-                value={form.enderecoLogradouro}
-                onChange={(e) => setForm((f) => ({ ...f, enderecoLogradouro: e.target.value }))}
-                className="clientes-input"
-                variant="modal"
-                disabled={salvando || excluindoId != null}
-              />
-              <div className="clientes-modal-grid-2">
-                <div>
-                  <label className="clientes-label" htmlFor="cf-cidade">
-                    Cidade
-                  </label>
-                  <FieldControl
-                    id="cf-cidade"
-                    value={form.enderecoCidade}
-                    onChange={(e) => setForm((f) => ({ ...f, enderecoCidade: e.target.value }))}
-                    className="clientes-input"
-                    variant="modal"
-                    disabled={salvando || excluindoId != null}
-                  />
-                </div>
-                <div>
-                  <label className="clientes-label" htmlFor="cf-uf">
-                    UF
-                  </label>
-                  <FieldControl
-                    id="cf-uf"
-                    value={form.enderecoUf}
-                    onChange={(e) => setForm((f) => ({ ...f, enderecoUf: e.target.value }))}
-                    className="clientes-input"
-                    variant="modal"
-                    disabled={salvando || excluindoId != null}
-                    maxLength={2}
-                  />
-                </div>
-              </div>
-              <label className="clientes-label" htmlFor="cf-cep">
-                CEP
-              </label>
-              <FieldControl
-                id="cf-cep"
-                value={form.enderecoCep}
-                onChange={(e) => setForm((f) => ({ ...f, enderecoCep: e.target.value }))}
-                className="clientes-input"
-                variant="modal"
-                disabled={salvando || excluindoId != null}
-              />
-              <label className="clientes-label" htmlFor="cf-observacoes">
-                Observações
-              </label>
-              <FieldControl
-                as="textarea"
-                id="cf-observacoes"
-                value={form.observacoes}
-                onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))}
-                className="clientes-input clientes-textarea"
-                variant="modal"
-                disabled={salvando || excluindoId != null}
-              />
-            </div>
+            </FormField>
+          </ModalFormGrid>
+          <FormField label="CEP" htmlFor="cf-cep">
+            <FieldControl
+              id="cf-cep"
+              value={form.enderecoCep}
+              onChange={(e) => setForm((f) => ({ ...f, enderecoCep: e.target.value }))}
+              className="clientes-input"
+              variant="modal"
+              disabled={salvando || excluindoId != null}
+            />
+          </FormField>
+          <FormField label="Observações" htmlFor="cf-observacoes">
+            <FieldControl
+              as="textarea"
+              id="cf-observacoes"
+              value={form.observacoes}
+              onChange={(e) => setForm((f) => ({ ...f, observacoes: e.target.value }))}
+              className="clientes-input clientes-textarea"
+              variant="modal"
+              disabled={salvando || excluindoId != null}
+            />
+          </FormField>
+        </ModalSection>
 
-            <div className="clientes-modal-actions">
-              {modo === "editar" && editandoId != null ? (
-                <GhostButton variant="danger" onClick={() => setConfirmarRemocaoId(editandoId)} disabled={salvando || excluindoId != null}>
-                  Remover
-                </GhostButton>
-              ) : null}
-              <GhostButton
-                onClick={() => {
-                  setModalAberto(false);
-                  setConfirmarRemocaoId(null);
-                }}
-                disabled={salvando || excluindoId != null}
-              >
-                Cancelar
-              </GhostButton>
-              <PrimaryButton onClick={() => void salvar()} disabled={salvando || excluindoId != null}>
-                {salvando ? "Salvando..." : "Salvar"}
-              </PrimaryButton>
-            </div>
+        <ModalFooter>
+          {modo === "editar" && editandoId != null ? (
+            <GhostButton variant="danger" onClick={() => setConfirmarRemocaoId(editandoId)} disabled={salvando || excluindoId != null}>
+              Remover
+            </GhostButton>
+          ) : null}
+          <GhostButton
+            onClick={() => {
+              setModalAberto(false);
+              setConfirmarRemocaoId(null);
+            }}
+            disabled={salvando || excluindoId != null}
+          >
+            Cancelar
+          </GhostButton>
+          <PrimaryButton onClick={() => void salvar()} disabled={salvando || excluindoId != null}>
+            {salvando ? "Salvando..." : "Salvar"}
+          </PrimaryButton>
+        </ModalFooter>
       </FormDialog>
 
       <ConfirmDialog

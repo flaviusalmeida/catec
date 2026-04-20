@@ -32,143 +32,24 @@
   width: 100%;
 }
 
-.clientes-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
-  table-layout: fixed;
-}
-
-.clientes-table thead {
-  background: linear-gradient(180deg, #f1f5f9 0%, #e8eef4 100%);
-}
-
-.clientes-table th,
-.clientes-table td {
-  text-align: left;
-  padding: 0.65rem 1rem;
-  border-bottom: 1px solid #eef2f6;
-  vertical-align: middle;
-}
-
-.clientes-table th {
-  color: #334155;
-  font-weight: 700;
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.clientes-table th:nth-child(1) {
+/* Larguras de colunas específicas da tabela de clientes (base: `admin-crud-table`). */
+.clientes-data-table th:nth-child(1) {
   width: 32%;
 }
-.clientes-table th:nth-child(2) {
+.clientes-data-table th:nth-child(2) {
   width: 12%;
 }
-.clientes-table th:nth-child(3) {
+.clientes-data-table th:nth-child(3) {
   width: 22%;
 }
-.clientes-table th:nth-child(4) {
+.clientes-data-table th:nth-child(4) {
   width: 22%;
 }
-.clientes-table th:nth-child(5) {
+.clientes-data-table th:nth-child(5) {
   width: 12%;
-}
-
-/* Especificidade acima de `.clientes-table th, td { text-align: left }` */
-.clientes-table th.clientes-th-actions,
-.clientes-table td.clientes-td-actions {
-  text-align: center;
-}
-
-.clientes-table-data-row {
-  cursor: pointer;
-}
-
-.clientes-table-data-row:hover {
-  background: #f0f9ff;
-}
-
-.clientes-table-data-row--alt {
-  background: #fafbfc;
-}
-
-.clientes-table-data-row--alt:hover {
-  background: #eff6ff;
-}
-
-.clientes-td-nome {
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.clientes-td-email {
-  color: #64748b;
-  font-size: 0.8125rem;
-  word-break: break-word;
-}
-
-.clientes-filter-empty {
-  margin: 0;
-  padding: 2.25rem 1rem;
-  text-align: center;
-  font-size: 0.9rem;
-  color: #64748b;
-}
-
-.clientes-modal-section {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #eef2f6;
-}
-
-.clientes-modal-section:first-of-type {
-  margin-top: 0.35rem;
-  padding-top: 0;
-  border-top: none;
-}
-
-.clientes-modal-section-title {
-  margin: 0 0 0.45rem;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: #64748b;
-}
-
-.clientes-label {
-  display: block;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #334155;
-  margin-top: 0.5rem;
-  margin-bottom: 0.28rem;
-}
-
-.clientes-modal-grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 120px;
-  gap: 0.75rem;
 }
 
 .clientes-textarea {
   min-height: 84px;
   resize: vertical;
-}
-
-.clientes-modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 0.35rem;
-  margin-top: 1rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid #eef2f6;
-}
-
-@media (max-width: 700px) {
-  .clientes-modal-grid-2 {
-    grid-template-columns: 1fr;
-  }
 }
