@@ -43,24 +43,6 @@
   line-height: 1.45;
 }
 
-.clientes-btn-cta {
-  flex-shrink: 0;
-  padding: 0.8rem 1.5rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-  border-radius: 10px;
-  box-shadow: 0 4px 14px rgba(0, 45, 75, 0.28);
-}
-
-.clientes-btn-cta:hover:not(:disabled) {
-  box-shadow: 0 6px 20px rgba(0, 45, 75, 0.35);
-  transform: translateY(-1px);
-}
-
-.clientes-btn-cta:active:not(:disabled) {
-  transform: translateY(0);
-}
-
 .clientes-card {
   background: #fff;
   border-radius: 14px;

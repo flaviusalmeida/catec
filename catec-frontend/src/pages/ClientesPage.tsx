@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../api/http";
 import { useAuth } from "../auth/AuthContext";
 import FieldControl from "../components/form/FieldControl";
+import PrimaryCtaButton from "../components/buttons/PrimaryCtaButton";
 import RowEditButton from "../components/table/RowEditButton";
 import "./ClientesPage.css";
 
@@ -273,9 +274,7 @@ export default function ClientesPage() {
             <h1 className="clientes-title">Clientes</h1>
             <p className="clientes-subtitle">Gestão de clientes</p>
           </div>
-          <button type="button" className="clientes-btn-primary clientes-btn-cta" onClick={abrirCriar}>
-            Novo cliente
-          </button>
+          <PrimaryCtaButton onClick={abrirCriar}>Novo cliente</PrimaryCtaButton>
         </header>
 
         {erro && !modalAberto ? <div className="clientes-alert clientes-alert--error">{erro}</div> : null}

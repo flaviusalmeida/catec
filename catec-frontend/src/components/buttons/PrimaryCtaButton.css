@@ -1,0 +1,28 @@
+/* Mesmas métricas do `.clientes-btn-primary` — ação principal no toolbar sem variante “CTA” grande. */
+.primary-cta-button {
+  flex-shrink: 0;
+  padding: 0.65rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #002d4b;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.primary-cta-button:hover:not(:disabled) {
+  background: #001f33;
+}
+
+.primary-cta-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.primary-cta-button:focus-visible {
+  outline: 2px solid #002d4b;
+  outline-offset: 2px;
+}
