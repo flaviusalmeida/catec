@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import EmptyState from "../ui/EmptyState";
+import LoadingBlock from "../ui/LoadingBlock";
 import "./DataTableSection.css";
 
 export type DataTableSectionProps = {
@@ -33,10 +34,7 @@ export default function DataTableSection({
   return (
     <section className={sectionClass} aria-busy={loading}>
       {loading ? (
-        <div className="data-table-section__loading">
-          <div className="data-table-section__spinner" aria-hidden />
-          <p className="data-table-section__loading-text">{loadingLabel}</p>
-        </div>
+        <LoadingBlock label={loadingLabel} />
       ) : empty ? (
         <EmptyState title={emptyTitle} description={emptyDescription} variant="standalone" />
       ) : (

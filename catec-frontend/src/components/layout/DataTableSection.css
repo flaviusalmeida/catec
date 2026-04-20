@@ -9,38 +9,6 @@
   overflow: hidden;
 }
 
-.data-table-section__loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  min-height: 14rem;
-  padding: 2.5rem 1rem;
-}
-
-.data-table-section__spinner {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 3px solid #e2e8f0;
-  border-top-color: #002d4b;
-  animation: data-table-section-spin 0.75s linear infinite;
-}
-
-@keyframes data-table-section-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.data-table-section__loading-text {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #475569;
-}
-
 .data-table-section__wrap {
   overflow-x: auto;
   transition: opacity 0.22s ease;
