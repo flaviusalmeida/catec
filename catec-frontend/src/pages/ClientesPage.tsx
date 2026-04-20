@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../api/http";
 import { useAuth } from "../auth/AuthContext";
 import FieldControl from "../components/form/FieldControl";
-import PrimaryCtaButton from "../components/buttons/PrimaryCtaButton";
+import GhostButton from "../components/buttons/GhostButton";
+import PrimaryButton from "../components/buttons/PrimaryButton";
 import DataTableSection from "../components/layout/DataTableSection";
 import ConfirmDialog from "../components/layout/ConfirmDialog";
 import AccessDeniedCard from "../components/ui/AccessDeniedCard";
@@ -274,7 +275,11 @@ export default function ClientesPage() {
         <PageToolbar
           title="Clientes"
           subtitle="Gestão de clientes"
-          actions={<PrimaryCtaButton onClick={abrirCriar}>Novo cliente</PrimaryCtaButton>}
+          actions={
+            <PrimaryButton variant="toolbar" onClick={abrirCriar}>
+              Novo cliente
+            </PrimaryButton>
+          }
         />
 
         {erro && !modalAberto ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
@@ -536,18 +541,11 @@ export default function ClientesPage() {
 
             <div className="clientes-modal-actions">
               {modo === "editar" && editandoId != null ? (
-                <button
-                  type="button"
-                  className="clientes-btn-ghost clientes-btn-danger-ghost"
-                  onClick={() => setConfirmarRemocaoId(editandoId)}
-                  disabled={salvando || excluindoId != null}
-                >
+                <GhostButton variant="danger" onClick={() => setConfirmarRemocaoId(editandoId)} disabled={salvando || excluindoId != null}>
                   Remover
-                </button>
+                </GhostButton>
               ) : null}
-              <button
-                type="button"
-                className="clientes-btn-ghost"
+              <GhostButton
                 onClick={() => {
                   setModalAberto(false);
                   setConfirmarRemocaoId(null);
@@ -555,15 +553,10 @@ export default function ClientesPage() {
                 disabled={salvando || excluindoId != null}
               >
                 Cancelar
-              </button>
-              <button
-                type="button"
-                className="clientes-btn-primary"
-                onClick={() => void salvar()}
-                disabled={salvando || excluindoId != null}
-              >
+              </GhostButton>
+              <PrimaryButton onClick={() => void salvar()} disabled={salvando || excluindoId != null}>
                 {salvando ? "Salvando..." : "Salvar"}
-              </button>
+              </PrimaryButton>
             </div>
       </FormDialog>
 
@@ -575,17 +568,16 @@ export default function ClientesPage() {
         onBackdropClick={() => excluindoId == null && setConfirmarRemocaoId(null)}
         actions={
           <>
-            <button type="button" className="clientes-btn-ghost" onClick={() => setConfirmarRemocaoId(null)} disabled={excluindoId != null}>
+            <GhostButton onClick={() => setConfirmarRemocaoId(null)} disabled={excluindoId != null}>
               Cancelar
-            </button>
-            <button
-              type="button"
-              className="clientes-btn-primary clientes-btn-danger"
+            </GhostButton>
+            <PrimaryButton
+              variant="danger"
               onClick={() => confirmarRemocaoId != null && void remover(confirmarRemocaoId)}
               disabled={excluindoId != null}
             >
               {excluindoId != null ? "Removendo..." : "Confirmar"}
-            </button>
+            </PrimaryButton>
           </>
         }
       />

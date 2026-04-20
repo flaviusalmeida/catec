@@ -26,19 +26,6 @@
   color: #64748b;
 }
 
-.filters-card__clear {
-  border: none;
-  background: none;
-  padding: 0.25rem 0;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #0369a1;
-  cursor: pointer;
-  font-family: inherit;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
 .filters-card__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

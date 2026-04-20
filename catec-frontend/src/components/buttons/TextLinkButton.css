@@ -1,0 +1,27 @@
+.text-link-button {
+  border: none;
+  background: none;
+  padding: 0.25rem 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #0369a1;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.text-link-button:hover:not(:disabled) {
+  color: #075985;
+}
+
+.text-link-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.text-link-button:focus-visible {
+  outline: 2px solid #0369a1;
+  outline-offset: 2px;
+  border-radius: 2px;
+}

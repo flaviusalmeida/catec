@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import TextLinkButton from "../buttons/TextLinkButton";
 import "./FiltersCard.css";
 
 export type FiltersCardProps = {
@@ -30,9 +31,9 @@ export default function FiltersCard({
         <h2 id={headingId} className="filters-card__title">
           {title}
         </h2>
-        <button type="button" className="filters-card__clear" onClick={onClear}>
+        <TextLinkButton onClick={onClear}>
           {clearLabel}
-        </button>
+        </TextLinkButton>
       </div>
       <div className="filters-card__grid">{children}</div>
     </section>

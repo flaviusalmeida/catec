@@ -1,0 +1,42 @@
+.primary-button {
+  padding: 0.65rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #002d4b;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+
+.primary-button--toolbar {
+  flex-shrink: 0;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: #001f33;
+}
+
+.primary-button--danger {
+  background: #991b1b;
+}
+
+.primary-button--danger:hover:not(:disabled) {
+  background: #7f1d1d;
+}
+
+.primary-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.primary-button:focus-visible {
+  outline: 2px solid #002d4b;
+  outline-offset: 2px;
+}
+
+.primary-button--danger:focus-visible {
+  outline-color: #991b1b;
+}

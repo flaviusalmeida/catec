@@ -116,47 +116,6 @@
   color: #64748b;
 }
 
-.clientes-btn-primary {
-  padding: 0.65rem 1rem;
-  border: none;
-  border-radius: 8px;
-  background: #002d4b;
-  color: #fff;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s ease;
-}
-
-.clientes-btn-primary:hover:not(:disabled) {
-  background: #001f33;
-}
-
-.clientes-btn-primary:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
-
-.clientes-btn-ghost {
-  padding: 0.55rem 0.95rem;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: #64748b;
-  font-weight: 600;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.clientes-btn-danger-ghost {
-  color: #991b1b;
-}
-
-.clientes-btn-danger {
-  background: #991b1b;
-}
-
 .clientes-modal-section {
   margin-top: 0.75rem;
   padding-top: 0.75rem;

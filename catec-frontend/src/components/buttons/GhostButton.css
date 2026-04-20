@@ -1,0 +1,29 @@
+.ghost-button {
+  padding: 0.55rem 0.95rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.ghost-button--danger {
+  color: #991b1b;
+}
+
+.ghost-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.ghost-button:focus-visible {
+  outline: 2px solid #002d4b;
+  outline-offset: 2px;
+}
+
+.ghost-button--danger:focus-visible {
+  outline-color: #991b1b;
+}
