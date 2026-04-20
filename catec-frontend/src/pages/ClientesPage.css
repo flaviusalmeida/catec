@@ -346,44 +346,6 @@
   color: #64748b;
 }
 
-.clientes-btn-edit {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  min-height: 2.25rem;
-  min-width: 5.5rem;
-  padding: 0.45rem 0.85rem;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background: #fff;
-  color: #002d4b;
-  font-size: 0.8rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition:
-    background 0.12s ease,
-    border-color 0.12s ease,
-    box-shadow 0.12s ease;
-}
-
-.clientes-btn-edit:hover {
-  background: #002d4b;
-  color: #fff;
-  border-color: #002d4b;
-  box-shadow: 0 2px 8px rgba(0, 45, 75, 0.2);
-}
-
-.clientes-btn-edit:focus-visible {
-  outline: 2px solid #002d4b;
-  outline-offset: 2px;
-}
-
-.clientes-btn-edit-icon {
-  flex-shrink: 0;
-}
-
 .clientes-btn-primary {
   padding: 0.65rem 1rem;
   border: none;
