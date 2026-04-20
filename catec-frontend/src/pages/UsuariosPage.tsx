@@ -2,6 +2,22 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "rea
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../api/http";
 import { useAuth } from "../auth/AuthContext";
+import GhostButton from "../components/buttons/GhostButton";
+import PrimaryButton from "../components/buttons/PrimaryButton";
+import FieldControl from "../components/form/FieldControl";
+import FormField from "../components/form/FormField";
+import ConfirmDialog from "../components/layout/ConfirmDialog";
+import DataTableSection from "../components/layout/DataTableSection";
+import FiltersCard from "../components/layout/FiltersCard";
+import FormDialog from "../components/layout/FormDialog";
+import ModalFooter from "../components/layout/ModalFooter";
+import ModalSection from "../components/layout/ModalSection";
+import PageToolbar from "../components/layout/PageToolbar";
+import RowEditButton from "../components/table/RowEditButton";
+import AccessDeniedCard from "../components/ui/AccessDeniedCard";
+import InlineAlert from "../components/ui/InlineAlert";
+import ToastAlert from "../components/ui/ToastAlert";
+import "../styles/admin-crud-table.css";
 import "./UsuariosPage.css";
 
 const PERFIS_OPCOES = [
@@ -108,27 +124,6 @@ function IconPerfilAjuda() {
         strokeLinejoin="round"
       />
       <line x1="12" y1="17" x2="12.01" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconEdit() {
-  return (
-    <svg className="usuarios-btn-edit-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
     </svg>
   );
 }
@@ -322,10 +317,11 @@ export default function UsuariosPage() {
     return (
       <div className="usuarios-page">
         <div className="usuarios-page-inner">
-          <div className="usuarios-card usuarios-card--denied">
-            <h1 className="usuarios-title">Usuários</h1>
-            <p>Seu perfil não inclui permissão de administrador técnico para esta tela.</p>
-          </div>
+          <AccessDeniedCard
+            titleId="usuarios-acesso-negado"
+            title="Usuários"
+            message="Seu perfil não inclui permissão de administrador técnico para esta tela."
+          />
         </div>
       </div>
     );
@@ -333,389 +329,306 @@ export default function UsuariosPage() {
 
   return (
     <div className="usuarios-page">
-      {sucesso ? (
-        <div className="usuarios-toast-wrap" role="status" aria-live="polite">
-          <div className="usuarios-alert usuarios-alert--success usuarios-alert--toast">
-            <span>{sucesso}</span>
-            <button
-              type="button"
-              className="usuarios-alert-dismiss usuarios-alert-dismiss--icon"
-              onClick={() => setSucesso(null)}
-              aria-label="Fechar notificação"
-              title="Fechar"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <ToastAlert
+        open={Boolean(sucesso)}
+        variant="success"
+        onDismiss={() => setSucesso(null)}
+        dismissAriaLabel="Fechar notificação"
+        dismissTitle="Fechar"
+      >
+        {sucesso}
+      </ToastAlert>
       <div className="usuarios-page-inner usuarios-page-stack">
-        <header className="usuarios-toolbar">
-          <div className="usuarios-toolbar-text">
-            <h1 className="usuarios-title">Usuários</h1>
-            <p className="usuarios-subtitle">Gestão de contas internas e perfis de acesso.</p>
-          </div>
-          <button type="button" className="usuarios-btn-primary usuarios-btn-cta" onClick={abrirCriar}>
-            Novo usuário
-          </button>
-        </header>
+        <PageToolbar
+          title="Usuários"
+          subtitle="Gestão de contas internas e perfis de acesso."
+          actions={
+            <PrimaryButton variant="toolbar" onClick={abrirCriar}>
+              Novo usuário
+            </PrimaryButton>
+          }
+        />
 
-        {erro && !modalAberto ? <div className="usuarios-alert usuarios-alert--error">{erro}</div> : null}
+        {erro && !modalAberto ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
 
-        <section className="usuarios-card usuarios-card--filters" aria-labelledby="usuarios-filtros-heading">
-          <div className="usuarios-filters-head">
-            <h2 id="usuarios-filtros-heading" className="usuarios-filters-title">
-              Filtros
-            </h2>
-            <button type="button" className="usuarios-link-clear" onClick={limparFiltros}>
-              Limpar filtros
-            </button>
+        <FiltersCard headingId="usuarios-filtros-heading" onClear={limparFiltros}>
+          <div>
+            <label className="usuarios-filter-label" htmlFor="flt-nome">
+              Nome
+            </label>
+            <FieldControl
+              id="flt-nome"
+              value={filtroNome}
+              onChange={(e) => setFiltroNome(e.target.value)}
+              variant="compact"
+              placeholder="Buscar por nome"
+              autoComplete="off"
+            />
           </div>
-          <div className="usuarios-filters-grid">
-            <div>
-              <label className="usuarios-filter-label" htmlFor="flt-nome">
-                Nome
-              </label>
-              <input
-                id="flt-nome"
-                className="usuarios-input usuarios-input--compact"
-                value={filtroNome}
-                onChange={(e) => setFiltroNome(e.target.value)}
-                placeholder="Buscar por nome"
-                autoComplete="off"
-              />
-            </div>
-            <div>
-              <label className="usuarios-filter-label" htmlFor="flt-email">
-                E-mail
-              </label>
-              <input
-                id="flt-email"
-                type="text"
-                className="usuarios-input usuarios-input--compact"
-                value={filtroEmail}
-                onChange={(e) => setFiltroEmail(e.target.value)}
-                placeholder="Buscar por e-mail"
-                autoComplete="off"
-              />
-            </div>
-            <div>
-              <label className="usuarios-filter-label" htmlFor="flt-perfil">
-                Perfil
-              </label>
-              <select
-                id="flt-perfil"
-                className="usuarios-select usuarios-select--compact"
-                value={filtroPerfil}
-                onChange={(e) => setFiltroPerfil(e.target.value)}
-              >
-                <option value="">Todos</option>
-                {PERFIS_OPCOES.map((p) => (
-                  <option key={p.valor} value={p.valor}>
-                    {p.rotulo}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="usuarios-filter-label" htmlFor="flt-status">
-                Status
-              </label>
-              <select
-                id="flt-status"
-                className="usuarios-select usuarios-select--compact"
-                value={filtroStatus}
-                onChange={(e) => setFiltroStatus(e.target.value as "" | "ativo" | "inativo")}
-              >
-                <option value="">Todos</option>
-                <option value="ativo">Ativo</option>
-                <option value="inativo">Inativo</option>
-              </select>
-            </div>
+          <div>
+            <label className="usuarios-filter-label" htmlFor="flt-email">
+              E-mail
+            </label>
+            <FieldControl
+              id="flt-email"
+              type="text"
+              value={filtroEmail}
+              onChange={(e) => setFiltroEmail(e.target.value)}
+              variant="compact"
+              placeholder="Buscar por e-mail"
+              autoComplete="off"
+            />
           </div>
-        </section>
-
-        <section className="usuarios-card usuarios-card--table" aria-busy={carregando}>
-          {carregando ? (
-            <div className="usuarios-loading">
-              <div className="usuarios-spinner" aria-hidden />
-              <p className="usuarios-loading-text">Carregando lista…</p>
-            </div>
-          ) : lista.length === 0 ? (
-            <div className="usuarios-empty usuarios-empty--standalone" role="status">
-              <p className="usuarios-empty-title">Nenhum usuário</p>
-              <p className="usuarios-empty-text">Ainda não há contas cadastradas no sistema.</p>
-            </div>
-          ) : (
-            <div
-              className={`usuarios-table-wrap${filtrosDigitacaoPendentes ? " usuarios-table-wrap--filter-pending" : ""}`}
+          <div>
+            <label className="usuarios-filter-label" htmlFor="flt-perfil">
+              Perfil
+            </label>
+            <FieldControl
+              as="select"
+              id="flt-perfil"
+              value={filtroPerfil}
+              onChange={(e) => setFiltroPerfil(e.target.value)}
+              variant="compact"
             >
-              <table className="usuarios-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Nome</th>
-                    <th scope="col">E-mail</th>
-                    <th scope="col">Perfis</th>
-                    <th scope="col">Status</th>
-                    <th scope="col" className="usuarios-th-actions">
-                      Ações
-                    </th>
+              <option value="">Todos</option>
+              {PERFIS_OPCOES.map((p) => (
+                <option key={p.valor} value={p.valor}>
+                  {p.rotulo}
+                </option>
+              ))}
+            </FieldControl>
+          </div>
+          <div>
+            <label className="usuarios-filter-label" htmlFor="flt-status">
+              Status
+            </label>
+            <FieldControl
+              as="select"
+              id="flt-status"
+              value={filtroStatus}
+              onChange={(e) => setFiltroStatus(e.target.value as "" | "ativo" | "inativo")}
+              variant="compact"
+            >
+              <option value="">Todos</option>
+              <option value="ativo">Ativo</option>
+              <option value="inativo">Inativo</option>
+            </FieldControl>
+          </div>
+        </FiltersCard>
+
+        <DataTableSection
+          loading={carregando}
+          loadingLabel="Carregando lista…"
+          empty={lista.length === 0}
+          emptyTitle="Nenhum usuário"
+          emptyDescription="Ainda não há contas cadastradas no sistema."
+          filterPending={filtrosDigitacaoPendentes}
+        >
+          <table className="admin-crud-table usuarios-data-table">
+            <thead>
+              <tr>
+                <th scope="col">Nome</th>
+                <th scope="col">E-mail</th>
+                <th scope="col">Perfis</th>
+                <th scope="col">Status</th>
+                <th scope="col" className="admin-crud-table__th-actions">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {listaFiltrada.length === 0 ? (
+                <tr className="admin-crud-table__empty-row">
+                  <td colSpan={5}>
+                    <p className="admin-crud-table__filter-msg" role="status">
+                      Não há usuários que correspondam aos filtros.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                listaFiltrada.map((u, idx) => (
+                  <tr
+                    key={u.id}
+                    className={`admin-crud-table__row${idx % 2 === 1 ? " admin-crud-table__row--alt" : ""}`}
+                    onClick={() => abrirEditar(u)}
+                  >
+                    <td className="admin-crud-table__cell-primary">{u.nome}</td>
+                    <td className="admin-crud-table__cell-muted">{u.email}</td>
+                    <td className="usuarios-perfis">{u.perfis.join(", ")}</td>
+                    <td>
+                      <div className="usuarios-status-badges">
+                        {u.requerTrocaSenha ? (
+                          <span className="usuarios-badge usuarios-badge--pendente">Troca senha</span>
+                        ) : u.ativo ? (
+                          <span className="usuarios-badge usuarios-badge--ativo">Ativo</span>
+                        ) : (
+                          <span className="usuarios-badge usuarios-badge--inativo">Inativo</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="admin-crud-table__td-actions">
+                      <RowEditButton ariaLabel={`Editar ${u.nome}`} onClick={() => abrirEditar(u)} />
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {listaFiltrada.length === 0 ? (
-                    <tr className="usuarios-table-empty-row">
-                      <td colSpan={5}>
-                        <p className="usuarios-filter-empty" role="status">
-                          Não há usuários que correspondam aos filtros.
-                        </p>
-                      </td>
-                    </tr>
-                  ) : (
-                    listaFiltrada.map((u, idx) => (
-                      <tr
-                        key={u.id}
-                        className={`usuarios-table-data-row${idx % 2 === 1 ? " usuarios-table-data-row--alt" : ""}`}
-                        onClick={() => abrirEditar(u)}
-                      >
-                        <td className="usuarios-td-nome">{u.nome}</td>
-                        <td className="usuarios-td-email">{u.email}</td>
-                        <td className="usuarios-perfis">{u.perfis.join(", ")}</td>
-                        <td>
-                          <div className="usuarios-status-badges">
-                            {u.requerTrocaSenha ? (
-                              <span className="usuarios-badge usuarios-badge--pendente">Troca senha</span>
-                            ) : u.ativo ? (
-                              <span className="usuarios-badge usuarios-badge--ativo">Ativo</span>
-                            ) : (
-                              <span className="usuarios-badge usuarios-badge--inativo">Inativo</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="usuarios-td-actions">
-                          <button
-                            type="button"
-                            className="usuarios-btn-edit"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              abrirEditar(u);
-                            }}
-                            aria-label={`Editar ${u.nome}`}
-                          >
-                            <IconEdit />
-                            <span>Editar</span>
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+                ))
+              )}
+            </tbody>
+          </table>
+        </DataTableSection>
       </div>
 
-      {modalAberto ? (
-        <div
-          className="usuarios-modal-backdrop"
-          role="presentation"
-          onClick={() => {
-            if (salvando || resetandoSenha) return;
-            setModalAberto(false);
-            setConfirmarResetAberto(false);
-          }}
-        >
-          <div
-            className="usuarios-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="usuarios-modal-titulo"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 id="usuarios-modal-titulo" className="usuarios-modal-title">
-              {modo === "criar" ? "Novo usuário" : "Editar usuário"}
-            </h2>
-            {erro ? <div className="usuarios-alert usuarios-alert--error">{erro}</div> : null}
+      <FormDialog
+        open={modalAberto}
+        titleId="usuarios-modal-titulo"
+        title={modo === "criar" ? "Novo usuário" : "Editar usuário"}
+        onBackdropClick={() => {
+          if (salvando || resetandoSenha) return;
+          setModalAberto(false);
+          setConfirmarResetAberto(false);
+        }}
+      >
+        {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
 
-            <div className="usuarios-modal-section">
-              <h3 className="usuarios-modal-section-title">Dados básicos</h3>
-              <label className="usuarios-label" htmlFor="uf-nome">
-                Nome
-              </label>
-              <input
-                id="uf-nome"
-                className="usuarios-input usuarios-input--modal"
-                value={form.nome}
-                onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-                disabled={salvando}
-              />
-              <label className="usuarios-label" htmlFor="uf-email">
-                E-mail
-              </label>
-              <input
-                id="uf-email"
-                type="email"
-                className="usuarios-input usuarios-input--modal"
-                value={form.email}
-                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                disabled={salvando}
-              />
-              <label className="usuarios-label" htmlFor="uf-tel">
-                Telefone
-              </label>
-              <input
-                id="uf-tel"
-                className="usuarios-input usuarios-input--modal"
-                value={form.telefone}
-                onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
-                disabled={salvando}
-              />
-            </div>
+        <ModalSection title="Dados básicos" titleId="usuario-modal-sec-basico">
+          <FormField label="Nome" htmlFor="uf-nome">
+            <FieldControl
+              id="uf-nome"
+              value={form.nome}
+              onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
+              variant="modal"
+              disabled={salvando}
+            />
+          </FormField>
+          <FormField label="E-mail" htmlFor="uf-email">
+            <FieldControl
+              id="uf-email"
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              variant="modal"
+              disabled={salvando}
+            />
+          </FormField>
+          <FormField label="Telefone" htmlFor="uf-tel">
+            <FieldControl
+              id="uf-tel"
+              value={form.telefone}
+              onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
+              variant="modal"
+              disabled={salvando}
+            />
+          </FormField>
+        </ModalSection>
 
-            <div className="usuarios-modal-section">
-              <h3 className="usuarios-modal-section-title">Acesso</h3>
-              {modo === "criar" ? (
-                <p className="usuarios-criar-acesso-info">
-                  A conta é criada <strong>inativa</strong>. O sistema gera uma senha provisória e envia por e-mail.
-                  No primeiro acesso o usuário define uma senha forte e a conta fica ativa.
-                </p>
-              ) : (
-                <>
-                  {!contaPendenteTrocaSenha ? (
-                    <label className="usuarios-toggle" htmlFor="uf-ativo">
-                      <input
-                        id="uf-ativo"
-                        type="checkbox"
-                        className="usuarios-toggle-input"
-                        checked={form.ativo}
-                        onChange={(e) => {
-                          setForm((f) => ({ ...f, ativo: e.target.checked }));
-                          setConfirmarResetAberto(false);
-                        }}
-                        disabled={salvando}
-                      />
-                      <span className="usuarios-toggle-ui" aria-hidden />
-                      <span className="usuarios-toggle-copy">
-                        <span className="usuarios-toggle-title">Conta ativa</span>
-                      </span>
-                    </label>
-                  ) : null}
-                  {form.ativo ? (
-                    <button
-                      type="button"
-                      className="usuarios-btn-reset-senha"
-                      onClick={() => setConfirmarResetAberto(true)}
-                      disabled={salvando || resetandoSenha}
-                    >
-                      {resetandoSenha ? "A enviar…" : "Redefinir senha"}
-                    </button>
-                  ) : null}
-                </>
-              )}
-            </div>
-
-            <div className="usuarios-modal-section">
-              <h3 className="usuarios-modal-section-title">Permissões</h3>
-              <div className="usuarios-perfis-modal-grid">
-                {PERFIS_OPCOES.map((p) => {
-                  const popId = `catec-perfil-pop-${p.valor}`;
-                  return (
-                    <div key={p.valor} className="usuarios-perfil-option">
-                      <label className="usuarios-perfil-option-main" htmlFor={`uf-perfil-${p.valor}`}>
-                        <input
-                          id={`uf-perfil-${p.valor}`}
-                          type="checkbox"
-                          className="usuarios-perfil-option-input"
-                          checked={form.perfis.has(p.valor)}
-                          onChange={() => togglePerfil(p.valor)}
-                          disabled={salvando}
-                        />
-                        <span className="usuarios-perfil-option-title">{p.rotulo}</span>
-                      </label>
-                      <button
-                        type="button"
-                        className="usuarios-perfil-help"
-                        popoverTarget={popId}
-                        aria-label={`O que é o perfil ${p.rotulo}?`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <IconPerfilAjuda />
-                      </button>
-                      <div id={popId} className="usuarios-perfil-popover" popover="auto">
-                        <p className="usuarios-perfil-popover-text">{p.detalhe}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="usuarios-modal-actions">
-              <button
-                type="button"
-                className="usuarios-btn-ghost"
-                onClick={() => {
-                  setModalAberto(false);
-                  setConfirmarResetAberto(false);
-                }}
-                disabled={salvando || resetandoSenha}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="usuarios-btn-primary"
-                onClick={() => void salvar()}
-                disabled={salvando || resetandoSenha}
-              >
-                {salvando ? "Salvando…" : "Salvar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-      {confirmarResetAberto ? (
-        <div
-          className="usuarios-modal-backdrop"
-          role="presentation"
-          onClick={() => !resetandoSenha && setConfirmarResetAberto(false)}
-        >
-          <div
-            className="usuarios-modal usuarios-modal--confirm"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="usuarios-confirm-reset-titulo"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 id="usuarios-confirm-reset-titulo" className="usuarios-modal-title">
-              Confirmar redefinição
-            </h2>
-            <p className="usuarios-confirm-copy">
-              Será gerada uma nova senha provisória, a conta ficará inativa até o próximo acesso e o usuário receberá
-              um e-mail. Continuar?
+        <ModalSection title="Acesso" titleId="usuario-modal-sec-acesso">
+          {modo === "criar" ? (
+            <p className="usuarios-criar-acesso-info">
+              A conta é criada <strong>inativa</strong>. O sistema gera uma senha provisória e envia por e-mail. No primeiro acesso o
+              usuário define uma senha forte e a conta fica ativa.
             </p>
-            <div className="usuarios-modal-actions">
-              <button
-                type="button"
-                className="usuarios-btn-ghost"
-                onClick={() => setConfirmarResetAberto(false)}
-                disabled={resetandoSenha}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="usuarios-btn-primary usuarios-btn-danger"
-                onClick={() => void solicitarResetSenha()}
-                disabled={resetandoSenha}
-              >
-                {resetandoSenha ? "A enviar…" : "Confirmar"}
-              </button>
-            </div>
+          ) : (
+            <>
+              {!contaPendenteTrocaSenha ? (
+                <label className="usuarios-toggle" htmlFor="uf-ativo">
+                  <input
+                    id="uf-ativo"
+                    type="checkbox"
+                    className="usuarios-toggle-input"
+                    checked={form.ativo}
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, ativo: e.target.checked }));
+                      setConfirmarResetAberto(false);
+                    }}
+                    disabled={salvando}
+                  />
+                  <span className="usuarios-toggle-ui" aria-hidden />
+                  <span className="usuarios-toggle-copy">
+                    <span className="usuarios-toggle-title">Conta ativa</span>
+                  </span>
+                </label>
+              ) : null}
+              {form.ativo ? (
+                <button
+                  type="button"
+                  className="usuarios-btn-reset-senha"
+                  onClick={() => setConfirmarResetAberto(true)}
+                  disabled={salvando || resetandoSenha}
+                >
+                  {resetandoSenha ? "A enviar…" : "Redefinir senha"}
+                </button>
+              ) : null}
+            </>
+          )}
+        </ModalSection>
+
+        <ModalSection title="Permissões" titleId="usuario-modal-sec-permis">
+          <div className="usuarios-perfis-modal-grid">
+            {PERFIS_OPCOES.map((p) => {
+              const popId = `catec-perfil-pop-${p.valor}`;
+              return (
+                <div key={p.valor} className="usuarios-perfil-option">
+                  <label className="usuarios-perfil-option-main" htmlFor={`uf-perfil-${p.valor}`}>
+                    <input
+                      id={`uf-perfil-${p.valor}`}
+                      type="checkbox"
+                      className="usuarios-perfil-option-input"
+                      checked={form.perfis.has(p.valor)}
+                      onChange={() => togglePerfil(p.valor)}
+                      disabled={salvando}
+                    />
+                    <span className="usuarios-perfil-option-title">{p.rotulo}</span>
+                  </label>
+                  <button
+                    type="button"
+                    className="usuarios-perfil-help"
+                    popoverTarget={popId}
+                    aria-label={`O que é o perfil ${p.rotulo}?`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <IconPerfilAjuda />
+                  </button>
+                  <div id={popId} className="usuarios-perfil-popover" popover="auto">
+                    <p className="usuarios-perfil-popover-text">{p.detalhe}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </div>
-      ) : null}
+        </ModalSection>
+
+        <ModalFooter>
+          <GhostButton
+            onClick={() => {
+              setModalAberto(false);
+              setConfirmarResetAberto(false);
+            }}
+            disabled={salvando || resetandoSenha}
+          >
+            Cancelar
+          </GhostButton>
+          <PrimaryButton onClick={() => void salvar()} disabled={salvando || resetandoSenha}>
+            {salvando ? "Salvando…" : "Salvar"}
+          </PrimaryButton>
+        </ModalFooter>
+      </FormDialog>
+
+      <ConfirmDialog
+        open={confirmarResetAberto}
+        titleId="usuarios-confirm-reset-titulo"
+        title="Confirmar redefinição"
+        description="Será gerada uma nova senha provisória, a conta ficará inativa até o próximo acesso e o usuário receberá um e-mail. Continuar?"
+        onBackdropClick={() => !resetandoSenha && setConfirmarResetAberto(false)}
+        actions={
+          <>
+            <GhostButton onClick={() => setConfirmarResetAberto(false)} disabled={resetandoSenha}>
+              Cancelar
+            </GhostButton>
+            <PrimaryButton variant="danger" onClick={() => void solicitarResetSenha()} disabled={resetandoSenha}>
+              {resetandoSenha ? "A enviar…" : "Confirmar"}
+            </PrimaryButton>
+          </>
+        }
+      />
     </div>
   );
 }

@@ -68,3 +68,9 @@
   font-size: 0.9rem;
   color: #64748b;
 }
+
+.admin-crud-table__empty-row td {
+  border-bottom: none;
+  padding: 0;
+  vertical-align: middle;
+}
