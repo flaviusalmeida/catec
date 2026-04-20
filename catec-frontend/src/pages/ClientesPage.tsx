@@ -4,6 +4,7 @@ import { apiFetch } from "../api/http";
 import { useAuth } from "../auth/AuthContext";
 import FieldControl from "../components/form/FieldControl";
 import PrimaryCtaButton from "../components/buttons/PrimaryCtaButton";
+import DataTableSection from "../components/layout/DataTableSection";
 import FiltersCard from "../components/layout/FiltersCard";
 import PageToolbar from "../components/layout/PageToolbar";
 import RowEditButton from "../components/table/RowEditButton";
@@ -327,65 +328,58 @@ export default function ClientesPage() {
           </div>
         </FiltersCard>
 
-        <section className="clientes-card clientes-card--table" aria-busy={carregando}>
-          {carregando ? (
-            <div className="clientes-loading">
-              <div className="clientes-spinner" aria-hidden />
-              <p className="clientes-loading-text">Carregando lista...</p>
-            </div>
-          ) : lista.length === 0 ? (
-            <div className="clientes-empty clientes-empty--standalone" role="status">
-              <p className="clientes-empty-title">Nenhum cliente</p>
-              <p className="clientes-empty-text">Ainda não há clientes cadastrados no sistema.</p>
-            </div>
-          ) : (
-            <div className={`clientes-table-wrap${filtrosDigitacaoPendentes ? " clientes-table-wrap--filter-pending" : ""}`}>
-              <table className="clientes-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Nome / Razão social</th>
-                    <th scope="col">Tipo</th>
-                    <th scope="col">Documento</th>
-                    <th scope="col">E-mail</th>
-                    <th scope="col" className="clientes-th-actions">
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {listaFiltrada.length === 0 ? (
-                    <tr className="clientes-table-empty-row">
-                      <td colSpan={5}>
-                        <p className="clientes-filter-empty" role="status">
-                          Não há clientes que correspondam aos filtros.
-                        </p>
-                      </td>
-                    </tr>
-                  ) : (
-                    listaFiltrada.map((c, idx) => (
-                      <tr
-                        key={c.id}
-                        className={`clientes-table-data-row${idx % 2 === 1 ? " clientes-table-data-row--alt" : ""}`}
+        <DataTableSection
+          loading={carregando}
+          loadingLabel="Carregando lista..."
+          empty={lista.length === 0}
+          emptyTitle="Nenhum cliente"
+          emptyDescription="Ainda não há clientes cadastrados no sistema."
+          filterPending={filtrosDigitacaoPendentes}
+        >
+          <table className="clientes-table">
+            <thead>
+              <tr>
+                <th scope="col">Nome / Razão social</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Documento</th>
+                <th scope="col">E-mail</th>
+                <th scope="col" className="clientes-th-actions">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {listaFiltrada.length === 0 ? (
+                <tr className="clientes-table-empty-row">
+                  <td colSpan={5}>
+                    <p className="clientes-filter-empty" role="status">
+                      Não há clientes que correspondam aos filtros.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                listaFiltrada.map((c, idx) => (
+                  <tr
+                    key={c.id}
+                    className={`clientes-table-data-row${idx % 2 === 1 ? " clientes-table-data-row--alt" : ""}`}
+                    onClick={() => abrirEditar(c)}
+                  >
+                    <td className="clientes-td-nome">{c.razaoSocialOuNome}</td>
+                    <td>{c.tipoPessoa}</td>
+                    <td>{c.documento ?? "-"}</td>
+                    <td className="clientes-td-email">{c.email ?? "-"}</td>
+                    <td className="clientes-td-actions">
+                      <RowEditButton
+                        ariaLabel={`Editar ${c.razaoSocialOuNome}`}
                         onClick={() => abrirEditar(c)}
-                      >
-                        <td className="clientes-td-nome">{c.razaoSocialOuNome}</td>
-                        <td>{c.tipoPessoa}</td>
-                        <td>{c.documento ?? "-"}</td>
-                        <td className="clientes-td-email">{c.email ?? "-"}</td>
-                        <td className="clientes-td-actions">
-                          <RowEditButton
-                            ariaLabel={`Editar ${c.razaoSocialOuNome}`}
-                            onClick={() => abrirEditar(c)}
-                          />
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+                      />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </DataTableSection>
       </div>
 
       {modalAberto ? (
