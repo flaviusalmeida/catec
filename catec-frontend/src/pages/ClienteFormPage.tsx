@@ -20,6 +20,10 @@ import {
 } from "../components/layout/entityFormKit";
 import AccessDeniedCard from "../components/ui/AccessDeniedCard";
 import InlineAlert from "../components/ui/InlineAlert";
+import ToastAlert from "../components/ui/ToastAlert";
+import { onlyDigits } from "../utils/digitsOnly";
+import { formatDocumentoByTipo, validateClienteObrigatorios } from "../utils/cpfCnpj";
+import { formatTelefoneBrasil } from "../utils/telefoneBrasil";
 import type { Cliente, ClienteFormState, TipoPessoa } from "./clienteTypes";
 import { EMPTY_CLIENTE_FORM, clienteToFormState } from "./clienteTypes";
 import "./ClientesPage.css";
@@ -40,6 +44,7 @@ export default function ClienteFormPage() {
   const [salvando, setSalvando] = useState(false);
   const [excluindoId, setExcluindoId] = useState<number | null>(null);
   const [confirmarRemocaoId, setConfirmarRemocaoId] = useState<number | null>(null);
+  const [toastObrigatoriedade, setToastObrigatoriedade] = useState<string | null>(null);
 
   const carregarCliente = useCallback(async () => {
     if (editandoId == null || Number.isNaN(editandoId)) return;
@@ -89,18 +94,30 @@ export default function ClienteFormPage() {
     void carregarCliente();
   }, [carregarCliente, idInvalido, isCreate]);
 
+  useEffect(() => {
+    if (!toastObrigatoriedade) return;
+    const t = window.setTimeout(() => setToastObrigatoriedade(null), 7000);
+    return () => window.clearTimeout(t);
+  }, [toastObrigatoriedade]);
+
   async function salvar() {
     if (idInvalido) return;
+    const validacao = validateClienteObrigatorios(form);
+    if (validacao) {
+      setToastObrigatoriedade(validacao);
+      return;
+    }
     setSalvando(true);
     setErro(null);
+    setToastObrigatoriedade(null);
     try {
       const payload = {
         tipoPessoa: form.tipoPessoa,
-        razaoSocialOuNome: form.razaoSocialOuNome,
+        razaoSocialOuNome: form.razaoSocialOuNome.trim(),
         nomeFantasia: form.nomeFantasia.trim() || null,
-        documento: form.documento.trim() || null,
-        email: form.email.trim() || null,
-        telefone: form.telefone.trim() || null,
+        documento: onlyDigits(form.documento),
+        email: form.email.trim(),
+        telefone: onlyDigits(form.telefone),
         enderecoLogradouro: form.enderecoLogradouro.trim() || null,
         enderecoCidade: form.enderecoCidade.trim() || null,
         enderecoUf: form.enderecoUf.trim().toUpperCase() || null,
@@ -184,6 +201,16 @@ export default function ClienteFormPage() {
 
   return (
     <>
+      <ToastAlert
+        open={toastObrigatoriedade != null}
+        variant="error"
+        onDismiss={() => setToastObrigatoriedade(null)}
+        dismissAriaLabel="Fechar notificação"
+        dismissTitle="Fechar"
+      >
+        {toastObrigatoriedade}
+      </ToastAlert>
+
       <AdminEntityFormPage
         listPath={LIST_PATH}
         titleId="cliente-form-titulo"
@@ -221,34 +248,58 @@ export default function ClienteFormPage() {
             <AdminFormSection title="Identificação" titleId="cliente-form-sec-ident">
               <AdminFormFields>
                 <ModalFormGrid balanced>
-                  <FormField label="Tipo de pessoa" htmlFor="cf-tipo">
+                  <FormField label="Tipo de pessoa" htmlFor="cf-tipo" required>
                     <FieldControl
                       as="select"
                       id="cf-tipo"
                       value={form.tipoPessoa}
-                      onChange={(e) => setForm((f) => ({ ...f, tipoPessoa: e.target.value as TipoPessoa }))}
+                      onChange={(e) => {
+                        const tipo = e.target.value as TipoPessoa;
+                        setForm((f) => {
+                          const d = onlyDigits(f.documento).slice(0, tipo === "PF" ? 11 : 14);
+                          return {
+                            ...f,
+                            tipoPessoa: tipo,
+                            documento: d ? formatDocumentoByTipo(tipo, d) : "",
+                          };
+                        });
+                      }}
                       className="clientes-select"
                       variant="modal"
                       disabled={desabilitadoForm}
+                      required
+                      aria-required="true"
                     >
                       <option value="PF">Pessoa Física</option>
                       <option value="PJ">Pessoa Jurídica</option>
                     </FieldControl>
                   </FormField>
-                  <FormField label="Documento" htmlFor="cf-documento">
+                  <FormField label="CPF/CNPJ" htmlFor="cf-documento" required>
                     <FieldControl
                       id="cf-documento"
+                      inputMode="numeric"
+                      autoComplete="off"
                       value={form.documento}
-                      onChange={(e) => setForm((f) => ({ ...f, documento: e.target.value }))}
+                      onChange={(e) => {
+                        const max = form.tipoPessoa === "PF" ? 11 : 14;
+                        const d = onlyDigits(e.target.value).slice(0, max);
+                        setForm((f) => ({
+                          ...f,
+                          documento: d ? formatDocumentoByTipo(f.tipoPessoa, d) : "",
+                        }));
+                      }}
                       className="clientes-input"
                       variant="modal"
                       disabled={desabilitadoForm}
+                      required
+                      aria-required="true"
+                      placeholder={form.tipoPessoa === "PF" ? "000.000.000-00" : "00.000.000/0000-00"}
                     />
                   </FormField>
                 </ModalFormGrid>
                 <AdminFormDivider />
                 <ModalFormGrid balanced>
-                  <FormField label="Nome / Razão social" htmlFor="cf-razao">
+                  <FormField label="Nome / Razão social" htmlFor="cf-razao" required>
                     <FieldControl
                       id="cf-razao"
                       value={form.razaoSocialOuNome}
@@ -256,6 +307,8 @@ export default function ClienteFormPage() {
                       className="clientes-input"
                       variant="modal"
                       disabled={desabilitadoForm}
+                      required
+                      aria-required="true"
                     />
                   </FormField>
                   <FormField label="Nome fantasia" htmlFor="cf-fantasia">
@@ -275,39 +328,51 @@ export default function ClienteFormPage() {
             <AdminFormSection title="Contato e endereço" titleId="cliente-form-sec-contato">
               <AdminFormFields>
                 <ModalFormGrid balanced>
-                  <FormField label="E-mail" htmlFor="cf-email">
+                  <FormField label="E-mail" htmlFor="cf-email" required>
                     <FieldControl
                       id="cf-email"
+                      type="email"
                       value={form.email}
                       onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                       className="clientes-input"
                       variant="modal"
                       disabled={desabilitadoForm}
+                      required
+                      aria-required="true"
                     />
                   </FormField>
-                  <FormField label="Telefone" htmlFor="cf-telefone">
+                  <FormField label="Telefone" htmlFor="cf-telefone" required>
                     <FieldControl
                       id="cf-telefone"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
                       value={form.telefone}
-                      onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
+                      onChange={(e) => {
+                        const d = onlyDigits(e.target.value).slice(0, 11);
+                        setForm((f) => ({ ...f, telefone: d ? formatTelefoneBrasil(d) : "" }));
+                      }}
+                      className="clientes-input"
+                      variant="modal"
+                      disabled={desabilitadoForm}
+                      required
+                      aria-required="true"
+                      placeholder="(00) 00000-0000"
+                    />
+                  </FormField>
+                </ModalFormGrid>
+                <AdminFormDivider />
+                <AdminFormGrid3>
+                  <FormField label="CEP" htmlFor="cf-cep">
+                    <FieldControl
+                      id="cf-cep"
+                      value={form.enderecoCep}
+                      onChange={(e) => setForm((f) => ({ ...f, enderecoCep: e.target.value }))}
                       className="clientes-input"
                       variant="modal"
                       disabled={desabilitadoForm}
                     />
                   </FormField>
-                </ModalFormGrid>
-                <AdminFormDivider />
-                <FormField label="Logradouro" htmlFor="cf-logradouro">
-                  <FieldControl
-                    id="cf-logradouro"
-                    value={form.enderecoLogradouro}
-                    onChange={(e) => setForm((f) => ({ ...f, enderecoLogradouro: e.target.value }))}
-                    className="clientes-input"
-                    variant="modal"
-                    disabled={desabilitadoForm}
-                  />
-                </FormField>
-                <AdminFormGrid3>
                   <FormField label="Cidade" htmlFor="cf-cidade">
                     <FieldControl
                       id="cf-cidade"
@@ -329,17 +394,17 @@ export default function ClienteFormPage() {
                       maxLength={2}
                     />
                   </FormField>
-                  <FormField label="CEP" htmlFor="cf-cep">
-                    <FieldControl
-                      id="cf-cep"
-                      value={form.enderecoCep}
-                      onChange={(e) => setForm((f) => ({ ...f, enderecoCep: e.target.value }))}
-                      className="clientes-input"
-                      variant="modal"
-                      disabled={desabilitadoForm}
-                    />
-                  </FormField>
                 </AdminFormGrid3>
+                <FormField label="Logradouro" htmlFor="cf-logradouro">
+                  <FieldControl
+                    id="cf-logradouro"
+                    value={form.enderecoLogradouro}
+                    onChange={(e) => setForm((f) => ({ ...f, enderecoLogradouro: e.target.value }))}
+                    className="clientes-input"
+                    variant="modal"
+                    disabled={desabilitadoForm}
+                  />
+                </FormField>
                 <AdminFormDivider />
                 <FormField label="Observações" htmlFor="cf-observacoes">
                   <FieldControl

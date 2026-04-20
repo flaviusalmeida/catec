@@ -1,4 +1,8 @@
-export type TipoPessoa = "PF" | "PJ";
+import { onlyDigits } from "../utils/digitsOnly";
+import { formatDocumentoByTipo, type TipoPessoa } from "../utils/cpfCnpj";
+import { formatTelefoneBrasil } from "../utils/telefoneBrasil";
+
+export type { TipoPessoa };
 
 export type Cliente = {
   id: number;
@@ -44,13 +48,15 @@ export const EMPTY_CLIENTE_FORM: ClienteFormState = {
 };
 
 export function clienteToFormState(c: Cliente): ClienteFormState {
+  const docDigits = onlyDigits(c.documento ?? "");
+  const telDigits = onlyDigits(c.telefone ?? "");
   return {
     tipoPessoa: c.tipoPessoa,
     razaoSocialOuNome: c.razaoSocialOuNome,
     nomeFantasia: c.nomeFantasia ?? "",
-    documento: c.documento ?? "",
+    documento: docDigits ? formatDocumentoByTipo(c.tipoPessoa, docDigits) : "",
     email: c.email ?? "",
-    telefone: c.telefone ?? "",
+    telefone: telDigits ? formatTelefoneBrasil(telDigits) : "",
     enderecoLogradouro: c.enderecoLogradouro ?? "",
     enderecoCidade: c.enderecoCidade ?? "",
     enderecoUf: c.enderecoUf ?? "",

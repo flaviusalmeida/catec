@@ -11,6 +11,11 @@
   margin-bottom: 0.28rem;
 }
 
+.form-field__required {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
 .form-field__error {
   margin: 0.35rem 0 0;
   font-size: 0.78rem;

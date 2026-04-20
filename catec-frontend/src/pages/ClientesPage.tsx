@@ -12,8 +12,14 @@ import FiltersCard from "../components/layout/FiltersCard";
 import PageToolbar from "../components/layout/PageToolbar";
 import RowEditButton from "../components/table/RowEditButton";
 import "../styles/admin-crud-table.css";
+import { formatDocumentoByTipo, onlyDigits } from "../utils/cpfCnpj";
 import type { Cliente, TipoPessoa } from "./clienteTypes";
 import "./ClientesPage.css";
+
+function documentoParaExibicao(c: Cliente): string {
+  const d = onlyDigits(c.documento ?? "");
+  return d ? formatDocumentoByTipo(c.tipoPessoa, d) : "—";
+}
 
 export default function ClientesPage() {
   const { isAdmin, logout } = useAuth();
@@ -33,10 +39,13 @@ export default function ClientesPage() {
 
   const listaFiltrada = useMemo(() => {
     const nome = deferredNome.trim().toLowerCase();
-    const doc = deferredDocumento.trim().toLowerCase();
+    const docDigits = onlyDigits(deferredDocumento);
     return lista.filter((c) => {
       if (nome && !c.razaoSocialOuNome.toLowerCase().includes(nome)) return false;
-      if (doc && !(c.documento ?? "").toLowerCase().includes(doc)) return false;
+      if (docDigits) {
+        const rowDigits = onlyDigits(c.documento ?? "");
+        if (!rowDigits.includes(docDigits)) return false;
+      }
       if (filtroTipo && c.tipoPessoa !== filtroTipo) return false;
       return true;
     });
@@ -152,7 +161,7 @@ export default function ClientesPage() {
           </div>
           <div>
             <label className="filters-card__label" htmlFor="flt-cliente-documento">
-              Documento
+              CPF/CNPJ
             </label>
             <FieldControl
               id="flt-cliente-documento"
@@ -160,7 +169,7 @@ export default function ClientesPage() {
               onChange={(e) => setFiltroDocumento(e.target.value)}
               className="clientes-input"
               variant="compact"
-              placeholder="Buscar por documento"
+              placeholder="Buscar por CPF ou CNPJ"
               autoComplete="off"
             />
           </div>
@@ -196,7 +205,7 @@ export default function ClientesPage() {
               <tr>
                 <th scope="col">Nome / Razão social</th>
                 <th scope="col">Tipo</th>
-                <th scope="col">Documento</th>
+                <th scope="col">CPF/CNPJ</th>
                 <th scope="col">E-mail</th>
                 <th scope="col" className="admin-crud-table__th-actions">
                   Ações
@@ -221,7 +230,7 @@ export default function ClientesPage() {
                   >
                     <td className="admin-crud-table__cell-primary">{c.razaoSocialOuNome}</td>
                     <td>{c.tipoPessoa}</td>
-                    <td>{c.documento ?? "-"}</td>
+                    <td>{documentoParaExibicao(c)}</td>
                     <td className="admin-crud-table__cell-muted">{c.email ?? "-"}</td>
                     <td className="admin-crud-table__td-actions">
                       <RowEditButton

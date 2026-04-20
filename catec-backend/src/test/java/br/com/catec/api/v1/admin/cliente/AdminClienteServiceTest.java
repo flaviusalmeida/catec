@@ -26,6 +26,9 @@ import org.springframework.web.server.ResponseStatusException;
 @ExtendWith(MockitoExtension.class)
 class AdminClienteServiceTest {
 
+    private static final String CPF_VALIDO = "52998224725";
+    private static final String CNPJ_VALIDO = "11444777000161";
+
     @Mock
     private ClienteRepository clienteRepository;
 
@@ -35,7 +38,8 @@ class AdminClienteServiceTest {
     @Test
     void listar_deveRetornarListaMapeada() {
         when(clienteRepository.findAll(any(org.springframework.data.domain.Sort.class)))
-                .thenReturn(List.of(cliente(1L, TipoPessoa.PF, "Joao Silva", "123"), cliente(2L, TipoPessoa.PJ, "Empresa X", "999")));
+                .thenReturn(
+                        List.of(cliente(1L, TipoPessoa.PF, "Joao Silva", CPF_VALIDO), cliente(2L, TipoPessoa.PJ, "Empresa X", CNPJ_VALIDO)));
 
         List<ClienteResponse> result = service.listar();
 
@@ -46,7 +50,7 @@ class AdminClienteServiceTest {
 
     @Test
     void criar_quandoDocumentoDuplicado_deveLancarConflict() {
-        when(clienteRepository.existsByDocumento("123")).thenReturn(true);
+        when(clienteRepository.existsByDocumento(CPF_VALIDO)).thenReturn(true);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.criar(requestBase()));
 
@@ -55,8 +59,98 @@ class AdminClienteServiceTest {
     }
 
     @Test
+    void criar_quandoCpfDigitosVerificadoresInvalidos_deveLancarBadRequest() {
+        ClienteRequest req = new ClienteRequest(
+                TipoPessoa.PF,
+                "A",
+                null,
+                "52998224724",
+                "a@b.com",
+                "11988887777",
+                null,
+                null,
+                null,
+                null,
+                null);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.criar(req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        verify(clienteRepository, never()).save(any(Cliente.class));
+    }
+
+    @Test
+    void criar_quandoTelefoneCurto_deveLancarBadRequest() {
+        ClienteRequest req = new ClienteRequest(
+                TipoPessoa.PF,
+                "A",
+                null,
+                CPF_VALIDO,
+                "a@b.com",
+                "1198888",
+                null,
+                null,
+                null,
+                null,
+                null);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.criar(req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        verify(clienteRepository, never()).save(any(Cliente.class));
+    }
+
+    @Test
+    void criar_quandoPfSem11Digitos_deveLancarBadRequest() {
+        ClienteRequest req = new ClienteRequest(
+                TipoPessoa.PF,
+                "A",
+                null,
+                "1234567890",
+                "a@b.com",
+                "11988887777",
+                null,
+                null,
+                null,
+                null,
+                null);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.criar(req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        verify(clienteRepository, never()).save(any(Cliente.class));
+    }
+
+    @Test
+    void criar_quandoDocumentoComMascara_devePersistirSoDigitos() {
+        ClienteRequest req = new ClienteRequest(
+                TipoPessoa.PF,
+                "Maria",
+                null,
+                "529.982.247-25",
+                "maria@teste.com",
+                "11977776666",
+                null,
+                null,
+                null,
+                null,
+                null);
+        when(clienteRepository.existsByDocumento(CPF_VALIDO)).thenReturn(false);
+        when(clienteRepository.save(any(Cliente.class))).thenAnswer(invocation -> {
+            Cliente c = invocation.getArgument(0);
+            ReflectionTestUtils.setField(c, "id", 11L);
+            return c;
+        });
+
+        ClienteResponse response = service.criar(req);
+
+        assertEquals(11L, response.id());
+        assertEquals(CPF_VALIDO, response.documento());
+    }
+
+    @Test
     void criar_quandoValido_deveSalvarComCamposNormalizados() {
-        when(clienteRepository.existsByDocumento("123")).thenReturn(false);
+        when(clienteRepository.existsByDocumento(CPF_VALIDO)).thenReturn(false);
         when(clienteRepository.save(any(Cliente.class))).thenAnswer(invocation -> {
             Cliente c = invocation.getArgument(0);
             ReflectionTestUtils.setField(c, "id", 10L);
@@ -68,7 +162,9 @@ class AdminClienteServiceTest {
         assertEquals(10L, response.id());
         assertEquals("Joao da Silva", response.razaoSocialOuNome());
         assertEquals("SP", response.enderecoUf());
-        assertEquals("123", response.documento());
+        assertEquals(CPF_VALIDO, response.documento());
+        assertEquals("joao@teste.com", response.email());
+        assertEquals("11988887777", response.telefone());
     }
 
     @Test
@@ -82,8 +178,8 @@ class AdminClienteServiceTest {
 
     @Test
     void atualizar_quandoDocumentoConflita_deveLancarConflict() {
-        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente(1L, TipoPessoa.PF, "A", null)));
-        when(clienteRepository.existsByDocumentoAndIdNot("123", 1L)).thenReturn(true);
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente(1L, TipoPessoa.PF, "A", CPF_VALIDO)));
+        when(clienteRepository.existsByDocumentoAndIdNot(CPF_VALIDO, 1L)).thenReturn(true);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.atualizar(1L, requestBase()));
 
@@ -92,12 +188,22 @@ class AdminClienteServiceTest {
 
     @Test
     void atualizar_quandoValido_deveAtualizarCampos() {
-        Cliente existente = cliente(1L, TipoPessoa.PF, "Nome Antigo", "123");
+        Cliente existente = cliente(1L, TipoPessoa.PF, "Nome Antigo", CPF_VALIDO);
         when(clienteRepository.findById(1L)).thenReturn(Optional.of(existente));
-        when(clienteRepository.existsByDocumentoAndIdNot("999", 1L)).thenReturn(false);
+        when(clienteRepository.existsByDocumentoAndIdNot(CNPJ_VALIDO, 1L)).thenReturn(false);
         when(clienteRepository.save(any(Cliente.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        ClienteRequest req =
-                new ClienteRequest(TipoPessoa.PJ, " Empresa Nova ", "", "999", " contato@empresa.com ", "1199999", null, null, "rj", null, "");
+        ClienteRequest req = new ClienteRequest(
+                TipoPessoa.PJ,
+                " Empresa Nova ",
+                "",
+                CNPJ_VALIDO,
+                " contato@empresa.com ",
+                "11999998888",
+                null,
+                null,
+                "rj",
+                null,
+                "");
 
         ClienteResponse response = service.atualizar(1L, req);
 
@@ -105,6 +211,9 @@ class AdminClienteServiceTest {
         assertEquals("Empresa Nova", response.razaoSocialOuNome());
         assertNull(response.nomeFantasia());
         assertEquals("RJ", response.enderecoUf());
+        assertEquals(CNPJ_VALIDO, response.documento());
+        assertEquals("contato@empresa.com", response.email());
+        assertEquals("11999998888", response.telefone());
     }
 
     @Test
@@ -131,7 +240,7 @@ class AdminClienteServiceTest {
                 TipoPessoa.PF,
                 " Joao da Silva ",
                 " Nome fantasia ",
-                "123",
+                CPF_VALIDO,
                 " joao@teste.com ",
                 " 11988887777 ",
                 " Rua A ",

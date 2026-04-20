@@ -75,7 +75,18 @@ class AdminClienteControllerMockMvcTest {
 
     @Test
     void criar_quandoPayloadValido_deveRetornar201() throws Exception {
-        ClienteRequest req = new ClienteRequest(TipoPessoa.PF, "Cliente C", null, "123", null, null, null, null, null, null, null);
+        ClienteRequest req = new ClienteRequest(
+                TipoPessoa.PF,
+                "Cliente C",
+                null,
+                "52998224725",
+                "cliente@catec.local",
+                "11988887777",
+                null,
+                null,
+                null,
+                null,
+                null);
         when(adminClienteService.criar(req)).thenReturn(response(10L, "Cliente C"));
 
         mockMvc.perform(post("/api/v1/admin/clientes")
@@ -91,7 +102,31 @@ class AdminClienteControllerMockMvcTest {
 
     @Test
     void criar_quandoPayloadInvalido_deveRetornar400() throws Exception {
-        ClienteRequest req = new ClienteRequest(null, "", null, null, null, null, null, null, null, null, null);
+        ClienteRequest req = new ClienteRequest(null, "", null, "", "", "", null, null, null, null, null);
+
+        mockMvc.perform(post("/api/v1/admin/clientes")
+                        .with(user(adminPrincipal(1L)))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void criar_quandoEmailFormatoInvalido_deveRetornar400() throws Exception {
+        ClienteRequest req = new ClienteRequest(
+                TipoPessoa.PF,
+                "X",
+                null,
+                "52998224725",
+                "email-sem-arroba",
+                "11988887777",
+                null,
+                null,
+                null,
+                null,
+                null);
 
         mockMvc.perform(post("/api/v1/admin/clientes")
                         .with(user(adminPrincipal(1L)))
@@ -104,7 +139,18 @@ class AdminClienteControllerMockMvcTest {
 
     @Test
     void atualizar_quandoPayloadValido_deveRetornar200() throws Exception {
-        ClienteRequest req = new ClienteRequest(TipoPessoa.PJ, "Cliente D", null, "333", null, null, null, null, null, null, null);
+        ClienteRequest req = new ClienteRequest(
+                TipoPessoa.PJ,
+                "Cliente D",
+                null,
+                "11444777000161",
+                "pj@catec.local",
+                "1133334444",
+                null,
+                null,
+                null,
+                null,
+                null);
         when(adminClienteService.atualizar(4L, req)).thenReturn(response(4L, "Cliente D"));
 
         mockMvc.perform(put("/api/v1/admin/clientes/4")

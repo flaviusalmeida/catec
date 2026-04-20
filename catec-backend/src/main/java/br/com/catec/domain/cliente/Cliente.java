@@ -28,13 +28,13 @@ public class Cliente {
     @Column(name = "nome_fantasia")
     private String nomeFantasia;
 
-    @Column(name = "documento")
+    @Column(name = "documento", length = 14)
     private String documento;
 
     @Column(name = "email")
     private String email;
 
-    @Column(name = "telefone")
+    @Column(name = "telefone", length = 11)
     private String telefone;
 
     @Column(name = "endereco_logradouro")
