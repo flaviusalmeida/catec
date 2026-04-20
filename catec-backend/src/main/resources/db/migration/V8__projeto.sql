@@ -1,5 +1,5 @@
 -- Demanda inicial (projeto) vinculada a cliente existente.
--- Política: cliente_id obrigatório — referência a registo já persistido em `cliente` (sem "cliente rascunho" nesta fase).
+-- Política: cliente_id obrigatório — referência a registro já persistido em `cliente` (sem "cliente rascunho" nesta fase).
 
 CREATE TABLE projeto (
     id                  BIGSERIAL PRIMARY KEY,

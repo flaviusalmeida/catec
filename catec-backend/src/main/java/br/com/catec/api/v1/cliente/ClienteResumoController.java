@@ -19,7 +19,7 @@ public class ClienteResumoController {
     }
 
     /**
-     * Lista clientes para autocomplete. {@code q} vazio: primeiros registos por nome; caso contrário filtra por nome
+     * Lista clientes para autocomplete. {@code q} vazio: primeiros registros por nome; caso contrário filtra por nome
      * (contém, sem distinção de maiúsculas) ou por documento quando o texto parecer só dígitos (mín. 3).
      */
     @GetMapping

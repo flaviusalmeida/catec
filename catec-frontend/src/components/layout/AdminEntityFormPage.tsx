@@ -25,7 +25,7 @@ export type AdminEntityFormPageProps = {
  */
 export default function AdminEntityFormPage({
   listPath,
-  backLabel = "Voltar à lista",
+  backLabel = "Voltar para a lista",
   titleId,
   title,
   subtitle,

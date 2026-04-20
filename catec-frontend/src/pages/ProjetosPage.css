@@ -1,5 +1,5 @@
-/* Larguras da tabela de projetos (base: `admin-crud-table`), alinhado à ideia da tabela de utilizadores:
- * «Criado por» mais estreito, «Status» mais largo entre essa coluna e Ações; última coluna ≥12% para o botão. */
+/* Larguras da tabela de projetos (base: `admin-crud-table`), alinhado à ideia da tabela de usuários:
+ * "Criado por" mais estreito, "Status" mais largo entre essa coluna e Ações; última coluna ≥12% para o botão. */
 .projetos-data-table th:nth-child(1) {
   width: 28%;
 }
@@ -44,12 +44,12 @@
   margin-top: 0.3rem;
 }
 
-/* Campo Descrição (mesmo passo vertical que entre campos na secção Identificação). */
+/* Campo Descrição (mesmo passo vertical que entre campos na seção Identificação). */
 .projetos-form-dialog .projetos-modal-escopo-block {
   margin-top: 0.75rem;
 }
 
-/* Linha entre «Contacto do cliente» e «Descrição» (novo com cliente / edição). */
+/* Linha entre "Contato do cliente" e "Descrição" (novo com cliente / edição). */
 .projetos-form-dialog .projetos-modal-escopo-block--after-contato {
   padding-top: 0.75rem;
   border-top: 1px solid #eef2f6;

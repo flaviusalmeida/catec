@@ -1,4 +1,4 @@
--- Utilizadores de exemplo (só desenvolvimento). Palavra-passe: "password" (BCrypt).
+-- Usuários de exemplo (só desenvolvimento). Senha: "password" (BCrypt).
 -- admin@catec.local — ativo, perfil ADMINISTRATIVO
 -- inativo@catec.local — inativo (não deve autenticar)
 

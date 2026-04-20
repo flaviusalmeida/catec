@@ -10,7 +10,7 @@ export type AdminFormSectionProps = {
   className?: string;
 };
 
-/** Cartão de secção em formulários longos (`AdminEntityFormPage`). */
+/** Cartão de seção em formulários longos (`AdminEntityFormPage`). */
 export default function AdminFormSection({ title, children, titleId: titleIdProp, className }: AdminFormSectionProps) {
   const gen = useId().replace(/:/g, "");
   const titleId = titleIdProp ?? `admin-form-section-${gen}`;

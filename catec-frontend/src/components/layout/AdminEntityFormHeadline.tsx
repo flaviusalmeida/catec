@@ -2,13 +2,13 @@ import type { ReactNode } from "react";
 import "./AdminEntityFormHeadline.css";
 
 export type AdminEntityFormHeadlineProps = {
-  /** Texto da ação (ex.: «Editar cliente», «Novo fornecedor»). */
+  /** Texto da ação (ex.: "Editar cliente", "Novo fornecedor"). */
   action: ReactNode;
-  /** Linha após « — » (nome do registo, código, etc.). Omitir em criação. */
+  /** Linha após " — " (nome do registro, código, etc.). Omitir em criação. */
   entityLabel?: ReactNode;
 };
 
-/** Conteúdo do `<h1>` em páginas `AdminEntityFormPage` (ação + registo). */
+/** Conteúdo do `<h1>` em páginas `AdminEntityFormPage` (ação + registro). */
 export default function AdminEntityFormHeadline({ action, entityLabel }: AdminEntityFormHeadlineProps) {
   const hasEntity = entityLabel != null && entityLabel !== "";
   return (

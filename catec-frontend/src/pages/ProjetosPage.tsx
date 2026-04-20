@@ -267,7 +267,7 @@ export default function ProjetosPage() {
       setSucesso("Projeto atualizado com sucesso.");
       await carregarProjetos();
     } catch {
-      setModalErro("Falha de rede ao guardar.");
+      setModalErro("Falha de rede ao salvar.");
     } finally {
       setSalvando(false);
     }
@@ -283,7 +283,7 @@ export default function ProjetosPage() {
           <AccessDeniedCard
             titleId="projetos-acesso-negado"
             title="Projetos"
-            message="A abertura de demandas está disponível para colaboradores e equipa administrativa."
+            message="A abertura de demandas está disponível para colaboradores e equipe administrativa."
           />
         </div>
       </div>
@@ -355,7 +355,7 @@ export default function ProjetosPage() {
           loadingLabel="Carregando projetos…"
           empty={lista.length === 0}
           emptyTitle="Nenhum projeto"
-          emptyDescription="Ainda não há demandas registadas."
+          emptyDescription="Ainda não há demandas registradas."
           filterPending={filtrosDigitacaoPendentes}
         >
           <table className="admin-crud-table projetos-data-table">
@@ -459,10 +459,10 @@ export default function ProjetosPage() {
         </ModalSection>
 
         {previewCliente ? (
-          <ModalSection title="Contacto do cliente" titleId="proj-modal-contato-ro">
+          <ModalSection title="Contato do cliente" titleId="proj-modal-contato-cliente">
             {!previewCliente.email?.trim() ? (
               <InlineAlert variant="error">
-                Este cliente não tem e-mail no cadastro. Complete o cadastro do cliente antes de guardar a demanda.
+                Este cliente não tem e-mail no cadastro. Complete o cadastro do cliente antes de salvar a demanda.
               </InlineAlert>
             ) : (
               <>

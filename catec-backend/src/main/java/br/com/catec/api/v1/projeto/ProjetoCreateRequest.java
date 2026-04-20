@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 /**
  * Criação de demanda. {@code clienteId} obrigatório: deve existir em {@code cliente}. E-mail e telefone da demanda
- * são copiados do cadastro do cliente no momento da gravação.
+ * são copiados do cadastro do cliente no momento em que a demanda é salva.
  */
 public record ProjetoCreateRequest(
         @NotNull(message = "clienteId é obrigatório.") Long clienteId,

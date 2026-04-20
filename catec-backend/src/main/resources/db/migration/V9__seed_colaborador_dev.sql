@@ -1,4 +1,4 @@
--- Utilizador de desenvolvimento com perfil COLABORADOR (palavra-passe: "password", mesmo BCrypt que V2).
+-- Usuário de desenvolvimento com perfil COLABORADOR (senha: "password", mesmo BCrypt que V2).
 WITH colab AS (
     INSERT INTO usuario (nome, email, senha_hash, telefone, ativo, criado_em, atualizado_em)
     VALUES (

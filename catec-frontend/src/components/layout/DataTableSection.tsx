@@ -10,7 +10,7 @@ export type DataTableSectionProps = {
   empty: boolean;
   emptyTitle: string;
   emptyDescription: string;
-  /** Indica que filtros ainda estão “encruzilhando” (ex.: `useDeferredValue`). */
+  /** Indica que os filtros ainda acompanham a digitação (ex.: `useDeferredValue`). */
   filterPending?: boolean;
   children: ReactNode;
   className?: string;

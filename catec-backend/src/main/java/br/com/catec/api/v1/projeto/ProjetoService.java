@@ -181,7 +181,7 @@ public class ProjetoService {
         String em = cliente.getEmail();
         if (em == null || em.isBlank()) {
             throw badRequest(
-                    "O cliente selecionado não tem e-mail cadastrado. Atualize o cadastro do cliente antes de registar a demanda.");
+                    "O cliente selecionado não tem e-mail cadastrado. Atualize o cadastro do cliente antes de registrar a demanda.");
         }
         p.setEmailContato(em.trim().toLowerCase(Locale.ROOT));
         p.setTelefoneContato(normalizarTelefoneOpcional(cliente.getTelefone()));

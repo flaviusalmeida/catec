@@ -6,7 +6,7 @@ export type AdminFormGrid3Props = {
   className?: string;
 };
 
-/** Grelha de três colunas (ex.: Cidade | UF | CEP). Colapsa a uma coluna em ecrãs estreitos. */
+/** Grade de três colunas (ex.: Cidade | UF | CEP). Colapsa a uma coluna em telas estreitas. */
 export default function AdminFormGrid3({ children, className }: AdminFormGrid3Props) {
   const classes = ["admin-form-grid-3", className].filter(Boolean).join(" ");
   return <div className={classes}>{children}</div>;

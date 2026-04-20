@@ -1,6 +1,6 @@
 /**
  * Kit de UI para formulários longos em `AdminEntityFormPage`.
- * Importe deste ficheiro nas páginas de criação/edição.
+ * Importe deste arquivo nas páginas de criação/edição.
  */
 export { default as AdminEntityFormHeadline } from "./AdminEntityFormHeadline";
 export { default as AdminEntityFormActions } from "./AdminEntityFormActions";

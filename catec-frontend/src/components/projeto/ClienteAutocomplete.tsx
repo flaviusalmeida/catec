@@ -150,7 +150,7 @@ export default function ClienteAutocomplete({
           <ul id={listId} className="cliente-autocomplete__lista" role="listbox">
             {carregando ? (
               <li className="cliente-autocomplete__item cliente-autocomplete__item--muted" role="presentation">
-                A pesquisar…
+                Pesquisando…
               </li>
             ) : opcoes.length === 0 ? (
               <li className="cliente-autocomplete__item cliente-autocomplete__item--muted" role="presentation">
