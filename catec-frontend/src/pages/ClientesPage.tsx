@@ -13,6 +13,7 @@ import PageToolbar from "../components/layout/PageToolbar";
 import RowEditButton from "../components/table/RowEditButton";
 import "../styles/admin-crud-table.css";
 import { formatDocumentoByTipo, onlyDigits } from "../utils/cpfCnpj";
+import { formatTelefoneBrasil } from "../utils/telefoneBrasil";
 import type { Cliente, TipoPessoa } from "./clienteTypes";
 import "./ClientesPage.css";
 
@@ -204,8 +205,8 @@ export default function ClientesPage() {
             <thead>
               <tr>
                 <th scope="col">Nome / Razão social</th>
-                <th scope="col">Tipo</th>
                 <th scope="col">CPF/CNPJ</th>
+                <th scope="col">Telefone</th>
                 <th scope="col">E-mail</th>
                 <th scope="col" className="admin-crud-table__th-actions">
                   Ações
@@ -229,8 +230,10 @@ export default function ClientesPage() {
                     onClick={() => navigate(`/app/clientes/${c.id}/editar`)}
                   >
                     <td className="admin-crud-table__cell-primary">{c.razaoSocialOuNome}</td>
-                    <td>{c.tipoPessoa}</td>
                     <td>{documentoParaExibicao(c)}</td>
+                    <td className="admin-crud-table__cell-muted">
+                      {c.telefone ? formatTelefoneBrasil(c.telefone) : "—"}
+                    </td>
                     <td className="admin-crud-table__cell-muted">{c.email ?? "-"}</td>
                     <td className="admin-crud-table__td-actions">
                       <RowEditButton

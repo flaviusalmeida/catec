@@ -25,13 +25,29 @@
   width: 30%;
 }
 .usuarios-data-table th:nth-child(3) {
-  width: 28%;
+  width: 16%;
 }
 .usuarios-data-table th:nth-child(4) {
-  width: 12%;
+  width: 24%;
 }
 .usuarios-data-table th:nth-child(5) {
   width: 12%;
+}
+
+.usuarios-data-table th:nth-child(4),
+.usuarios-data-table td:nth-child(4) {
+  text-align: center;
+}
+
+.usuarios-data-table td:nth-child(4) .status-badge-group {
+  justify-content: center;
+}
+
+/* Ações: mantém a última coluna (larguras em `th:nth-child(5)`) e reforça alinhamento ao centro. */
+.usuarios-data-table .admin-crud-table__th-actions,
+.usuarios-data-table .admin-crud-table__td-actions {
+  text-align: center;
+  vertical-align: middle;
 }
 
 .usuarios-perfis {

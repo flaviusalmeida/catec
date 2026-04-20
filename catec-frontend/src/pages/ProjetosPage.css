@@ -1,30 +1,30 @@
-/* Larguras da tabela de projetos (base: `admin-crud-table`).
- * A coluna de ações precisa caber o `RowEditButton` (min-width ~5.5rem + padding);
- * porcentagem demasiado baixa provoca overflow-x na `DataTableSection`. */
+/* Larguras da tabela de projetos (base: `admin-crud-table`), alinhado à ideia da tabela de utilizadores:
+ * «Criado por» mais estreito, «Status» mais largo entre essa coluna e Ações; última coluna ≥12% para o botão. */
 .projetos-data-table th:nth-child(1) {
   width: 28%;
 }
 .projetos-data-table th:nth-child(2) {
-  width: 22%;
+  width: 20%;
 }
 .projetos-data-table th:nth-child(3) {
-  width: 18%;
+  width: 16%;
 }
 .projetos-data-table th:nth-child(4) {
-  width: 20%;
+  width: 24%;
 }
 .projetos-data-table th:nth-child(5) {
   width: 12%;
 }
 
-.projetos-data-table .admin-crud-table__th-actions,
-.projetos-data-table .admin-crud-table__td-actions {
-  text-align: right;
+.projetos-data-table th:nth-child(4),
+.projetos-data-table td:nth-child(4) {
+  text-align: center;
 }
 
+.projetos-data-table .admin-crud-table__th-actions,
 .projetos-data-table .admin-crud-table__td-actions {
-  padding-left: 0.5rem;
-  padding-right: 0.65rem;
+  text-align: center;
+  vertical-align: middle;
 }
 
 /* —— Modal Novo / Editar projeto: espaçamento vertical uniforme —— */

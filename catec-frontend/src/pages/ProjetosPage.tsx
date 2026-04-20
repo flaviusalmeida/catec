@@ -363,8 +363,8 @@ export default function ProjetosPage() {
               <tr>
                 <th scope="col">Título</th>
                 <th scope="col">Cliente</th>
-                <th scope="col">Status</th>
                 <th scope="col">Criado por</th>
+                <th scope="col">Status</th>
                 <th scope="col" className="admin-crud-table__th-actions">
                   Ações
                 </th>
@@ -388,10 +388,10 @@ export default function ProjetosPage() {
                   >
                     <td className="admin-crud-table__cell-primary">{p.titulo}</td>
                     <td>{p.clienteNome}</td>
+                    <td className="admin-crud-table__cell-muted">{p.criadoPorNome}</td>
                     <td>
                       <ProjetoStatusBadge status={p.status} />
                     </td>
-                    <td className="admin-crud-table__cell-muted">{p.criadoPorNome}</td>
                     <td className="admin-crud-table__td-actions">
                       <RowEditButton ariaLabel={`Abrir ${p.titulo}`} onClick={() => abrirEditar(p)} />
                     </td>

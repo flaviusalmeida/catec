@@ -22,21 +22,27 @@
   width: 100%;
 }
 
-/* Larguras de colunas específicas da tabela de clientes (base: `admin-crud-table`). */
+/* Larguras de colunas: Nome | CPF/CNPJ | Telefone | E-mail | Ações (última ~12%, como nas outras listagens). */
 .clientes-data-table th:nth-child(1) {
-  width: 32%;
+  width: 28%;
 }
 .clientes-data-table th:nth-child(2) {
-  width: 12%;
+  width: 18%;
 }
 .clientes-data-table th:nth-child(3) {
-  width: 22%;
+  width: 14%;
 }
 .clientes-data-table th:nth-child(4) {
-  width: 22%;
+  width: 28%;
 }
 .clientes-data-table th:nth-child(5) {
   width: 12%;
+}
+
+.clientes-data-table .admin-crud-table__th-actions,
+.clientes-data-table .admin-crud-table__td-actions {
+  text-align: center;
+  vertical-align: middle;
 }
 
 .clientes-textarea {
