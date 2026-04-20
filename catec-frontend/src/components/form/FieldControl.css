@@ -1,0 +1,35 @@
+.field-control {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: #0f172a;
+}
+
+/* Alinhado ao comportamento visual atual da tela de usuarios. */
+.field-control--compact {
+  padding: 0.65rem 0.75rem;
+  font-size: 0.9375rem;
+  border-radius: 8px;
+}
+
+.field-control--modal {
+  padding: 0.5rem 0.65rem;
+  font-size: 0.875rem;
+}
+
+.field-control:focus {
+  outline: none;
+  border-color: #002d4b;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(0, 45, 75, 0.12);
+}
+
+.field-control:focus-visible {
+  outline: 2px solid #002d4b;
+  outline-offset: 2px;
+}

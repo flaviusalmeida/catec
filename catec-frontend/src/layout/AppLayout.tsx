@@ -23,6 +23,15 @@ function IconUsers({ className }: { className?: string }) {
   );
 }
 
+function IconClients({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+    </svg>
+  );
+}
+
 export default function AppLayout() {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -44,6 +53,12 @@ export default function AppLayout() {
             <IconHome className="app-shell-nav-icon" />
             <span>Início</span>
           </NavLink>
+          {isAdmin ? (
+            <NavLink to="/app/clientes" className={({ isActive }) => `app-shell-nav-link${isActive ? " active" : ""}`}>
+              <IconClients className="app-shell-nav-icon" />
+              <span>Clientes</span>
+            </NavLink>
+          ) : null}
           {isAdmin ? (
             <NavLink to="/app/usuarios" className={({ isActive }) => `app-shell-nav-link${isActive ? " active" : ""}`}>
               <IconUsers className="app-shell-nav-icon" />
