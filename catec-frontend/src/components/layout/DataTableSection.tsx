@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import EmptyState from "../ui/EmptyState";
 import "./DataTableSection.css";
 
 export type DataTableSectionProps = {
@@ -37,10 +38,7 @@ export default function DataTableSection({
           <p className="data-table-section__loading-text">{loadingLabel}</p>
         </div>
       ) : empty ? (
-        <div className="data-table-section__empty data-table-section__empty--standalone" role="status">
-          <p className="data-table-section__empty-title">{emptyTitle}</p>
-          <p className="data-table-section__empty-text">{emptyDescription}</p>
-        </div>
+        <EmptyState title={emptyTitle} description={emptyDescription} variant="standalone" />
       ) : (
         <div
           className={
