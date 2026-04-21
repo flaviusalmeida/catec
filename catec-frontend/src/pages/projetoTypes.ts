@@ -37,27 +37,6 @@ export const ORDEM_STATUS_PROJETO: ProjetoStatus[] = [
   "PROPOSTA_CONCLUIDA",
 ];
 
-/**
- * Destinos permitidos a partir de cada status (administrativo).
- * Alinhado a {@code ProjetoService#validarTransicao} no backend.
- */
-export const PROJETO_TRANSICOES_ADMIN: Record<ProjetoStatus, readonly ProjetoStatus[]> = {
-  PENDENTE_CLIENTE: [],
-  AGUARDANDO_PROPOSTA_COMERCIAL: ["ELABORANDO_PROPOSTA"],
-  ELABORANDO_PROPOSTA: ["PROPOSTA_CONCLUIDA"],
-  PROPOSTA_CONCLUIDA: [],
-};
-
-/** Status atual + destinos válidos para o select do administrativo (ordem do fluxo). */
-export function statusOpcoesFluxoAdmin(atual: ProjetoStatus): ProjetoStatus[] {
-  if (atual === "PENDENTE_CLIENTE") {
-    return ["PENDENTE_CLIENTE"];
-  }
-  const destinos = PROJETO_TRANSICOES_ADMIN[atual];
-  const conjunto = new Set<ProjetoStatus>([atual, ...destinos]);
-  return ORDEM_STATUS_PROJETO.filter((s) => conjunto.has(s));
-}
-
 /** Filtros, modais e textos longos (frase completa). */
 export const STATUS_PROJETO_ROTULO: Record<ProjetoStatus, string> = {
   PENDENTE_CLIENTE: "Pendente de cadastro de cliente",

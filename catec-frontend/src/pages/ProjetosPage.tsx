@@ -21,7 +21,7 @@ import ToastAlert from "../components/ui/ToastAlert";
 import "../styles/admin-crud-table.css";
 import { formatTelefoneBrasil } from "../utils/telefoneBrasil";
 import type { ClienteResumo, Projeto, ProjetoStatus } from "./projetoTypes";
-import { ORDEM_STATUS_PROJETO, STATUS_PROJETO_ROTULO, statusOpcoesFluxoAdmin } from "./projetoTypes";
+import { ORDEM_STATUS_PROJETO, STATUS_PROJETO_ROTULO } from "./projetoTypes";
 import "./ClientesPage.css";
 import "./ProjetosPage.css";
 
@@ -32,7 +32,6 @@ type FormState = {
   clienteBusca: string;
   titulo: string;
   escopo: string;
-  status: ProjetoStatus;
 };
 
 function emptyForm(): FormState {
@@ -41,7 +40,6 @@ function emptyForm(): FormState {
     clienteBusca: "",
     titulo: "",
     escopo: "",
-    status: "AGUARDANDO_PROPOSTA_COMERCIAL",
   };
 }
 
@@ -51,7 +49,6 @@ function formFromProjeto(p: Projeto): FormState {
     clienteBusca: p.clienteNome ?? "",
     titulo: p.titulo,
     escopo: p.escopo,
-    status: p.status,
   };
 }
 
@@ -193,7 +190,7 @@ export default function ProjetosPage() {
     const titulo = form.titulo.trim();
     const escopo = form.escopo.trim();
     if (!titulo || !escopo) {
-      setModalErro("Preencha título e escopo.");
+      setModalErro("Preencha título e descrição.");
       return;
     }
     const cid = Number.parseInt(form.clienteId, 10);
@@ -267,11 +264,7 @@ export default function ProjetosPage() {
       }
       if (isAdmin) {
         body.clienteId = Number.isNaN(cid) ? editando.clienteId : cid;
-        if (form.status !== editando.status) {
-          body.status = form.status;
-        } else {
-          body.status = null;
-        }
+        body.status = null;
       } else {
         body.clienteId = null;
         body.status = null;
@@ -553,30 +546,6 @@ export default function ProjetosPage() {
             />
           </FormField>
         </div>
-
-            {modo === "editar" && isAdmin && editando?.status !== "PENDENTE_CLIENTE" ? (
-          <ModalSection title="Status do fluxo" titleId="proj-modal-status">
-            <FormField label="Status" htmlFor="pf-status">
-              <FieldControl
-                as="select"
-                id="pf-status"
-                value={form.status}
-                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as ProjetoStatus }))}
-                className="clientes-select"
-                variant="modal"
-                disabled={salvando}
-              >
-                {editando ? (
-                  statusOpcoesFluxoAdmin(editando.status).map((s) => (
-                    <option key={s} value={s}>
-                      {STATUS_PROJETO_ROTULO[s]}
-                    </option>
-                  ))
-                ) : null}
-              </FieldControl>
-            </FormField>
-          </ModalSection>
-        ) : null}
 
         <ModalFooter>
           <GhostButton onClick={() => setModalAberto(false)} disabled={salvando}>
