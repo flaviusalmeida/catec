@@ -181,17 +181,7 @@ public class ProjetoService {
                     case PENDENTE_CLIENTE -> false;
                     case AGUARDANDO_PROPOSTA_COMERCIAL -> novo == ProjetoStatus.ELABORANDO_PROPOSTA;
                     case ELABORANDO_PROPOSTA -> novo == ProjetoStatus.PROPOSTA_CONCLUIDA;
-                    case PROPOSTA_CONCLUIDA ->
-                            novo == ProjetoStatus.PROPOSTA_ENVIADA_CLIENTE
-                                    || novo == ProjetoStatus.AGUARDANDO_REVISAO;
-                    case AGUARDANDO_REVISAO ->
-                            novo == ProjetoStatus.EM_REVISAO
-                                    || novo == ProjetoStatus.ELABORANDO_PROPOSTA;
-                    case EM_REVISAO ->
-                            novo == ProjetoStatus.PROPOSTA_APROVADA_SOCIO
-                                    || novo == ProjetoStatus.ELABORANDO_PROPOSTA;
-                    case PROPOSTA_APROVADA_SOCIO -> novo == ProjetoStatus.PROPOSTA_ENVIADA_CLIENTE;
-                    case PROPOSTA_ENVIADA_CLIENTE -> false;
+                    case PROPOSTA_CONCLUIDA -> false;
                 };
         if (!ok) {
             throw badRequest(
@@ -206,10 +196,6 @@ public class ProjetoService {
             case AGUARDANDO_PROPOSTA_COMERCIAL -> "Aguardando proposta comercial";
             case ELABORANDO_PROPOSTA -> "Elaborando proposta";
             case PROPOSTA_CONCLUIDA -> "Proposta concluída";
-            case AGUARDANDO_REVISAO -> "Aguardando revisão";
-            case EM_REVISAO -> "Em revisão";
-            case PROPOSTA_APROVADA_SOCIO -> "Proposta aprovada pelo sócio";
-            case PROPOSTA_ENVIADA_CLIENTE -> "Proposta enviada ao cliente";
         };
     }
 

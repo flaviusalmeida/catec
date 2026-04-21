@@ -50,7 +50,7 @@ class ProjetoServiceTest {
         Projeto p = projeto(1L, ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL, 10L, 1L);
         when(projetoRepository.findById(1L)).thenReturn(Optional.of(p));
 
-        var req = new ProjetoUpdateRequest(null, null, null, ProjetoStatus.PROPOSTA_ENVIADA_CLIENTE);
+        var req = new ProjetoUpdateRequest(null, null, null, ProjetoStatus.PROPOSTA_CONCLUIDA);
 
         ResponseStatusException ex =
                 assertThrows(ResponseStatusException.class, () -> service.atualizar(1L, req, adminPrincipal()));

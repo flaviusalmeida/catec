@@ -2,11 +2,7 @@ export type ProjetoStatus =
   | "PENDENTE_CLIENTE"
   | "AGUARDANDO_PROPOSTA_COMERCIAL"
   | "ELABORANDO_PROPOSTA"
-  | "PROPOSTA_CONCLUIDA"
-  | "AGUARDANDO_REVISAO"
-  | "EM_REVISAO"
-  | "PROPOSTA_APROVADA_SOCIO"
-  | "PROPOSTA_ENVIADA_CLIENTE";
+  | "PROPOSTA_CONCLUIDA";
 
 export type Projeto = {
   id: number;
@@ -39,10 +35,6 @@ export const ORDEM_STATUS_PROJETO: ProjetoStatus[] = [
   "AGUARDANDO_PROPOSTA_COMERCIAL",
   "ELABORANDO_PROPOSTA",
   "PROPOSTA_CONCLUIDA",
-  "AGUARDANDO_REVISAO",
-  "EM_REVISAO",
-  "PROPOSTA_APROVADA_SOCIO",
-  "PROPOSTA_ENVIADA_CLIENTE",
 ];
 
 /**
@@ -53,11 +45,7 @@ export const PROJETO_TRANSICOES_ADMIN: Record<ProjetoStatus, readonly ProjetoSta
   PENDENTE_CLIENTE: [],
   AGUARDANDO_PROPOSTA_COMERCIAL: ["ELABORANDO_PROPOSTA"],
   ELABORANDO_PROPOSTA: ["PROPOSTA_CONCLUIDA"],
-  PROPOSTA_CONCLUIDA: ["PROPOSTA_ENVIADA_CLIENTE", "AGUARDANDO_REVISAO"],
-  AGUARDANDO_REVISAO: ["EM_REVISAO", "ELABORANDO_PROPOSTA"],
-  EM_REVISAO: ["PROPOSTA_APROVADA_SOCIO", "ELABORANDO_PROPOSTA"],
-  PROPOSTA_APROVADA_SOCIO: ["PROPOSTA_ENVIADA_CLIENTE"],
-  PROPOSTA_ENVIADA_CLIENTE: [],
+  PROPOSTA_CONCLUIDA: [],
 };
 
 /** Status atual + destinos válidos para o select do administrativo (ordem do fluxo). */
@@ -76,10 +64,6 @@ export const STATUS_PROJETO_ROTULO: Record<ProjetoStatus, string> = {
   AGUARDANDO_PROPOSTA_COMERCIAL: "Aguardando proposta comercial",
   ELABORANDO_PROPOSTA: "Elaborando proposta",
   PROPOSTA_CONCLUIDA: "Proposta concluída",
-  AGUARDANDO_REVISAO: "Aguardando revisão",
-  EM_REVISAO: "Em revisão",
-  PROPOSTA_APROVADA_SOCIO: "Proposta aprovada pelo sócio",
-  PROPOSTA_ENVIADA_CLIENTE: "Proposta enviada ao cliente",
 };
 
 /** Texto da pill na tabela (vira maiúsculas no CSS; manter curto por causa do `nowrap`). */
@@ -88,8 +72,4 @@ export const STATUS_PROJETO_ROTULO_BADGE: Record<ProjetoStatus, string> = {
   AGUARDANDO_PROPOSTA_COMERCIAL: "Aguard. prop.",
   ELABORANDO_PROPOSTA: "Elaborando",
   PROPOSTA_CONCLUIDA: "Prop. concl.",
-  AGUARDANDO_REVISAO: "Aguard. rev.",
-  EM_REVISAO: "Em revisão",
-  PROPOSTA_APROVADA_SOCIO: "Aprov. sócio",
-  PROPOSTA_ENVIADA_CLIENTE: "Enviada",
 };

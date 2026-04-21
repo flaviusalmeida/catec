@@ -7,10 +7,6 @@ const VARIANT_POR_STATUS: Record<ProjetoStatus, "inativo" | "pendente" | "ativo"
   AGUARDANDO_PROPOSTA_COMERCIAL: "pendente",
   ELABORANDO_PROPOSTA: "pendente",
   PROPOSTA_CONCLUIDA: "ativo",
-  AGUARDANDO_REVISAO: "pendente",
-  EM_REVISAO: "pendente",
-  PROPOSTA_APROVADA_SOCIO: "ativo",
-  PROPOSTA_ENVIADA_CLIENTE: "ativo",
 };
 
 /** Estado na listagem de projetos — mesma pill e grupo que em Usuários (`UsuarioStatusBadge`). */

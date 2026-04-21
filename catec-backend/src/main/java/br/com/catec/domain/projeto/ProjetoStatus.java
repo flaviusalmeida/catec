@@ -1,11 +1,8 @@
 package br.com.catec.domain.projeto;
 
 /**
- * Fluxo da proposta comercial (Fase 1). Transições de status alteradas pelo administrativo.
- *
- * <p>Ramo opcional de revisão pelo sócio: após {@link #PROPOSTA_CONCLUIDA} pode ir direto a
- * {@link #PROPOSTA_ENVIADA_CLIENTE} ou passar por {@link #AGUARDANDO_REVISAO} → {@link #EM_REVISAO} →
- * {@link #PROPOSTA_APROVADA_SOCIO} antes do envio.
+ * Estados do projeto (demanda inicial). Revisão, aprovação sócio e envio ao cliente ficam no CRUD de
+ * proposta (futuro).
  */
 public enum ProjetoStatus {
     /** Sem cliente vinculado; só é permitido associar cliente. */
@@ -13,9 +10,6 @@ public enum ProjetoStatus {
     /** Com cliente; aguardando início da elaboração da proposta comercial. */
     AGUARDANDO_PROPOSTA_COMERCIAL,
     ELABORANDO_PROPOSTA,
-    PROPOSTA_CONCLUIDA,
-    AGUARDANDO_REVISAO,
-    EM_REVISAO,
-    PROPOSTA_APROVADA_SOCIO,
-    PROPOSTA_ENVIADA_CLIENTE
+    /** Proposta comercial pronta no âmbito do projeto; etapas seguintes na entidade Proposta (futuro). */
+    PROPOSTA_CONCLUIDA
 }
