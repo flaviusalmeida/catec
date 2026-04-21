@@ -147,6 +147,8 @@ class ProjetoServiceTest {
         p.setStatus(status);
         p.setCriadoEm(Instant.now());
         p.setAtualizadoEm(Instant.now());
+        p.setClienteAssociadoEm(Instant.now());
+        p.setClienteAssociadoPor(u);
         return p;
     }
 }

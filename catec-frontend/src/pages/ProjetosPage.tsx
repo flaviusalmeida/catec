@@ -47,8 +47,8 @@ function emptyForm(): FormState {
 
 function formFromProjeto(p: Projeto): FormState {
   return {
-    clienteId: String(p.clienteId),
-    clienteBusca: p.clienteNome,
+    clienteId: p.clienteId != null ? String(p.clienteId) : "",
+    clienteBusca: p.clienteNome ?? "",
     titulo: p.titulo,
     escopo: p.escopo,
     status: p.status,
@@ -57,6 +57,7 @@ function formFromProjeto(p: Projeto): FormState {
 
 function podeEditarCampos(p: Projeto | null, userId: number | undefined, isAdmin: boolean): boolean {
   if (!p || userId == null) return false;
+  if (p.status === "PENDENTE_CLIENTE") return false;
   if (isAdmin) return true;
   return p.criadoPorId === userId && p.status === "CRIADO";
 }
@@ -67,10 +68,10 @@ function previewContatoCliente(
   clienteSelecionado: ClienteResumo | null,
 ): ClienteResumo | null {
   if (clienteSelecionado) return clienteSelecionado;
-  if (modo === "editar" && editando) {
+  if (modo === "editar" && editando && editando.clienteId != null) {
     return {
       id: editando.clienteId,
-      razaoSocialOuNome: editando.clienteNome,
+      razaoSocialOuNome: editando.clienteNome ?? "",
       email: editando.emailContato,
       telefone: editando.telefoneContato,
     };
@@ -196,21 +197,18 @@ export default function ProjetosPage() {
       return;
     }
     const cid = Number.parseInt(form.clienteId, 10);
-    if (modo === "criar" && (Number.isNaN(cid) || cid < 1)) {
-      setModalErro("Selecione um cliente na pesquisa.");
-      return;
-    }
+    const temCliente = !Number.isNaN(cid) && cid >= 1;
 
     setSalvando(true);
     try {
       if (modo === "criar") {
+        const body: Record<string, unknown> = { titulo, escopo };
+        if (temCliente) {
+          body.clienteId = cid;
+        }
         const res = await apiFetch("/api/v1/projetos", {
           method: "POST",
-          body: JSON.stringify({
-            clienteId: cid,
-            titulo,
-            escopo,
-          }),
+          body: JSON.stringify(body),
         });
         if (res.status === 401) {
           logout();
@@ -218,17 +216,47 @@ export default function ProjetosPage() {
           return;
         }
         if (!res.ok) {
-          const body = await res.json().catch(() => null);
-          setModalErro(body?.mensagem ?? `Erro ao criar (${res.status})`);
+          const bodyJson = await res.json().catch(() => null);
+          setModalErro(bodyJson?.mensagem ?? `Erro ao criar (${res.status})`);
           return;
         }
         setModalAberto(false);
-        setSucesso("Projeto criado com sucesso.");
+        setSucesso(temCliente ? "Projeto criado com sucesso." : "Demanda registrada. Associe um cliente quando possível.");
         await carregarProjetos();
         return;
       }
 
       if (editando == null) return;
+
+      if (editando.status === "PENDENTE_CLIENTE") {
+        if (!temCliente) {
+          setModalErro("Selecione um cliente na pesquisa para associar à demanda.");
+          return;
+        }
+        const emailAssoc = previewContatoCliente(modo, editando, clienteSelecionado)?.email?.trim();
+        if (!emailAssoc) {
+          setModalErro("O cliente selecionado precisa ter e-mail cadastrado para associar à demanda.");
+          return;
+        }
+        const res = await apiFetch(`/api/v1/projetos/${editando.id}/cliente`, {
+          method: "PUT",
+          body: JSON.stringify({ clienteId: cid }),
+        });
+        if (res.status === 401) {
+          logout();
+          navigate("/login", { replace: true });
+          return;
+        }
+        if (!res.ok) {
+          const b = await res.json().catch(() => null);
+          setModalErro(b?.mensagem ?? `Erro ao associar cliente (${res.status})`);
+          return;
+        }
+        setModalAberto(false);
+        setSucesso("Cliente associado à demanda com sucesso.");
+        await carregarProjetos();
+        return;
+      }
 
       const podeCampos = podeEditarCampos(editando, user?.id, isAdmin);
       const body: Record<string, unknown> = {};
@@ -273,8 +301,15 @@ export default function ProjetosPage() {
     }
   }
 
+  const pendenteCliente = modo === "editar" && editando?.status === "PENDENTE_CLIENTE";
+  const podeAssociarCliente =
+    pendenteCliente &&
+    editando != null &&
+    (isAdmin || (user?.id != null && editando.criadoPorId === user.id));
+
   const camposEditaveis = editando == null ? true : podeEditarCampos(editando, user?.id, isAdmin);
-  const somenteLeitura = modo === "editar" && !camposEditaveis && !isAdmin;
+  const somenteLeitura =
+    modo === "editar" && !isAdmin && (pendenteCliente ? !podeAssociarCliente : !camposEditaveis);
 
   if (!podeGerirProjetos) {
     return (
@@ -343,6 +378,7 @@ export default function ProjetosPage() {
               variant="compact"
             >
               <option value="">Todos</option>
+              <option value="PENDENTE_CLIENTE">{STATUS_PROJETO_ROTULO.PENDENTE_CLIENTE}</option>
               <option value="CRIADO">Criado</option>
               <option value="AGUARDANDO_ADM">Aguardando administrativo</option>
               <option value="EM_PROPOSTA">Em proposta</option>
@@ -387,7 +423,7 @@ export default function ProjetosPage() {
                     onClick={() => abrirEditar(p)}
                   >
                     <td className="admin-crud-table__cell-primary">{p.titulo}</td>
-                    <td>{p.clienteNome}</td>
+                    <td>{p.clienteNome ?? "—"}</td>
                     <td className="admin-crud-table__cell-muted">{p.criadoPorNome}</td>
                     <td>
                       <ProjetoStatusBadge status={p.status} />
@@ -408,7 +444,13 @@ export default function ProjetosPage() {
         titleId="projetos-modal-titulo"
         panelClassName="projetos-form-dialog"
         title={
-          modo === "criar" ? "Novo projeto" : somenteLeitura ? "Ver projeto" : "Editar projeto"
+          modo === "criar"
+            ? "Novo projeto"
+            : pendenteCliente && podeAssociarCliente
+              ? "Completar cadastro da demanda"
+              : somenteLeitura
+                ? "Ver projeto"
+                : "Editar projeto"
         }
         onBackdropClick={() => {
           if (salvando) return;
@@ -416,9 +458,17 @@ export default function ProjetosPage() {
         }}
       >
         {modalErro ? <InlineAlert variant="error">{modalErro}</InlineAlert> : null}
+        {pendenteCliente && podeAssociarCliente ? (
+          <InlineAlert variant="error">
+            Esta demanda está pendente de cadastro de cliente. Associe um cliente para liberar título, descrição e
+            fluxo. Até lá não é possível alterar a demanda por outros meios.
+          </InlineAlert>
+        ) : null}
         {somenteLeitura ? (
           <p className="admin-crud-table__filter-msg" role="status">
-            Esta demanda já seguiu o fluxo. Só o administrativo pode alterar status e dados.
+            {pendenteCliente
+              ? "Esta demanda está pendente de cliente. Só quem abriu a demanda ou o administrativo pode associar o cliente."
+              : "Esta demanda já seguiu o fluxo. Só o administrativo pode alterar status e dados."}
           </p>
         ) : null}
 
@@ -426,8 +476,12 @@ export default function ProjetosPage() {
           <div className="projetos-modal-ident-stack">
             <ClienteAutocomplete
               label="Cliente"
-              required={modo === "criar"}
-              disabled={salvando || (modo === "editar" && !isAdmin) || somenteLeitura}
+              required={pendenteCliente}
+              disabled={
+                salvando ||
+                somenteLeitura ||
+                (modo === "editar" && !pendenteCliente && !isAdmin)
+              }
               valueId={form.clienteId}
               inputValue={form.clienteBusca}
               onInputValueChange={(clienteBusca) => setForm((f) => ({ ...f, clienteBusca }))}
@@ -450,7 +504,7 @@ export default function ProjetosPage() {
                 onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
                 className="clientes-input"
                 variant="modal"
-                disabled={salvando || (!camposEditaveis && modo === "editar")}
+                disabled={salvando || (!camposEditaveis && modo === "editar") || pendenteCliente}
                 required
                 aria-required="true"
               />
@@ -493,14 +547,14 @@ export default function ProjetosPage() {
               onChange={(e) => setForm((f) => ({ ...f, escopo: e.target.value }))}
               className="clientes-input clientes-textarea"
               variant="modal"
-              disabled={salvando || (!camposEditaveis && modo === "editar")}
+              disabled={salvando || (!camposEditaveis && modo === "editar") || pendenteCliente}
               required
               aria-required="true"
             />
           </FormField>
         </div>
 
-        {modo === "editar" && isAdmin ? (
+            {modo === "editar" && isAdmin && editando?.status !== "PENDENTE_CLIENTE" ? (
           <ModalSection title="Status do fluxo" titleId="proj-modal-status">
             <FormField label="Status" htmlFor="pf-status">
               <FieldControl
@@ -526,7 +580,13 @@ export default function ProjetosPage() {
           </GhostButton>
           {somenteLeitura ? null : (
             <PrimaryButton onClick={() => void salvar()} disabled={salvando}>
-              {salvando ? "Salvando…" : "Salvar"}
+              {pendenteCliente && podeAssociarCliente
+                ? salvando
+                  ? "Associando…"
+                  : "Associar cliente"
+                : salvando
+                  ? "Salvando…"
+                  : "Salvar"}
             </PrimaryButton>
           )}
         </ModalFooter>

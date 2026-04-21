@@ -23,8 +23,8 @@ public class Projeto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "cliente_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "cliente_id", nullable = true)
     private Cliente cliente;
 
     @Column(name = "titulo", nullable = false, length = 500)
@@ -33,7 +33,7 @@ public class Projeto {
     @Column(name = "escopo", nullable = false, columnDefinition = "TEXT")
     private String escopo;
 
-    @Column(name = "email_contato", nullable = false)
+    @Column(name = "email_contato", nullable = true, length = 255)
     private String emailContato;
 
     @Column(name = "telefone_contato", length = 20)
@@ -52,6 +52,13 @@ public class Projeto {
 
     @Column(name = "atualizado_em", nullable = false)
     private Instant atualizadoEm;
+
+    @Column(name = "cliente_associado_em")
+    private Instant clienteAssociadoEm;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "cliente_associado_por_id", nullable = true)
+    private Usuario clienteAssociadoPor;
 
     public Long getId() {
         return id;
@@ -93,6 +100,14 @@ public class Projeto {
         return atualizadoEm;
     }
 
+    public Instant getClienteAssociadoEm() {
+        return clienteAssociadoEm;
+    }
+
+    public Usuario getClienteAssociadoPor() {
+        return clienteAssociadoPor;
+    }
+
     public void setCliente(Cliente cliente) {
         this.cliente = cliente;
     }
@@ -127,5 +142,13 @@ public class Projeto {
 
     public void setAtualizadoEm(Instant atualizadoEm) {
         this.atualizadoEm = atualizadoEm;
+    }
+
+    public void setClienteAssociadoEm(Instant clienteAssociadoEm) {
+        this.clienteAssociadoEm = clienteAssociadoEm;
+    }
+
+    public void setClienteAssociadoPor(Usuario clienteAssociadoPor) {
+        this.clienteAssociadoPor = clienteAssociadoPor;
     }
 }

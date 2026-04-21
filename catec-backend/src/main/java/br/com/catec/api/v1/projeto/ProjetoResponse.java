@@ -15,4 +15,7 @@ public record ProjetoResponse(
         String criadoPorNome,
         ProjetoStatus status,
         Instant criadoEm,
-        Instant atualizadoEm) {}
+        Instant atualizadoEm,
+        Instant clienteAssociadoEm,
+        Long clienteAssociadoPorId,
+        String clienteAssociadoPorNome) {}

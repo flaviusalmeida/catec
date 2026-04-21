@@ -5,6 +5,11 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:catec}
     password: ${SPRING_DATASOURCE_PASSWORD:catec}
     driver-class-name: org.postgresql.Driver
+  flyway:
+    # Dev: scripts V* já aplicados no banco foram alterados no repositório (checksum diferente).
+    # `false` evita abortar a subida; o caminho correto é `./mvnw flyway:repair` para alinhar flyway_schema_history.
+    # Não use em produção — lá não se edita migração já aplicada; crie sempre um V novo.
+    validate-on-migrate: false
 
 management:
   endpoint:

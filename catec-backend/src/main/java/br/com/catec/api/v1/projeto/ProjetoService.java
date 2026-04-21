@@ -53,21 +53,60 @@ public class ProjetoService {
 
     @Transactional
     public ProjetoResponse criar(ProjetoCreateRequest req, UsuarioAutenticado principal) {
-        Cliente cliente = clienteRepository
-                .findById(req.clienteId())
-                .orElseThrow(() -> badRequest("Cliente não encontrado. Indique um clienteId válido."));
         Instant agora = Instant.now();
         Usuario criador = usuarioRepository
                 .findById(principal.id())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sessão inválida."));
         Projeto p = new Projeto();
-        p.setCliente(cliente);
         p.setTitulo(req.titulo().trim());
         p.setEscopo(req.escopo().trim());
-        aplicarContatoDoCliente(cliente, p);
         p.setCriadoPor(criador);
-        p.setStatus(ProjetoStatus.CRIADO);
         p.setCriadoEm(agora);
+        p.setAtualizadoEm(agora);
+
+        if (req.clienteId() == null) {
+            p.setCliente(null);
+            p.setEmailContato(null);
+            p.setTelefoneContato(null);
+            p.setStatus(ProjetoStatus.PENDENTE_CLIENTE);
+            p.setClienteAssociadoEm(null);
+            p.setClienteAssociadoPor(null);
+        } else {
+            Cliente cliente = clienteRepository
+                    .findById(req.clienteId())
+                    .orElseThrow(() -> badRequest("Cliente não encontrado. Indique um clienteId válido."));
+            p.setCliente(cliente);
+            aplicarContatoDoCliente(cliente, p);
+            p.setStatus(ProjetoStatus.CRIADO);
+            p.setClienteAssociadoEm(agora);
+            p.setClienteAssociadoPor(criador);
+        }
+        return toResponse(projetoRepository.save(p));
+    }
+
+    @Transactional
+    public ProjetoResponse associarCliente(Long id, ProjetoAssociarClienteRequest req, UsuarioAutenticado principal) {
+        Projeto p = loadOrNotFound(id);
+        garantirLeitura(p, principal);
+        if (p.getStatus() != ProjetoStatus.PENDENTE_CLIENTE) {
+            throw badRequest("Só é possível associar cliente quando a demanda está pendente de cadastro de cliente.");
+        }
+        boolean admin = isAdministrativo(principal);
+        if (!admin && !p.getCriadoPor().getId().equals(principal.id())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Só o criador pode associar o cliente a esta demanda.");
+        }
+        Cliente cliente = clienteRepository
+                .findById(req.clienteId())
+                .orElseThrow(() -> badRequest("Cliente não encontrado. Indique um clienteId válido."));
+        Usuario quem = usuarioRepository
+                .findById(principal.id())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sessão inválida."));
+        Instant agora = Instant.now();
+        p.setCliente(cliente);
+        aplicarContatoDoCliente(cliente, p);
+        p.setStatus(ProjetoStatus.CRIADO);
+        p.setClienteAssociadoEm(agora);
+        p.setClienteAssociadoPor(quem);
         p.setAtualizadoEm(agora);
         return toResponse(projetoRepository.save(p));
     }
@@ -75,6 +114,11 @@ public class ProjetoService {
     @Transactional
     public ProjetoResponse atualizar(Long id, ProjetoUpdateRequest req, UsuarioAutenticado principal) {
         Projeto p = loadOrNotFound(id);
+        if (p.getStatus() == ProjetoStatus.PENDENTE_CLIENTE) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Demanda pendente de cadastro de cliente. Associe um cliente antes de qualquer alteração.");
+        }
         boolean admin = isAdministrativo(principal);
 
         if (!admin) {
@@ -133,6 +177,7 @@ public class ProjetoService {
     private void validarTransicao(ProjetoStatus atual, ProjetoStatus novo) {
         boolean ok =
                 switch (atual) {
+                    case PENDENTE_CLIENTE -> false;
                     case CRIADO -> novo == ProjetoStatus.AGUARDANDO_ADM;
                     case AGUARDANDO_ADM -> novo == ProjetoStatus.EM_PROPOSTA;
                     case EM_PROPOSTA -> false;
@@ -146,6 +191,7 @@ public class ProjetoService {
 
     private static String labelEstado(ProjetoStatus s) {
         return switch (s) {
+            case PENDENTE_CLIENTE -> "Pendente de cliente";
             case CRIADO -> "Criado";
             case AGUARDANDO_ADM -> "Aguardando administrativo";
             case EM_PROPOSTA -> "Em proposta";
@@ -189,6 +235,27 @@ public class ProjetoService {
 
     private ProjetoResponse toResponse(Projeto p) {
         Cliente c = p.getCliente();
+        Long associadoPorId = p.getClienteAssociadoPor() != null ? p.getClienteAssociadoPor().getId() : null;
+        String associadoPorNome =
+                p.getClienteAssociadoPor() != null ? p.getClienteAssociadoPor().getNome() : null;
+        if (c == null) {
+            return new ProjetoResponse(
+                    p.getId(),
+                    null,
+                    null,
+                    p.getTitulo(),
+                    p.getEscopo(),
+                    p.getEmailContato(),
+                    p.getTelefoneContato(),
+                    p.getCriadoPor().getId(),
+                    p.getCriadoPor().getNome(),
+                    p.getStatus(),
+                    p.getCriadoEm(),
+                    p.getAtualizadoEm(),
+                    p.getClienteAssociadoEm(),
+                    associadoPorId,
+                    associadoPorNome);
+        }
         return new ProjetoResponse(
                 p.getId(),
                 c.getId(),
@@ -201,13 +268,12 @@ public class ProjetoService {
                 p.getCriadoPor().getNome(),
                 p.getStatus(),
                 p.getCriadoEm(),
-                p.getAtualizadoEm());
+                p.getAtualizadoEm(),
+                p.getClienteAssociadoEm(),
+                associadoPorId,
+                associadoPorNome);
     }
 
-    /**
-     * E-mail mostrado na API: cadastro atual do cliente, com fallback ao valor gravado na demanda (ex.: cliente sem
-     * e-mail hoje).
-     */
     private static String emailContatoParaResposta(Cliente c, Projeto p) {
         String em = c.getEmail();
         if (em != null && !em.isBlank()) {
@@ -216,10 +282,6 @@ public class ProjetoService {
         return p.getEmailContato();
     }
 
-    /**
-     * Telefone mostrado na API: cadastro atual do cliente, com fallback ao valor gravado na demanda (ex.: projetos
-     * antigos ou antes de sincronizar).
-     */
     private static String telefoneContatoParaResposta(Cliente c, Projeto p) {
         String tel = c.getTelefone();
         if (tel != null && !tel.isBlank()) {
@@ -228,7 +290,6 @@ public class ProjetoService {
         return p.getTelefoneContato();
     }
 
-    /** Telefone opcional: vazio ou null grava null; caso contrário 10–11 dígitos (DDD + número). */
     private static String normalizarTelefoneOpcional(String raw) {
         if (raw == null) {
             return null;

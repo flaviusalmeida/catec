@@ -50,4 +50,12 @@ public class ProjetoController {
             @AuthenticationPrincipal UsuarioAutenticado principal) {
         return projetoService.atualizar(id, body, principal);
     }
+
+    @PutMapping("/{id}/cliente")
+    public ProjetoResponse associarCliente(
+            @PathVariable Long id,
+            @Valid @RequestBody ProjetoAssociarClienteRequest body,
+            @AuthenticationPrincipal UsuarioAutenticado principal) {
+        return projetoService.associarCliente(id, body, principal);
+    }
 }

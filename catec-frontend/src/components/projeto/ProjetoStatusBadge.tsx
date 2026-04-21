@@ -3,6 +3,7 @@ import type { ProjetoStatus } from "../../pages/projetoTypes";
 import { STATUS_PROJETO_ROTULO_BADGE } from "../../pages/projetoTypes";
 
 const VARIANT_POR_STATUS: Record<ProjetoStatus, "inativo" | "pendente" | "ativo"> = {
+  PENDENTE_CLIENTE: "pendente",
   CRIADO: "inativo",
   AGUARDANDO_ADM: "pendente",
   EM_PROPOSTA: "ativo",
