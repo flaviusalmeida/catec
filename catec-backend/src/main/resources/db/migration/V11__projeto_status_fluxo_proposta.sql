@@ -1,0 +1,24 @@
+-- Novo fluxo de status da proposta comercial (substitui CRIADO / AGUARDANDO_ADM / EM_PROPOSTA).
+-- Remover o CHECK antes do UPDATE: senão valores novos violam ck_projeto_status ainda antigo.
+
+ALTER TABLE projeto DROP CONSTRAINT IF EXISTS ck_projeto_status;
+
+UPDATE projeto
+SET status = CASE status
+    WHEN 'CRIADO' THEN 'AGUARDANDO_PROPOSTA_COMERCIAL'
+    WHEN 'AGUARDANDO_ADM' THEN 'ELABORANDO_PROPOSTA'
+    WHEN 'EM_PROPOSTA' THEN 'PROPOSTA_CONCLUIDA'
+    ELSE status
+END
+WHERE status IN ('CRIADO', 'AGUARDANDO_ADM', 'EM_PROPOSTA');
+
+ALTER TABLE projeto ADD CONSTRAINT ck_projeto_status CHECK (status IN (
+    'PENDENTE_CLIENTE',
+    'AGUARDANDO_PROPOSTA_COMERCIAL',
+    'ELABORANDO_PROPOSTA',
+    'PROPOSTA_CONCLUIDA',
+    'AGUARDANDO_REVISAO',
+    'EM_REVISAO',
+    'PROPOSTA_APROVADA_SOCIO',
+    'PROPOSTA_ENVIADA_CLIENTE'
+));

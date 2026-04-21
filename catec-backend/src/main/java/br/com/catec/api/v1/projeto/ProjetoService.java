@@ -77,7 +77,7 @@ public class ProjetoService {
                     .orElseThrow(() -> badRequest("Cliente não encontrado. Indique um clienteId válido."));
             p.setCliente(cliente);
             aplicarContatoDoCliente(cliente, p);
-            p.setStatus(ProjetoStatus.CRIADO);
+            p.setStatus(ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL);
             p.setClienteAssociadoEm(agora);
             p.setClienteAssociadoPor(criador);
         }
@@ -104,7 +104,7 @@ public class ProjetoService {
         Instant agora = Instant.now();
         p.setCliente(cliente);
         aplicarContatoDoCliente(cliente, p);
-        p.setStatus(ProjetoStatus.CRIADO);
+        p.setStatus(ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL);
         p.setClienteAssociadoEm(agora);
         p.setClienteAssociadoPor(quem);
         p.setAtualizadoEm(agora);
@@ -125,9 +125,10 @@ public class ProjetoService {
             if (!p.getCriadoPor().getId().equals(principal.id())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Só o criador pode editar esta demanda.");
             }
-            if (p.getStatus() != ProjetoStatus.CRIADO) {
+            if (p.getStatus() != ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL) {
                 throw new ResponseStatusException(
-                        HttpStatus.FORBIDDEN, "Só é possível editar a demanda enquanto estiver no estado Criado.");
+                        HttpStatus.FORBIDDEN,
+                        "Só é possível editar título e descrição enquanto o projeto estiver aguardando proposta comercial.");
             }
             if (req.clienteId() != null && !req.clienteId().equals(p.getCliente().getId())) {
                 throw new ResponseStatusException(
@@ -178,9 +179,19 @@ public class ProjetoService {
         boolean ok =
                 switch (atual) {
                     case PENDENTE_CLIENTE -> false;
-                    case CRIADO -> novo == ProjetoStatus.AGUARDANDO_ADM;
-                    case AGUARDANDO_ADM -> novo == ProjetoStatus.EM_PROPOSTA;
-                    case EM_PROPOSTA -> false;
+                    case AGUARDANDO_PROPOSTA_COMERCIAL -> novo == ProjetoStatus.ELABORANDO_PROPOSTA;
+                    case ELABORANDO_PROPOSTA -> novo == ProjetoStatus.PROPOSTA_CONCLUIDA;
+                    case PROPOSTA_CONCLUIDA ->
+                            novo == ProjetoStatus.PROPOSTA_ENVIADA_CLIENTE
+                                    || novo == ProjetoStatus.AGUARDANDO_REVISAO;
+                    case AGUARDANDO_REVISAO ->
+                            novo == ProjetoStatus.EM_REVISAO
+                                    || novo == ProjetoStatus.ELABORANDO_PROPOSTA;
+                    case EM_REVISAO ->
+                            novo == ProjetoStatus.PROPOSTA_APROVADA_SOCIO
+                                    || novo == ProjetoStatus.ELABORANDO_PROPOSTA;
+                    case PROPOSTA_APROVADA_SOCIO -> novo == ProjetoStatus.PROPOSTA_ENVIADA_CLIENTE;
+                    case PROPOSTA_ENVIADA_CLIENTE -> false;
                 };
         if (!ok) {
             throw badRequest(
@@ -192,9 +203,13 @@ public class ProjetoService {
     private static String labelEstado(ProjetoStatus s) {
         return switch (s) {
             case PENDENTE_CLIENTE -> "Pendente de cliente";
-            case CRIADO -> "Criado";
-            case AGUARDANDO_ADM -> "Aguardando administrativo";
-            case EM_PROPOSTA -> "Em proposta";
+            case AGUARDANDO_PROPOSTA_COMERCIAL -> "Aguardando proposta comercial";
+            case ELABORANDO_PROPOSTA -> "Elaborando proposta";
+            case PROPOSTA_CONCLUIDA -> "Proposta concluída";
+            case AGUARDANDO_REVISAO -> "Aguardando revisão";
+            case EM_REVISAO -> "Em revisão";
+            case PROPOSTA_APROVADA_SOCIO -> "Proposta aprovada pelo sócio";
+            case PROPOSTA_ENVIADA_CLIENTE -> "Proposta enviada ao cliente";
         };
     }
 

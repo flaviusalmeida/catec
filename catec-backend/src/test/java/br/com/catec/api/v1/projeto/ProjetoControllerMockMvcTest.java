@@ -79,7 +79,7 @@ class ProjetoControllerMockMvcTest {
                 "11988887777",
                 2L,
                 "Colab",
-                ProjetoStatus.CRIADO,
+                ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL,
                 Instant.parse("2026-01-01T12:00:00Z"),
                 Instant.parse("2026-01-01T12:00:00Z"),
                 Instant.parse("2026-01-01T12:00:00Z"),
@@ -94,14 +94,14 @@ class ProjetoControllerMockMvcTest {
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(10))
-                .andExpect(jsonPath("$.status").value("CRIADO"));
+                .andExpect(jsonPath("$.status").value("AGUARDANDO_PROPOSTA_COMERCIAL"));
 
         verify(projetoService).criar(eq(body), eq(colab(2L)));
     }
 
     @Test
     void atualizar_quandoAdmin_deveRetornar200() throws Exception {
-        var body = new ProjetoUpdateRequest(null, null, null, ProjetoStatus.AGUARDANDO_ADM);
+        var body = new ProjetoUpdateRequest(null, null, null, ProjetoStatus.ELABORANDO_PROPOSTA);
         var res = new ProjetoResponse(
                 5L,
                 1L,
@@ -112,7 +112,7 @@ class ProjetoControllerMockMvcTest {
                 null,
                 2L,
                 "Colab",
-                ProjetoStatus.AGUARDANDO_ADM,
+                ProjetoStatus.ELABORANDO_PROPOSTA,
                 Instant.parse("2026-01-01T12:00:00Z"),
                 Instant.parse("2026-01-02T12:00:00Z"),
                 Instant.parse("2026-01-01T12:00:00Z"),
@@ -126,7 +126,7 @@ class ProjetoControllerMockMvcTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("AGUARDANDO_ADM"));
+                .andExpect(jsonPath("$.status").value("ELABORANDO_PROPOSTA"));
 
         verify(projetoService).atualizar(eq(5L), eq(body), eq(adm(1L)));
     }

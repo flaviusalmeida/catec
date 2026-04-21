@@ -47,10 +47,10 @@ class ProjetoServiceTest {
 
     @Test
     void atualizar_quandoAdminTransicaoInvalida_deve400() {
-        Projeto p = projeto(1L, ProjetoStatus.CRIADO, 10L, 1L);
+        Projeto p = projeto(1L, ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL, 10L, 1L);
         when(projetoRepository.findById(1L)).thenReturn(Optional.of(p));
 
-        var req = new ProjetoUpdateRequest(null, null, null, ProjetoStatus.EM_PROPOSTA);
+        var req = new ProjetoUpdateRequest(null, null, null, ProjetoStatus.PROPOSTA_ENVIADA_CLIENTE);
 
         ResponseStatusException ex =
                 assertThrows(ResponseStatusException.class, () -> service.atualizar(1L, req, adminPrincipal()));
@@ -60,22 +60,22 @@ class ProjetoServiceTest {
     }
 
     @Test
-    void atualizar_quandoAdminCriadoParaAguardando_devePersistir() {
-        Projeto p = projeto(1L, ProjetoStatus.CRIADO, 10L, 1L);
+    void atualizar_quandoAdminAguardandoPropostaParaElaborando_devePersistir() {
+        Projeto p = projeto(1L, ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL, 10L, 1L);
         when(projetoRepository.findById(1L)).thenReturn(Optional.of(p));
         when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        var req = new ProjetoUpdateRequest(null, null, null, ProjetoStatus.AGUARDANDO_ADM);
+        var req = new ProjetoUpdateRequest(null, null, null, ProjetoStatus.ELABORANDO_PROPOSTA);
 
         ProjetoResponse out = service.atualizar(1L, req, adminPrincipal());
 
-        assertEquals(ProjetoStatus.AGUARDANDO_ADM, out.status());
+        assertEquals(ProjetoStatus.ELABORANDO_PROPOSTA, out.status());
         verify(projetoRepository).save(p);
     }
 
     @Test
     void atualizar_quandoColaboradorNaoDono_deve403() {
-        Projeto p = projeto(1L, ProjetoStatus.CRIADO, 99L, 1L);
+        Projeto p = projeto(1L, ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL, 99L, 1L);
         when(projetoRepository.findById(1L)).thenReturn(Optional.of(p));
 
         var req = new ProjetoUpdateRequest(null, "Novo", "Esc", null);

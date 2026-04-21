@@ -21,7 +21,7 @@ import ToastAlert from "../components/ui/ToastAlert";
 import "../styles/admin-crud-table.css";
 import { formatTelefoneBrasil } from "../utils/telefoneBrasil";
 import type { ClienteResumo, Projeto, ProjetoStatus } from "./projetoTypes";
-import { STATUS_PROJETO_ROTULO } from "./projetoTypes";
+import { ORDEM_STATUS_PROJETO, STATUS_PROJETO_ROTULO, statusOpcoesFluxoAdmin } from "./projetoTypes";
 import "./ClientesPage.css";
 import "./ProjetosPage.css";
 
@@ -41,7 +41,7 @@ function emptyForm(): FormState {
     clienteBusca: "",
     titulo: "",
     escopo: "",
-    status: "CRIADO",
+    status: "AGUARDANDO_PROPOSTA_COMERCIAL",
   };
 }
 
@@ -59,7 +59,7 @@ function podeEditarCampos(p: Projeto | null, userId: number | undefined, isAdmin
   if (!p || userId == null) return false;
   if (p.status === "PENDENTE_CLIENTE") return false;
   if (isAdmin) return true;
-  return p.criadoPorId === userId && p.status === "CRIADO";
+  return p.criadoPorId === userId && p.status === "AGUARDANDO_PROPOSTA_COMERCIAL";
 }
 
 function previewContatoCliente(
@@ -230,7 +230,7 @@ export default function ProjetosPage() {
 
       if (editando.status === "PENDENTE_CLIENTE") {
         if (!temCliente) {
-          setModalErro("Selecione um cliente na pesquisa para associar à demanda.");
+          setModalErro(null);
           return;
         }
         const emailAssoc = previewContatoCliente(modo, editando, clienteSelecionado)?.email?.trim();
@@ -378,10 +378,11 @@ export default function ProjetosPage() {
               variant="compact"
             >
               <option value="">Todos</option>
-              <option value="PENDENTE_CLIENTE">{STATUS_PROJETO_ROTULO.PENDENTE_CLIENTE}</option>
-              <option value="CRIADO">Criado</option>
-              <option value="AGUARDANDO_ADM">Aguardando administrativo</option>
-              <option value="EM_PROPOSTA">Em proposta</option>
+              {ORDEM_STATUS_PROJETO.map((s) => (
+                <option key={s} value={s}>
+                  {STATUS_PROJETO_ROTULO[s]}
+                </option>
+              ))}
             </FieldControl>
           </div>
         </FiltersCard>
@@ -460,8 +461,7 @@ export default function ProjetosPage() {
         {modalErro ? <InlineAlert variant="error">{modalErro}</InlineAlert> : null}
         {pendenteCliente && podeAssociarCliente ? (
           <InlineAlert variant="error">
-            Esta demanda está pendente de cadastro de cliente. Associe um cliente para liberar título, descrição e
-            fluxo. Até lá não é possível alterar a demanda por outros meios.
+            Este projeto está pendente do cadastro de um cliente. Associe um cliente para liberar título, descrição e fluxo.
           </InlineAlert>
         ) : null}
         {somenteLeitura ? (
@@ -566,9 +566,13 @@ export default function ProjetosPage() {
                 variant="modal"
                 disabled={salvando}
               >
-                <option value="CRIADO">{STATUS_PROJETO_ROTULO.CRIADO}</option>
-                <option value="AGUARDANDO_ADM">{STATUS_PROJETO_ROTULO.AGUARDANDO_ADM}</option>
-                <option value="EM_PROPOSTA">{STATUS_PROJETO_ROTULO.EM_PROPOSTA}</option>
+                {editando ? (
+                  statusOpcoesFluxoAdmin(editando.status).map((s) => (
+                    <option key={s} value={s}>
+                      {STATUS_PROJETO_ROTULO[s]}
+                    </option>
+                  ))
+                ) : null}
               </FieldControl>
             </FormField>
           </ModalSection>
