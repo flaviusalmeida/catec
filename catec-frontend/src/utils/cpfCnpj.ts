@@ -69,6 +69,12 @@ export function isCnpjValid(digits: string): boolean {
   return v1 === parseInt(digits[12]!, 10) && v2 === parseInt(digits[13]!, 10);
 }
 
+export type ClienteResponsavelObrigatorios = {
+  nome: string;
+  email: string;
+  telefone: string;
+};
+
 /** Valida campos obrigatórios e formato CPF/CNPJ; retorna mensagem de erro ou null. */
 export function validateClienteObrigatorios(form: {
   tipoPessoa: TipoPessoa;
@@ -76,6 +82,8 @@ export function validateClienteObrigatorios(form: {
   documento: string;
   email: string;
   telefone: string;
+  periodoFaturamento: string;
+  responsavel: ClienteResponsavelObrigatorios;
 }): string | null {
   if (!form.razaoSocialOuNome.trim()) {
     return "Nome / Razão social é obrigatório.";
@@ -112,6 +120,27 @@ export function validateClienteObrigatorios(form: {
   }
   if (!isTelefoneBrasilValid(tel)) {
     return "Telefone inválido. Use DDD + número (10 ou 11 dígitos).";
+  }
+  if (!form.periodoFaturamento.trim()) {
+    return "Período de faturamento é obrigatório.";
+  }
+  const respNome = form.responsavel.nome.trim();
+  if (!respNome) {
+    return "Nome do responsável é obrigatório.";
+  }
+  const respEmail = form.responsavel.email.trim();
+  if (!respEmail) {
+    return "E-mail do responsável é obrigatório.";
+  }
+  if (!isEmailValid(respEmail)) {
+    return "Informe um e-mail válido para o responsável.";
+  }
+  const respTel = onlyDigits(form.responsavel.telefone);
+  if (!respTel) {
+    return "Telefone do responsável é obrigatório.";
+  }
+  if (!isTelefoneBrasilValid(respTel)) {
+    return "Telefone do responsável inválido. Use DDD + número (10 ou 11 dígitos).";
   }
   return null;
 }

@@ -5,6 +5,13 @@ import { formatTelefoneBrasil } from "../utils/telefoneBrasil";
 
 export type { TipoPessoa };
 
+export type ClienteResponsavel = {
+  id: number;
+  nome: string;
+  email: string;
+  telefone: string;
+};
+
 export type Cliente = {
   id: number;
   tipoPessoa: TipoPessoa;
@@ -19,7 +26,15 @@ export type Cliente = {
   enderecoCidade: string | null;
   enderecoUf: string | null;
   enderecoCep: string | null;
+  periodoFaturamento: string;
   observacoes: string | null;
+  responsaveis?: ClienteResponsavel[];
+};
+
+export type ClienteResponsavelFormState = {
+  nome: string;
+  email: string;
+  telefone: string;
 };
 
 export type ClienteFormState = {
@@ -35,7 +50,15 @@ export type ClienteFormState = {
   enderecoCidade: string;
   enderecoUf: string;
   enderecoCep: string;
+  periodoFaturamento: string;
   observacoes: string;
+  responsavel: ClienteResponsavelFormState;
+};
+
+export const EMPTY_RESPONSAVEL_FORM: ClienteResponsavelFormState = {
+  nome: "",
+  email: "",
+  telefone: "",
 };
 
 export const EMPTY_CLIENTE_FORM: ClienteFormState = {
@@ -51,12 +74,16 @@ export const EMPTY_CLIENTE_FORM: ClienteFormState = {
   enderecoCidade: "",
   enderecoUf: "",
   enderecoCep: "",
+  periodoFaturamento: "",
   observacoes: "",
+  responsavel: { ...EMPTY_RESPONSAVEL_FORM },
 };
 
 export function clienteToFormState(c: Cliente): ClienteFormState {
   const docDigits = onlyDigits(c.documento ?? "");
   const telDigits = onlyDigits(c.telefone ?? "");
+  const primeiroResp = c.responsaveis?.[0];
+  const respTelDigits = onlyDigits(primeiroResp?.telefone ?? "");
   return {
     tipoPessoa: c.tipoPessoa,
     razaoSocialOuNome: c.razaoSocialOuNome,
@@ -73,6 +100,12 @@ export function clienteToFormState(c: Cliente): ClienteFormState {
       const cepD = onlyDigits(c.enderecoCep ?? "");
       return cepD ? formatCep(cepD) : "";
     })(),
+    periodoFaturamento: c.periodoFaturamento ?? "",
     observacoes: c.observacoes ?? "",
+    responsavel: {
+      nome: primeiroResp?.nome ?? "",
+      email: primeiroResp?.email ?? "",
+      telefone: respTelDigits ? formatTelefoneBrasil(respTelDigits) : "",
+    },
   };
 }

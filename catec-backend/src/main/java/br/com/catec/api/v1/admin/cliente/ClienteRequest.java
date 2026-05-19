@@ -2,10 +2,13 @@ package br.com.catec.api.v1.admin.cliente;
 
 import br.com.catec.domain.cliente.TipoPessoa;
 import br.com.catec.util.EmailFormat;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 
 public record ClienteRequest(
         @NotNull TipoPessoa tipoPessoa,
@@ -20,4 +23,6 @@ public record ClienteRequest(
         @Size(max = 120) String enderecoCidade,
         @Size(min = 2, max = 2) String enderecoUf,
         @Size(max = 10) String enderecoCep,
-        @Size(max = 5000) String observacoes) {}
+        @NotBlank @Size(max = 100) String periodoFaturamento,
+        @Size(max = 5000) String observacoes,
+        @NotEmpty @Valid List<ClienteResponsavelRequest> responsaveis) {}

@@ -20,6 +20,7 @@ import br.com.catec.security.UsuarioAutenticado;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.List;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -88,7 +89,9 @@ class AdminClienteControllerMockMvcTest {
                 null,
                 null,
                 null,
-                null);
+                "Até todo dia 15",
+                null,
+                List.of(new ClienteResponsavelRequest("Resp", "resp@catec.local", "11977776666")));
         when(adminClienteService.criar(req)).thenReturn(response(10L, "Cliente C"));
 
         mockMvc.perform(post("/api/v1/admin/clientes")
@@ -104,7 +107,8 @@ class AdminClienteControllerMockMvcTest {
 
     @Test
     void criar_quandoPayloadInvalido_deveRetornar400() throws Exception {
-        ClienteRequest req = new ClienteRequest(null, "", null, "", "", "", null, null, null, null, null, null, null);
+        ClienteRequest req =
+                new ClienteRequest(null, "", null, "", "", "", null, null, null, null, null, null, "", null, List.of());
 
         mockMvc.perform(post("/api/v1/admin/clientes")
                         .with(user(adminPrincipal(1L)))
@@ -130,7 +134,9 @@ class AdminClienteControllerMockMvcTest {
                 null,
                 null,
                 null,
-                null);
+                "Até todo dia 15",
+                null,
+                List.of(new ClienteResponsavelRequest("R", "resp@catec.local", "11977776666")));
 
         mockMvc.perform(post("/api/v1/admin/clientes")
                         .with(user(adminPrincipal(1L)))
@@ -156,7 +162,9 @@ class AdminClienteControllerMockMvcTest {
                 null,
                 null,
                 null,
-                null);
+                "Até todo dia 15",
+                null,
+                List.of(new ClienteResponsavelRequest("R", "resp@catec.local", "11977776666")));
         when(adminClienteService.atualizar(4L, req)).thenReturn(response(4L, "Cliente D"));
 
         mockMvc.perform(put("/api/v1/admin/clientes/4")
@@ -205,6 +213,8 @@ class AdminClienteControllerMockMvcTest {
                 null,
                 null,
                 null,
+                null,
+                Collections.emptyList(),
                 Instant.now(),
                 Instant.now());
     }

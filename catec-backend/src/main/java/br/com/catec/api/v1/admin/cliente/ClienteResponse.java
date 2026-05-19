@@ -2,6 +2,7 @@ package br.com.catec.api.v1.admin.cliente;
 
 import br.com.catec.domain.cliente.TipoPessoa;
 import java.time.Instant;
+import java.util.List;
 
 public record ClienteResponse(
         Long id,
@@ -17,6 +18,8 @@ public record ClienteResponse(
         String enderecoCidade,
         String enderecoUf,
         String enderecoCep,
+        String periodoFaturamento,
         String observacoes,
+        List<ClienteResponsavelResponse> responsaveis,
         Instant criadoEm,
         Instant atualizadoEm) {}

@@ -1,5 +1,6 @@
 package br.com.catec.domain.cliente;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -7,8 +8,11 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "cliente")
@@ -55,6 +59,9 @@ public class Cliente {
     @Column(name = "endereco_cep")
     private String enderecoCep;
 
+    @Column(name = "periodo_faturamento", nullable = false, length = 100)
+    private String periodoFaturamento;
+
     @Column(name = "observacoes")
     private String observacoes;
 
@@ -63,6 +70,9 @@ public class Cliente {
 
     @Column(name = "atualizado_em", nullable = false)
     private Instant atualizadoEm;
+
+    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ClienteResponsavel> responsaveis = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -114,6 +124,10 @@ public class Cliente {
 
     public String getEnderecoCep() {
         return enderecoCep;
+    }
+
+    public String getPeriodoFaturamento() {
+        return periodoFaturamento;
     }
 
     public String getObservacoes() {
@@ -176,6 +190,10 @@ public class Cliente {
         this.enderecoCep = enderecoCep;
     }
 
+    public void setPeriodoFaturamento(String periodoFaturamento) {
+        this.periodoFaturamento = periodoFaturamento;
+    }
+
     public void setObservacoes(String observacoes) {
         this.observacoes = observacoes;
     }
@@ -186,5 +204,13 @@ public class Cliente {
 
     public void setAtualizadoEm(Instant atualizadoEm) {
         this.atualizadoEm = atualizadoEm;
+    }
+
+    public List<ClienteResponsavel> getResponsaveis() {
+        return responsaveis;
+    }
+
+    public void setResponsaveis(List<ClienteResponsavel> responsaveis) {
+        this.responsaveis = responsaveis;
     }
 }

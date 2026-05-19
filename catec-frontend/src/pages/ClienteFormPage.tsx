@@ -195,7 +195,15 @@ export default function ClienteFormPage() {
         enderecoCidade: form.enderecoCidade.trim() || null,
         enderecoUf: form.enderecoUf.trim().toUpperCase() || null,
         enderecoCep: form.enderecoCep.trim() || null,
+        periodoFaturamento: form.periodoFaturamento.trim(),
         observacoes: form.observacoes.trim() || null,
+        responsaveis: [
+          {
+            nome: form.responsavel.nome.trim(),
+            email: form.responsavel.email.trim(),
+            telefone: onlyDigits(form.responsavel.telefone),
+          },
+        ],
       };
       const path = isCreate ? "/api/v1/admin/clientes" : `/api/v1/admin/clientes/${editandoId}`;
       const method = isCreate ? "POST" : "PUT";
@@ -514,6 +522,21 @@ export default function ClienteFormPage() {
                   </FormField>
                 </ModalFormGrid>
                 <AdminFormDivider />
+                <FormField label="Período de faturamento" htmlFor="cf-periodo-faturamento" required>
+                  <FieldControl
+                    id="cf-periodo-faturamento"
+                    value={form.periodoFaturamento}
+                    onChange={(e) => setForm((f) => ({ ...f, periodoFaturamento: e.target.value }))}
+                    className="clientes-input"
+                    variant="modal"
+                    disabled={desabilitadoForm}
+                    required
+                    aria-required="true"
+                    maxLength={100}
+                    placeholder="Ex.: Até todo dia 15"
+                  />
+                </FormField>
+                <AdminFormDivider />
                 <FormField label="Observações" htmlFor="cf-observacoes">
                   <FieldControl
                     as="textarea"
@@ -525,6 +548,74 @@ export default function ClienteFormPage() {
                     disabled={desabilitadoForm}
                   />
                 </FormField>
+              </AdminFormFields>
+            </AdminFormSection>
+
+            <AdminFormSection title="Responsável" titleId="cliente-form-sec-responsavel">
+              <AdminFormFields>
+                <FormField label="Nome" htmlFor="cf-resp-nome" required>
+                  <FieldControl
+                    id="cf-resp-nome"
+                    value={form.responsavel.nome}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        responsavel: { ...f.responsavel, nome: e.target.value },
+                      }))
+                    }
+                    className="clientes-input"
+                    variant="modal"
+                    disabled={desabilitadoForm}
+                    required
+                    aria-required="true"
+                  />
+                </FormField>
+                <AdminFormDivider />
+                <ModalFormGrid balanced>
+                  <FormField label="E-mail" htmlFor="cf-resp-email" required>
+                    <FieldControl
+                      id="cf-resp-email"
+                      type="email"
+                      value={form.responsavel.email}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          responsavel: { ...f.responsavel, email: e.target.value },
+                        }))
+                      }
+                      className="clientes-input"
+                      variant="modal"
+                      disabled={desabilitadoForm}
+                      required
+                      aria-required="true"
+                    />
+                  </FormField>
+                  <FormField label="Telefone" htmlFor="cf-resp-telefone" required>
+                    <FieldControl
+                      id="cf-resp-telefone"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      value={form.responsavel.telefone}
+                      onChange={(e) => {
+                        const d = onlyDigits(e.target.value).slice(0, 11);
+                        setForm((f) => ({
+                          ...f,
+                          responsavel: {
+                            ...f.responsavel,
+                            telefone: d ? formatTelefoneBrasil(d) : "",
+                          },
+                        }));
+                      }}
+                      className="clientes-input"
+                      variant="modal"
+                      disabled={desabilitadoForm}
+                      required
+                      aria-required="true"
+                      placeholder="(00) 00000-0000"
+                    />
+                  </FormField>
+                </ModalFormGrid>
               </AdminFormFields>
             </AdminFormSection>
           </>

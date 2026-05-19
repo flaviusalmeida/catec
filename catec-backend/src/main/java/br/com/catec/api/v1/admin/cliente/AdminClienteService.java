@@ -2,6 +2,7 @@ package br.com.catec.api.v1.admin.cliente;
 
 import br.com.catec.domain.cliente.Cliente;
 import br.com.catec.domain.cliente.ClienteRepository;
+import br.com.catec.domain.cliente.ClienteResponsavel;
 import br.com.catec.domain.cliente.TipoPessoa;
 import br.com.catec.util.CpfCnpjValidator;
 import java.time.Instant;
@@ -25,13 +26,16 @@ public class AdminClienteService {
     @Transactional(readOnly = true)
     public List<ClienteResponse> listar() {
         return clienteRepository.findAll(Sort.by("razaoSocialOuNome").ascending()).stream()
-                .map(this::toResponse)
+                .map(c -> toResponse(c, false))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public ClienteResponse obter(Long id) {
-        return clienteRepository.findById(id).map(this::toResponse).orElseThrow(AdminClienteService::notFound);
+        return clienteRepository
+                .findWithResponsaveisById(id)
+                .map(c -> toResponse(c, true))
+                .orElseThrow(AdminClienteService::notFound);
     }
 
     @Transactional
@@ -42,18 +46,21 @@ public class AdminClienteService {
         Instant agora = Instant.now();
         Cliente c = new Cliente();
         aplicarDados(c, req, documentoDigitos, telefoneDigitos, agora);
+        aplicarResponsaveis(c, req.responsaveis(), agora);
         c.setCriadoEm(agora);
-        return toResponse(clienteRepository.save(c));
+        return toResponse(clienteRepository.save(c), true);
     }
 
     @Transactional
     public ClienteResponse atualizar(Long id, ClienteRequest req) {
-        Cliente c = clienteRepository.findById(id).orElseThrow(AdminClienteService::notFound);
+        Cliente c = clienteRepository.findWithResponsaveisById(id).orElseThrow(AdminClienteService::notFound);
         String documentoDigitos = normalizarDocumento(req);
         String telefoneDigitos = normalizarTelefone(req.telefone());
         validarDocumentoUnico(id, documentoDigitos);
-        aplicarDados(c, req, documentoDigitos, telefoneDigitos, Instant.now());
-        return toResponse(clienteRepository.save(c));
+        Instant agora = Instant.now();
+        aplicarDados(c, req, documentoDigitos, telefoneDigitos, agora);
+        aplicarResponsaveis(c, req.responsaveis(), agora);
+        return toResponse(clienteRepository.save(c), true);
     }
 
     @Transactional
@@ -138,11 +145,30 @@ public class AdminClienteService {
         c.setEnderecoCidade(blankToNull(req.enderecoCidade()));
         c.setEnderecoUf(upperOrNull(req.enderecoUf()));
         c.setEnderecoCep(blankToNull(req.enderecoCep()));
+        c.setPeriodoFaturamento(req.periodoFaturamento().trim());
         c.setObservacoes(blankToNull(req.observacoes()));
         c.setAtualizadoEm(atualizadoEm);
     }
 
-    private ClienteResponse toResponse(Cliente c) {
+    private void aplicarResponsaveis(Cliente c, List<ClienteResponsavelRequest> reqResponsaveis, Instant agora) {
+        c.getResponsaveis().clear();
+        for (ClienteResponsavelRequest r : reqResponsaveis) {
+            String telefoneDigitos = normalizarTelefone(r.telefone());
+            ClienteResponsavel resp = new ClienteResponsavel();
+            resp.setCliente(c);
+            resp.setNome(r.nome().trim());
+            resp.setEmail(r.email().trim().toLowerCase(Locale.ROOT));
+            resp.setTelefone(telefoneDigitos);
+            resp.setCriadoEm(agora);
+            resp.setAtualizadoEm(agora);
+            c.getResponsaveis().add(resp);
+        }
+    }
+
+    private ClienteResponse toResponse(Cliente c, boolean incluirResponsaveis) {
+        List<ClienteResponsavelResponse> responsaveis = incluirResponsaveis
+                ? c.getResponsaveis().stream().map(this::toResponsavelResponse).toList()
+                : List.of();
         return new ClienteResponse(
                 c.getId(),
                 c.getTipoPessoa(),
@@ -157,9 +183,15 @@ public class AdminClienteService {
                 c.getEnderecoCidade(),
                 c.getEnderecoUf(),
                 c.getEnderecoCep(),
+                c.getPeriodoFaturamento(),
                 c.getObservacoes(),
+                responsaveis,
                 c.getCriadoEm(),
                 c.getAtualizadoEm());
+    }
+
+    private ClienteResponsavelResponse toResponsavelResponse(ClienteResponsavel r) {
+        return new ClienteResponsavelResponse(r.getId(), r.getNome(), r.getEmail(), r.getTelefone());
     }
 
     private static String blankToNull(String value) {

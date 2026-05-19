@@ -73,7 +73,9 @@ class AdminClienteServiceTest {
                 null,
                 null,
                 null,
-                null);
+                "Até todo dia 15",
+                null,
+                responsaveisPadrao());
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.criar(req));
 
@@ -96,7 +98,9 @@ class AdminClienteServiceTest {
                 null,
                 null,
                 null,
-                null);
+                "Até todo dia 15",
+                null,
+                responsaveisPadrao());
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.criar(req));
 
@@ -119,7 +123,9 @@ class AdminClienteServiceTest {
                 null,
                 null,
                 null,
-                null);
+                "Até todo dia 15",
+                null,
+                responsaveisPadrao());
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.criar(req));
 
@@ -142,7 +148,9 @@ class AdminClienteServiceTest {
                 null,
                 null,
                 null,
-                null);
+                "Até todo dia 15",
+                null,
+                responsaveisPadrao());
         when(clienteRepository.existsByDocumento(CPF_VALIDO)).thenReturn(false);
         when(clienteRepository.save(any(Cliente.class))).thenAnswer(invocation -> {
             Cliente c = invocation.getArgument(0);
@@ -176,11 +184,12 @@ class AdminClienteServiceTest {
         assertEquals("Rua A", response.enderecoLogradouro());
         assertEquals("100", response.enderecoNumero());
         assertEquals("Apto 2", response.enderecoComplemento());
+        assertEquals("Até todo dia 15", response.periodoFaturamento());
     }
 
     @Test
     void atualizar_quandoNaoExiste_deveLancarNotFound() {
-        when(clienteRepository.findById(99L)).thenReturn(Optional.empty());
+        when(clienteRepository.findWithResponsaveisById(99L)).thenReturn(Optional.empty());
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.atualizar(99L, requestBase()));
 
@@ -189,7 +198,8 @@ class AdminClienteServiceTest {
 
     @Test
     void atualizar_quandoDocumentoConflita_deveLancarConflict() {
-        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente(1L, TipoPessoa.PF, "A", CPF_VALIDO)));
+        when(clienteRepository.findWithResponsaveisById(1L))
+                .thenReturn(Optional.of(cliente(1L, TipoPessoa.PF, "A", CPF_VALIDO)));
         when(clienteRepository.existsByDocumentoAndIdNot(CPF_VALIDO, 1L)).thenReturn(true);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> service.atualizar(1L, requestBase()));
@@ -200,7 +210,7 @@ class AdminClienteServiceTest {
     @Test
     void atualizar_quandoValido_deveAtualizarCampos() {
         Cliente existente = cliente(1L, TipoPessoa.PF, "Nome Antigo", CPF_VALIDO);
-        when(clienteRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(clienteRepository.findWithResponsaveisById(1L)).thenReturn(Optional.of(existente));
         when(clienteRepository.existsByDocumentoAndIdNot(CNPJ_VALIDO, 1L)).thenReturn(false);
         when(clienteRepository.save(any(Cliente.class))).thenAnswer(invocation -> invocation.getArgument(0));
         ClienteRequest req = new ClienteRequest(
@@ -216,7 +226,9 @@ class AdminClienteServiceTest {
                 null,
                 "rj",
                 null,
-                "");
+                "Até todo dia 15",
+                "",
+                responsaveisPadrao());
 
         ClienteResponse response = service.atualizar(1L, req);
 
@@ -248,6 +260,30 @@ class AdminClienteServiceTest {
         verify(clienteRepository).delete(c);
     }
 
+    @Test
+    void criar_quandoValido_devePersistirResponsavel() {
+        when(clienteRepository.existsByDocumento(CPF_VALIDO)).thenReturn(false);
+        when(clienteRepository.save(any(Cliente.class))).thenAnswer(invocation -> {
+            Cliente c = invocation.getArgument(0);
+            ReflectionTestUtils.setField(c, "id", 10L);
+            if (!c.getResponsaveis().isEmpty()) {
+                ReflectionTestUtils.setField(c.getResponsaveis().get(0), "id", 100L);
+            }
+            return c;
+        });
+
+        ClienteResponse response = service.criar(requestBase());
+
+        assertEquals(1, response.responsaveis().size());
+        assertEquals("Carlos Responsavel", response.responsaveis().get(0).nome());
+        assertEquals("carlos@empresa.com", response.responsaveis().get(0).email());
+        assertEquals("11977776666", response.responsaveis().get(0).telefone());
+    }
+
+    private static List<ClienteResponsavelRequest> responsaveisPadrao() {
+        return List.of(new ClienteResponsavelRequest("Carlos Responsavel", "carlos@empresa.com", "11977776666"));
+    }
+
     private static ClienteRequest requestBase() {
         return new ClienteRequest(
                 TipoPessoa.PF,
@@ -262,7 +298,9 @@ class AdminClienteServiceTest {
                 " Sao Paulo ",
                 "sp",
                 " 12345-000 ",
-                " Observacao ");
+                " Até todo dia 15 ",
+                " Observacao ",
+                responsaveisPadrao());
     }
 
     private static Cliente cliente(Long id, TipoPessoa tipoPessoa, String nome, String documento) {
