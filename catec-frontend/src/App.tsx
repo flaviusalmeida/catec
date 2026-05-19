@@ -5,7 +5,6 @@ import RequireAuth from "./layout/RequireAuth";
 import RequireRole from "./layout/RequireRole";
 import "./layout/RequireAuth.css";
 import DefinirSenhaPage from "./pages/DefinirSenhaPage";
-import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import ClienteFormPage from "./pages/ClienteFormPage";
 import ClientesPage from "./pages/ClientesPage";
@@ -22,7 +21,7 @@ function LoginRoute() {
     if (user.requerTrocaSenha === true) {
       return <Navigate to="/definir-senha" replace />;
     }
-    return <Navigate to="/app/inicio" replace />;
+    return <Navigate to="/app/painel" replace />;
   }
   return <LoginPage />;
 }
@@ -45,7 +44,7 @@ function DefinirSenhaRoute() {
     return <Navigate to="/login" replace />;
   }
   if (user.requerTrocaSenha !== true) {
-    return <Navigate to="/app/inicio" replace />;
+    return <Navigate to="/app/painel" replace />;
   }
   return <DefinirSenhaPage />;
 }
@@ -57,8 +56,8 @@ export default function App() {
       <Route path="/definir-senha" element={<DefinirSenhaRoute />} />
       <Route path="/app" element={<RequireAuth />}>
         <Route element={<AppLayout />}>
-          <Route index element={<Navigate to="/app/inicio" replace />} />
-          <Route path="inicio" element={<HomePage />} />
+          <Route index element={<Navigate to="/app/painel" replace />} />
+          <Route path="inicio" element={<Navigate to="/app/painel" replace />} />
           <Route
             path="painel"
             element={
@@ -125,8 +124,8 @@ export default function App() {
           />
         </Route>
       </Route>
-      <Route path="/" element={<Navigate to="/app/inicio" replace />} />
-      <Route path="*" element={<Navigate to="/app/inicio" replace />} />
+      <Route path="/" element={<Navigate to="/app/painel" replace />} />
+      <Route path="*" element={<Navigate to="/app/painel" replace />} />
     </Routes>
   );
 }

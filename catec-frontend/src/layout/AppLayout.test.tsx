@@ -45,10 +45,10 @@ describe("AppLayout logout confirmation", () => {
 
   function renderLayout() {
     return render(
-      <MemoryRouter initialEntries={["/app/inicio"]}>
+      <MemoryRouter initialEntries={["/app/painel"]}>
         <Routes>
           <Route path="/app" element={<AppLayout />}>
-            <Route path="inicio" element={<div>Inicio</div>} />
+            <Route path="painel" element={<div>Painel</div>} />
             <Route path="usuarios" element={<div>Usuarios</div>} />
           </Route>
         </Routes>
@@ -94,10 +94,10 @@ describe("AppLayout mobile menu", () => {
 
   function renderLayout() {
     return render(
-      <MemoryRouter initialEntries={["/app/inicio"]}>
+      <MemoryRouter initialEntries={["/app/painel"]}>
         <Routes>
           <Route path="/app" element={<AppLayout />}>
-            <Route path="inicio" element={<div>Inicio</div>} />
+            <Route path="painel" element={<div>Painel</div>} />
           </Route>
         </Routes>
       </MemoryRouter>,
@@ -135,23 +135,23 @@ describe("AppLayout menu por perfil", () => {
 
   function renderNav() {
     return render(
-      <MemoryRouter initialEntries={["/app/inicio"]}>
+      <MemoryRouter initialEntries={["/app/painel"]}>
         <Routes>
           <Route path="/app" element={<AppLayout />}>
-            <Route path="inicio" element={<div>Inicio</div>} />
+            <Route path="painel" element={<div>Painel</div>} />
           </Route>
         </Routes>
       </MemoryRouter>,
     );
   }
 
-  it("colaborador ve Inicio e Projetos, sem Clientes nem Usuarios", () => {
+  it("colaborador ve Painel e Projetos, sem Clientes nem Usuarios", () => {
     useAuthMock.mockReturnValue({
       user: { nome: "Colab", email: "c@test.local", perfis: ["COLABORADOR"] },
       logout: logoutMock,
     });
     renderNav();
-    expect(screen.getByRole("link", { name: /Início/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Painel/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Projetos/i })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Clientes/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Usuários/i })).not.toBeInTheDocument();

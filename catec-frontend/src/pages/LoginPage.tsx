@@ -59,7 +59,7 @@ export default function LoginPage() {
         if (login.trocaSenhaObrigatoria === true) {
           navigate("/definir-senha", { replace: true });
         } else {
-          navigate("/app/inicio", { replace: true });
+          navigate("/app/painel", { replace: true });
         }
         return;
       }

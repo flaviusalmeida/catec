@@ -150,7 +150,7 @@ npm install
 npm run dev
 ```
 
-Por padrão o Vite serve em **http://localhost:5173** (porta indicada no terminal após `npm run dev`). Após o login, o app redireciona para **`/app/inicio`** (área autenticada com menu lateral no mesmo estilo visual da tela de login). O item **Usuários** aparece apenas para quem tem perfil `ADMINISTRATIVO` e consome a API acima. A **página de login** usa a paleta da marca e a logo PNG transparente em `catec-frontend/public/logo-catec.png` (cópia de `Analise Projeto/logotipos/Logo principal azul-8.png`). A API por padrão é `http://localhost:8080`; para outro host, crie `catec-frontend/.env` com `VITE_API_BASE_URL=https://...`.
+Por padrão o Vite serve em **http://localhost:5173** (porta indicada no terminal após `npm run dev`). Após o login, o app redireciona para **`/app/painel`** (área autenticada com menu lateral no mesmo estilo visual da tela de login). O item **Usuários** aparece apenas para quem tem perfil `ADMINISTRATIVO` e consome a API acima. A **página de login** usa a paleta da marca e a logo PNG transparente em `catec-frontend/public/logo-catec.png` (cópia de `Analise Projeto/logotipos/Logo principal azul-8.png`). A API por padrão é `http://localhost:8080`; para outro host, crie `catec-frontend/.env` com `VITE_API_BASE_URL=https://...`.
 
 **Autenticação no browser (task_017):** `AuthContext` carrega `/api/v1/me` e expõe `hasRole` / `hasAnyRole`. O menu usa `CanRole`; rotas sensíveis usam `RequireAuth` + `RequireRole`. **Importante:** ocultar botões ou rotas no React não substitui a segurança da API — o backend continua a validar JWT e perfis em cada operação.
 

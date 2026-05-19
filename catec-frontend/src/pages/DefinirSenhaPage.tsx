@@ -56,7 +56,7 @@ export default function DefinirSenhaPage() {
       const login = data as LoginResponse;
       if (login?.accessToken) {
         await loginWithToken(login.accessToken);
-        navigate("/app/inicio", { replace: true });
+        navigate("/app/painel", { replace: true });
         return;
       }
       setError("Resposta inválida do servidor.");

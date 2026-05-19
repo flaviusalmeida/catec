@@ -4,15 +4,6 @@ import CanRole from "../auth/CanRole";
 import { useAuth } from "../auth/AuthContext";
 import "./AppLayout.css";
 
-function IconHome({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      <polyline points="9 22 9 12 15 12 15 22" />
-    </svg>
-  );
-}
-
 function IconUsers({ className }: { className?: string }) {
   return (
     <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -183,12 +174,8 @@ export default function AppLayout() {
           ) : null}
         </div>
         <nav className="app-shell-nav">
-          <NavLink to="/app/inicio" className={navLinkClass} end onClick={fecharMenu}>
-            <IconHome className="app-shell-nav-icon" />
-            <span>Início</span>
-          </NavLink>
           <CanRole anyOf={["COLABORADOR", "ADMINISTRATIVO", "SOCIO"]}>
-            <NavLink to="/app/painel" className={navLinkClass} onClick={fecharMenu}>
+            <NavLink to="/app/painel" className={navLinkClass} end onClick={fecharMenu}>
               <IconLayoutDashboard className="app-shell-nav-icon" />
               <span>Painel</span>
             </NavLink>
