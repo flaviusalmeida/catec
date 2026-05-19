@@ -18,15 +18,39 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: ${APP_DOCUMENTO_MAX_FILE_SIZE:10MB}
+      max-request-size: ${APP_DOCUMENTO_MAX_REQUEST_SIZE:11MB}
 
 app:
   mail:
     enabled: ${APP_MAIL_ENABLED:false}
     from: ${APP_MAIL_FROM:noreply@catec.local}
+  documento:
+    max-size-bytes: ${APP_DOCUMENTO_MAX_BYTES:10485760}
+    allowed-mime-types:
+      - application/pdf
+      - image/jpeg
+      - image/png
+      - application/msword
+      - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    storage:
+      type: ${APP_DOCUMENTO_STORAGE_TYPE:local}
+      local:
+        base-dir: ${APP_DOCUMENTO_STORAGE_DIR:./storage/documentos}
   security:
     jwt:
       secret: ${JWT_SECRET:catec-dev-jwt-secret-min-32b-please-change!!}
       expiration-minutes: ${JWT_EXPIRATION_MINUTES:480}
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+  api:
+    version: "1.0.0"
 
 server:
   port: 8080

@@ -1,0 +1,47 @@
+.painel-indicador-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--catec-radius-md);
+  background: var(--catec-color-surface);
+  border: 1px solid var(--catec-color-border);
+  box-shadow: var(--catec-shadow-card);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  width: 100%;
+}
+
+.painel-indicador-card--clickable {
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.painel-indicador-card--clickable:hover {
+  border-color: var(--catec-color-brand);
+}
+
+.painel-indicador-card--active {
+  border-color: var(--catec-color-brand);
+  box-shadow: 0 0 0 2px rgba(0, 45, 75, 0.12);
+}
+
+.painel-indicador-card__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--catec-color-brand);
+}
+
+.painel-indicador-card__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--catec-color-text);
+}
+
+.painel-indicador-card__hint {
+  font-size: 0.75rem;
+  color: var(--catec-color-text-muted);
+}

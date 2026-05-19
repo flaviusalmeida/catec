@@ -13,11 +13,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Projetos", description = "Projetos comerciais e vínculo com cliente")
 @RestController
 @RequestMapping("/api/v1/projetos")
-@PreAuthorize("hasAnyRole('COLABORADOR','ADMINISTRATIVO')")
+@PreAuthorize("hasAnyRole('COLABORADOR','ADMINISTRATIVO','SOCIO')")
 public class ProjetoController {
 
     private final ProjetoService projetoService;

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import CanRole from "../auth/CanRole";
 import { useAuth } from "../auth/AuthContext";
 import "./AppLayout.css";
 
@@ -28,6 +29,17 @@ function IconClients({ className }: { className?: string }) {
     <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
       <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
       <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+    </svg>
+  );
+}
+
+function IconLayoutDashboard({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <rect x="3" y="3" width="7" height="9" rx="1" />
+      <rect x="14" y="3" width="7" height="5" rx="1" />
+      <rect x="14" y="12" width="7" height="9" rx="1" />
+      <rect x="3" y="16" width="7" height="5" rx="1" />
     </svg>
   );
 }
@@ -77,7 +89,7 @@ function useNavDrawerMode() {
 }
 
 export default function AppLayout() {
-  const { user, logout, isAdmin, podeGerirProjetos } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const navDrawer = useNavDrawerMode();
   const [menuAberto, setMenuAberto] = useState(false);
@@ -175,24 +187,36 @@ export default function AppLayout() {
             <IconHome className="app-shell-nav-icon" />
             <span>Início</span>
           </NavLink>
-          {podeGerirProjetos ? (
+          <CanRole anyOf={["COLABORADOR", "ADMINISTRATIVO", "SOCIO"]}>
+            <NavLink to="/app/painel" className={navLinkClass} onClick={fecharMenu}>
+              <IconLayoutDashboard className="app-shell-nav-icon" />
+              <span>Painel</span>
+            </NavLink>
+          </CanRole>
+          <CanRole anyOf={["COLABORADOR", "ADMINISTRATIVO"]}>
             <NavLink to="/app/projetos" className={navLinkClass} onClick={fecharMenu}>
               <IconFolderKanban className="app-shell-nav-icon" />
               <span>Projetos</span>
             </NavLink>
-          ) : null}
-          {isAdmin ? (
+          </CanRole>
+          <CanRole anyOf={["SOCIO"]}>
+            <NavLink to="/app/socio/propostas" className={navLinkClass} onClick={fecharMenu}>
+              <IconFolderKanban className="app-shell-nav-icon" />
+              <span>Fila sócio</span>
+            </NavLink>
+          </CanRole>
+          <CanRole anyOf={["ADMINISTRATIVO"]}>
             <NavLink to="/app/clientes" className={navLinkClass} onClick={fecharMenu}>
               <IconClients className="app-shell-nav-icon" />
               <span>Clientes</span>
             </NavLink>
-          ) : null}
-          {isAdmin ? (
+          </CanRole>
+          <CanRole anyOf={["ADMINISTRATIVO"]}>
             <NavLink to="/app/usuarios" className={navLinkClass} onClick={fecharMenu}>
               <IconUsers className="app-shell-nav-icon" />
               <span>Usuários</span>
             </NavLink>
-          ) : null}
+          </CanRole>
         </nav>
         <div className="app-shell-footer">
           <div className="app-shell-user-card">

@@ -18,7 +18,6 @@ import {
   AdminFormGrid3,
   AdminFormSection,
 } from "../components/layout/entityFormKit";
-import AccessDeniedCard from "../components/ui/AccessDeniedCard";
 import InlineAlert from "../components/ui/InlineAlert";
 import ToastAlert from "../components/ui/ToastAlert";
 import { buscarEnderecoPorCep } from "../api/viaCep";
@@ -38,7 +37,7 @@ export default function ClienteFormPage() {
   const editandoId = !isCreate && idParam != null ? Number.parseInt(idParam, 10) : null;
   const idInvalido = !isCreate && (editandoId == null || Number.isNaN(editandoId));
 
-  const { isAdmin, logout } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const [carregando, setCarregando] = useState(!isCreate);
   const [erro, setErro] = useState<string | null>(null);
@@ -254,20 +253,6 @@ export default function ClienteFormPage() {
     } finally {
       setExcluindoId(null);
     }
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="clientes-page">
-        <div className="clientes-page-inner">
-          <AccessDeniedCard
-            titleId="clientes-form-acesso-negado"
-            title="Clientes"
-            message="Seu perfil não inclui permissão de administrador técnico para esta tela."
-          />
-        </div>
-      </div>
-    );
   }
 
   const tituloAcao = isCreate ? "Novo cliente" : "Editar cliente";

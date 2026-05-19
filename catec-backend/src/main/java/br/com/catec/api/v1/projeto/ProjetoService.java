@@ -206,12 +206,21 @@ public class ProjetoService {
     }
 
     private void garantirLeitura(Projeto p, UsuarioAutenticado principal) {
-        if (isAdministrativo(principal)) {
+        if (isAdministrativo(principal) || isSocio(principal)) {
             return;
         }
         if (!p.getCriadoPor().getId().equals(principal.id())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado a este projeto.");
         }
+    }
+
+    private static boolean isSocio(UsuarioAutenticado principal) {
+        for (GrantedAuthority a : principal.getAuthorities()) {
+            if ("ROLE_SOCIO".equals(a.getAuthority())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean isAdministrativo(UsuarioAutenticado principal) {

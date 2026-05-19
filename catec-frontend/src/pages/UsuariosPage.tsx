@@ -15,7 +15,6 @@ import ModalFormGrid from "../components/layout/ModalFormGrid";
 import ModalSection from "../components/layout/ModalSection";
 import PageToolbar from "../components/layout/PageToolbar";
 import RowEditButton from "../components/table/RowEditButton";
-import AccessDeniedCard from "../components/ui/AccessDeniedCard";
 import InlineAlert from "../components/ui/InlineAlert";
 import LabeledSwitch from "../components/ui/LabeledSwitch";
 import UsuarioStatusBadge from "../components/ui/UsuarioStatusBadge";
@@ -132,7 +131,7 @@ function IconPerfilAjuda() {
 }
 
 export default function UsuariosPage() {
-  const { isAdmin, logout } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const [lista, setLista] = useState<AdminUsuario[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -196,8 +195,8 @@ export default function UsuariosPage() {
   }, [logout, navigate]);
 
   useEffect(() => {
-    if (isAdmin) void carregar();
-  }, [isAdmin, carregar]);
+    void carregar();
+  }, [carregar]);
 
   function limparFiltros() {
     setFiltroNome("");
@@ -314,20 +313,6 @@ export default function UsuariosPage() {
     } finally {
       setSalvando(false);
     }
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="usuarios-page">
-        <div className="usuarios-page-inner">
-          <AccessDeniedCard
-            titleId="usuarios-acesso-negado"
-            title="Usuários"
-            message="Seu perfil não inclui permissão de administrador técnico para esta tela."
-          />
-        </div>
-      </div>
-    );
   }
 
   return (

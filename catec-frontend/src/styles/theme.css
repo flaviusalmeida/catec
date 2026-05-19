@@ -1,0 +1,22 @@
+/**
+ * Tema global CATEC (Fase 1). Usar variáveis em novos componentes em vez de cores soltas.
+ */
+:root {
+  --catec-color-brand: #002d4b;
+  --catec-color-brand-hover: #001f33;
+  --catec-color-danger: #991b1b;
+  --catec-color-danger-hover: #7f1d1d;
+
+  --catec-color-surface: #ffffff;
+  --catec-color-bg: #eef2f8;
+  --catec-color-bg-gradient-start: #e4eaf2;
+  --catec-color-bg-gradient-end: #e8edf5;
+
+  --catec-color-text: #0f172a;
+  --catec-color-text-muted: #64748b;
+  --catec-color-border: #e2e8f0;
+
+  --catec-radius-md: 12px;
+  --catec-shadow-card: 0 10px 40px rgba(15, 23, 42, 0.08);
+  --catec-font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}

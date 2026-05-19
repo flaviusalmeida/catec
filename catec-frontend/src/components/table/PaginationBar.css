@@ -1,0 +1,21 @@
+.pagination-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid var(--catec-color-border);
+  margin-top: 0.75rem;
+}
+
+.pagination-bar__info {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--catec-color-text-muted);
+}
+
+.pagination-bar__actions {
+  display: flex;
+  gap: 0.5rem;
+}

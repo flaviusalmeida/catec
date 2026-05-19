@@ -2,7 +2,7 @@
   padding: 0.65rem 1rem;
   border: none;
   border-radius: 8px;
-  background: #002d4b;
+  background: var(--catec-color-brand);
   color: #fff;
   font-weight: 600;
   font-size: 0.9rem;
@@ -16,7 +16,7 @@
 }
 
 .primary-button:hover:not(:disabled) {
-  background: #001f33;
+  background: var(--catec-color-brand-hover);
 }
 
 .primary-button--danger {
@@ -33,7 +33,7 @@
 }
 
 .primary-button:focus-visible {
-  outline: 2px solid #002d4b;
+  outline: 2px solid var(--catec-color-brand);
   outline-offset: 2px;
 }
 

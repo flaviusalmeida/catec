@@ -72,6 +72,15 @@ O perfil Spring ativo por padrão é **`dev`** (`application-dev.yml`, conexão 
 
 A API sobe por padrão em **http://localhost:8080**. Endpoints públicos: **`GET /api/v1/health-check`**, **`POST /api/v1/auth/login`**, **`GET /actuator/health`**. Com JWT válido: **`GET /api/v1/me`** (dados do usuário e lista de perfis) e exemplo protegido **`GET /api/v1/demo/ping`**.
 
+### Documentação OpenAPI (Swagger) — perfil `dev`
+
+Com o backend em execução e **`SPRING_PROFILES_ACTIVE=dev`** (padrão local):
+
+- **Swagger UI:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) (atalho: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html))
+- **Spec JSON:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+A UI e o spec ficam **desabilitados** fora do perfil `dev` (`application.yml`). Tags no Swagger: **Auth**, **Clientes**, **Projetos**, **Propostas**, **Documentos**, **Usuários**, **Sessão**, **Sistema**. Versão da API no spec: **1.0.0**. Use **Authorize** com o token de `POST /api/v1/auth/login` (`Bearer <accessToken>`).
+
 **Gestão de usuários (task_005):** rotas sob **`/api/v1/admin/usuarios`**, restritas a JWT de usuário com perfil **`ADMINISTRATIVO`** (HTTP **403** caso contrário). Operações: **`GET`** listagem; **`GET /{id}`** detalhe; **`POST`** criação (corpo com `nome`, `email`, `senha`, `telefone` opcional, `ativo`, `perfis` como lista de enums, ex.: `["COLABORADOR","ADMINISTRATIVO"]`); **`PUT /{id}`** atualização (mesmos campos; `senha` opcional — vazia mantém a senha atual). Regras: e-mail único; não é permitido desativar a própria conta nem remover o próprio perfil `ADMINISTRATIVO`. Testes unitários do serviço: `AdminUsuarioServiceTest`. Regressão manual rápida: login como `admin@catec.local`, chamar `GET /api/v1/admin/usuarios` com `Authorization: Bearer <token>` e verificar **200**; com token inválido, **401**; sem perfil administrativo (quando existir outro usuário ativo só colaborador), **403**.
 
 ### Autenticação (JWT)
@@ -96,6 +105,43 @@ O Spring Boot usa `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` e `SPRIN
 - **Novas alterações:** crie sempre um arquivo com **versão maior** (`V2__...`, `V3__...`); **não edite** migrações já aplicadas em ambientes compartilhados (o Flyway valida checksums).
 - **Começar do zero (só dev local):** `docker compose down -v` apaga o volume do Postgres; no próximo `docker compose up` o Flyway volta a aplicar desde o `V1`.
 
+### Documentos (upload / download)
+
+- Metadados na tabela `documento` (`V15__documento.sql`); bytes em storage configurável (disco local em dev: `catec-backend/storage/documentos/`, ignorado pelo Git).
+- API autenticada (`COLABORADOR`, `ADMINISTRATIVO` ou `SOCIO`): `POST /api/v1/documentos` (multipart: `tipoVinculo`, `vinculoId`, `file`, `tipoArquivo` opcional — **não** usar `PROPOSTA` aqui), `GET /api/v1/documentos/{id}`, `GET /api/v1/documentos/{id}/conteudo`.
+- **Autorização por vínculo:** `ADMINISTRATIVO` acede a qualquer documento; `COLABORADOR` a `PROJETO` que criou; `SOCIO` lê documentos de `PROPOSTA`; upload de `PROPOSTA` só via endpoint aninhado (abaixo).
+
+### Proposta comercial (API)
+
+- Tabelas `proposta` (`V17`) e `auditoria_fluxo` (`V16`).
+- Base: `/api/v1/projetos/{projetoId}/propostas` — perfis `COLABORADOR`, `ADMINISTRATIVO`, `SOCIO` (leitura conforme projeto; transições por perfil no serviço).
+- `POST /` — criar (`requerAvaliacaoSocio` no body; só `ADMINISTRATIVO`).
+- `GET /`, `GET /{propostaId}` — listar / detalhe.
+- Transições (`POST`): `/{id}/submeter-avaliacao-socio`, `/{id}/aprovar-interna` (ADM), `/{id}/aprovar-socio`, `/{id}/devolver-rascunho` (Sócio), `/{id}/enviar-cliente` (ADM).
+- Anexos: `GET|POST /{propostaId}/documentos` (upload só ADM, estados `RASCUNHO` / `PENDENTE_AVALIACAO_SOCIO` / `APROVADA_INTERNA`); download pelo `GET /api/v1/documentos/{id}/conteudo`.
+- Resposta do cliente (registro interno ADM): `GET|POST /{propostaId}/interacoes` (`CONSIDERACOES_CLIENTE`, `ACEITE_CLIENTE`, `RECUSA_CLIENTE`).
+- Fila sócio: `GET /api/v1/socio/propostas/pendentes`, `POST /api/v1/socio/propostas/{propostaId}/aprovar`, `POST .../devolver` (parecer obrigatório na devolução).
+
+### Painel (API — task_015)
+
+Somente leitura; perfis `COLABORADOR`, `ADMINISTRATIVO`, `SOCIO` (colaborador vê só projetos que criou).
+
+- `GET /api/v1/painel/resumo` — projetos paginados com **fase macro** (proposta de maior versão tem prioridade sobre `projeto.status`). Query: `clienteId`, `status` (enum fase macro), `prazoAte` (ISO-8601, filtra `atualizado_em ≤ prazoAte`), `page`, `size`.
+- `GET /api/v1/painel/indicadores` — contadores: pendentes de cliente, propostas aguardando registro do cliente, aguardando sócio, aprovadas aguardando envio, em rascunho.
+- `GET /api/v1/painel/projetos/{id}/historico` — união paginada de `auditoria_fluxo` (projeto + propostas) e `interacao_fluxo` (propostas), ordenada por data descendente.
+
+Regra de fase macro documentada em `FaseMacro` / `FaseMacroResolver` no backend.
+
+### Painel de visibilidade (frontend — task_019)
+
+- Rota **`/app/painel`**: indicadores, filtros (cliente, fase macro, atualizado até), tabela paginada de projetos com **fase macro**, histórico do projeto selecionado (paginação).
+
+### Frontend — fluxo comercial Fase 1
+
+- Detalhe do projeto: `/app/projetos/:id` (proposta, anexos, transições, registro da resposta do cliente).
+- Fila do sócio: `/app/socio/propostas`.
+- Limites em `application.yml` (`app.documento.max-size-bytes`, `app.documento.allowed-mime-types`); variáveis opcionais: `APP_DOCUMENTO_MAX_BYTES`, `APP_DOCUMENTO_STORAGE_DIR`, `APP_DOCUMENTO_STORAGE_TYPE`.
+
 ## Executar o frontend
 
 ```bash
@@ -105,6 +151,8 @@ npm run dev
 ```
 
 Por padrão o Vite serve em **http://localhost:5173** (porta indicada no terminal após `npm run dev`). Após o login, o app redireciona para **`/app/inicio`** (área autenticada com menu lateral no mesmo estilo visual da tela de login). O item **Usuários** aparece apenas para quem tem perfil `ADMINISTRATIVO` e consome a API acima. A **página de login** usa a paleta da marca e a logo PNG transparente em `catec-frontend/public/logo-catec.png` (cópia de `Analise Projeto/logotipos/Logo principal azul-8.png`). A API por padrão é `http://localhost:8080`; para outro host, crie `catec-frontend/.env` com `VITE_API_BASE_URL=https://...`.
+
+**Autenticação no browser (task_017):** `AuthContext` carrega `/api/v1/me` e expõe `hasRole` / `hasAnyRole`. O menu usa `CanRole`; rotas sensíveis usam `RequireAuth` + `RequireRole`. **Importante:** ocultar botões ou rotas no React não substitui a segurança da API — o backend continua a validar JWT e perfis em cada operação.
 
 ## Parar o banco
 

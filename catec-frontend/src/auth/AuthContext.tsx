@@ -7,7 +7,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { apiFetch, getStoredToken } from "../api/http";
+import { apiFetch } from "../api/http";
+import { hasAllRoles, hasAnyRole, hasRole as perfilHasRole } from "./hasRole";
+import type { PerfilCodigo } from "./perfil";
+import { clearStoredAuth, getStoredToken, setStoredToken } from "./tokenStorage";
 
 export type MeUser = {
   id: number;
@@ -23,8 +26,12 @@ type AuthContextValue = {
   user: MeUser | null;
   loading: boolean;
   isAdmin: boolean;
+  isSocio: boolean;
   /** Colaborador ou administrativo: demandas (projeto). */
   podeGerirProjetos: boolean;
+  hasRole: (role: PerfilCodigo) => boolean;
+  hasAnyRole: (roles: readonly PerfilCodigo[]) => boolean;
+  hasAllRoles: (roles: readonly PerfilCodigo[]) => boolean;
   refreshMe: () => Promise<void>;
   loginWithToken: (accessToken: string) => Promise<void>;
   logout: () => void;
@@ -47,8 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await apiFetch("/api/v1/me");
       if (!res.ok) {
-        localStorage.removeItem("catec_token");
-        localStorage.removeItem("catec_token_type");
+        clearStoredAuth();
         setUser(null);
         return;
       }
@@ -64,24 +70,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginWithToken = useCallback(
     async (accessToken: string) => {
-      localStorage.setItem("catec_token", accessToken);
-      localStorage.setItem("catec_token_type", "Bearer");
+      setStoredToken(accessToken);
       await refreshMe();
     },
     [refreshMe],
   );
 
   const logout = useCallback(() => {
-    localStorage.removeItem("catec_token");
-    localStorage.removeItem("catec_token_type");
+    clearStoredAuth();
     setUser(null);
   }, []);
 
   const isAdmin = useMemo(() => user?.perfis?.includes("ADMINISTRATIVO") ?? false, [user]);
+  const isSocio = useMemo(() => user?.perfis?.includes("SOCIO") ?? false, [user]);
 
   const podeGerirProjetos = useMemo(
-    () =>
-      Boolean(user?.perfis?.includes("COLABORADOR") || user?.perfis?.includes("ADMINISTRATIVO")),
+    () => hasAnyRole(user?.perfis, ["COLABORADOR", "ADMINISTRATIVO"]),
+    [user],
+  );
+
+  const hasRoleFn = useCallback((role: PerfilCodigo) => perfilHasRole(user?.perfis, role), [user]);
+  const hasAnyRoleFn = useCallback(
+    (roles: readonly PerfilCodigo[]) => hasAnyRole(user?.perfis, roles),
+    [user],
+  );
+  const hasAllRolesFn = useCallback(
+    (roles: readonly PerfilCodigo[]) => hasAllRoles(user?.perfis, roles),
     [user],
   );
 
@@ -90,12 +104,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       isAdmin,
+      isSocio,
       podeGerirProjetos,
+      hasRole: hasRoleFn,
+      hasAnyRole: hasAnyRoleFn,
+      hasAllRoles: hasAllRolesFn,
       refreshMe,
       loginWithToken,
       logout,
     }),
-    [user, loading, isAdmin, podeGerirProjetos, refreshMe, loginWithToken, logout],
+    [
+      user,
+      loading,
+      isAdmin,
+      isSocio,
+      podeGerirProjetos,
+      hasRoleFn,
+      hasAnyRoleFn,
+      hasAllRolesFn,
+      refreshMe,
+      loginWithToken,
+      logout,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

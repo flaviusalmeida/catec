@@ -15,7 +15,6 @@ import ModalFooter from "../components/layout/ModalFooter";
 import ModalSection from "../components/layout/ModalSection";
 import PageToolbar from "../components/layout/PageToolbar";
 import RowEditButton from "../components/table/RowEditButton";
-import AccessDeniedCard from "../components/ui/AccessDeniedCard";
 import InlineAlert from "../components/ui/InlineAlert";
 import ToastAlert from "../components/ui/ToastAlert";
 import "../styles/admin-crud-table.css";
@@ -77,7 +76,7 @@ function previewContatoCliente(
 }
 
 export default function ProjetosPage() {
-  const { user, isAdmin, podeGerirProjetos, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [lista, setLista] = useState<Projeto[]>([]);
@@ -143,8 +142,8 @@ export default function ProjetosPage() {
   }, [logout, navigate]);
 
   useEffect(() => {
-    if (podeGerirProjetos) void carregarProjetos();
-  }, [carregarProjetos, podeGerirProjetos]);
+    void carregarProjetos();
+  }, [carregarProjetos]);
 
   useEffect(() => {
     if (!sucesso) return;
@@ -304,20 +303,6 @@ export default function ProjetosPage() {
   const somenteLeitura =
     modo === "editar" && !isAdmin && (pendenteCliente ? !podeAssociarCliente : !camposEditaveis);
 
-  if (!podeGerirProjetos) {
-    return (
-      <div className="clientes-page">
-        <div className="clientes-page-inner">
-          <AccessDeniedCard
-            titleId="projetos-acesso-negado"
-            title="Projetos"
-            message="A abertura de demandas está disponível para colaboradores e equipe administrativa."
-          />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="clientes-page">
       <ToastAlert
@@ -414,7 +399,11 @@ export default function ProjetosPage() {
                   <tr
                     key={p.id}
                     className={`admin-crud-table__row${idx % 2 === 1 ? " admin-crud-table__row--alt" : ""}`}
-                    onClick={() => abrirEditar(p)}
+                    onClick={() => navigate(`/app/projetos/${p.id}`)}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      abrirEditar(p);
+                    }}
                   >
                     <td className="admin-crud-table__cell-primary" data-label="Título">
                       {p.titulo}
@@ -427,7 +416,10 @@ export default function ProjetosPage() {
                       <ProjetoStatusBadge status={p.status} />
                     </td>
                     <td className="admin-crud-table__td-actions" data-label="Ações">
-                      <RowEditButton ariaLabel={`Abrir ${p.titulo}`} onClick={() => abrirEditar(p)} />
+                      <RowEditButton
+                        ariaLabel={`Abrir ${p.titulo}`}
+                        onClick={() => navigate(`/app/projetos/${p.id}`)}
+                      />
                     </td>
                   </tr>
                 ))

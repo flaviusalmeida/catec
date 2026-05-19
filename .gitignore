@@ -9,6 +9,7 @@ Analise Projeto/
 
 # Java / Maven / Gradle
 catec-backend/target/
+catec-backend/storage/
 *.class
 *.jar
 !**/.mvn/wrapper/maven-wrapper.jar

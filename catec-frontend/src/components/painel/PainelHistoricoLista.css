@@ -1,0 +1,62 @@
+.painel-historico {
+  min-height: 12rem;
+}
+
+.painel-historico__titulo {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.painel-historico__projeto-nome {
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--catec-color-text-muted);
+}
+
+.painel-historico__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.painel-historico__item {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--catec-color-border);
+}
+
+.painel-historico__item:last-child {
+  border-bottom: none;
+}
+
+.painel-historico__item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.painel-historico__item-tipo {
+  font-weight: 600;
+  text-transform: capitalize;
+  font-size: 0.875rem;
+}
+
+.painel-historico__item-data {
+  font-size: 0.8125rem;
+  color: var(--catec-color-text-muted);
+  white-space: nowrap;
+}
+
+.painel-historico__item-meta {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--catec-color-text-muted);
+}
+
+.painel-historico__item-texto {
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+}

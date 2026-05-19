@@ -1,0 +1,23 @@
+.painel-resumo-table__titulo {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.painel-resumo-table__row--selected {
+  background: rgba(0, 45, 75, 0.06);
+}
+
+.painel-resumo-table__grid tbody tr {
+  cursor: pointer;
+}
+
+.painel-resumo-table__link {
+  color: var(--catec-color-brand);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.painel-resumo-table__link:hover {
+  text-decoration: underline;
+}

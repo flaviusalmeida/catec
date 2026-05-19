@@ -66,4 +66,36 @@ describe("LoginPage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Credenciais inválidas.");
     expect(loginWithTokenMock).not.toHaveBeenCalled();
   });
+
+  it("exibe mensagem clara para conta inativa (403)", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: false,
+      status: 403,
+      text: async () => JSON.stringify({ mensagem: "Usuário inativo." }),
+    } as Response);
+
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "inativo@catec.local" } });
+    fireEvent.change(screen.getByLabelText("Senha"), { target: { value: "password" } });
+    fireEvent.click(screen.getByRole("button", { name: "Entrar" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Usuário inativo.");
+  });
+
+  it("valida e-mail vazio antes de chamar a API", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch");
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Entrar" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Informe o e-mail.");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

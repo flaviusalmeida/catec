@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Usuários", description = "Gestão de usuários e perfis (ADMINISTRATIVO)")
 @RestController
 @RequestMapping("/api/v1/admin/usuarios")
 @PreAuthorize("hasRole('ADMINISTRATIVO')")

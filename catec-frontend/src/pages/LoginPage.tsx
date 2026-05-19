@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../api/config";
 import { useAuth } from "../auth/AuthContext";
+import { mensagemErroLogin } from "../utils/loginErrorMessage";
 import "./LoginPage.css";
 
 type LoginResponse = {
@@ -10,11 +11,6 @@ type LoginResponse = {
   accessToken: string;
   expiresInSeconds: number;
   trocaSenhaObrigatoria?: boolean;
-};
-
-type ApiErrorBody = {
-  status?: number;
-  mensagem?: string;
 };
 
 export default function LoginPage() {
@@ -28,12 +24,23 @@ export default function LoginPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    const emailTrim = email.trim();
+    if (!emailTrim) {
+      setError("Informe o e-mail.");
+      return;
+    }
+    if (!password) {
+      setError("Informe a senha.");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
+        body: JSON.stringify({ email: emailTrim, password }),
       });
       const text = await res.text();
       let data: unknown = null;
@@ -43,11 +50,7 @@ export default function LoginPage() {
         data = null;
       }
       if (!res.ok) {
-        const msg =
-          data && typeof data === "object" && "mensagem" in data
-            ? String((data as ApiErrorBody).mensagem)
-            : `Erro ao entrar (${res.status})`;
-        setError(msg);
+        setError(mensagemErroLogin(res.status, data));
         return;
       }
       const login = data as LoginResponse;

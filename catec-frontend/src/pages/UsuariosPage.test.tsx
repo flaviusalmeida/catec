@@ -21,21 +21,8 @@ describe("UsuariosPage", () => {
     vi.clearAllMocks();
   });
 
-  it("exibe aviso de acesso negado para usuário sem perfil admin", async () => {
-    useAuthMock.mockReturnValue({ isAdmin: false, podeGerirProjetos: false, logout: logoutMock });
-
-    render(
-      <MemoryRouter>
-        <UsuariosPage />
-      </MemoryRouter>,
-    );
-
-    expect(await screen.findByText("Seu perfil não inclui permissão de administrador técnico para esta tela.")).toBeVisible();
-    expect(apiFetchMock).not.toHaveBeenCalled();
-  });
-
   it("filtra tabela por nome", async () => {
-    useAuthMock.mockReturnValue({ isAdmin: true, podeGerirProjetos: true, logout: logoutMock });
+    useAuthMock.mockReturnValue({ logout: logoutMock });
     apiFetchMock.mockResolvedValue({
       status: 200,
       ok: true,
@@ -81,7 +68,7 @@ describe("UsuariosPage", () => {
   });
 
   it("esconde botão de redefinir senha quando conta editada está inativa", async () => {
-    useAuthMock.mockReturnValue({ isAdmin: true, podeGerirProjetos: true, logout: logoutMock });
+    useAuthMock.mockReturnValue({ logout: logoutMock });
     apiFetchMock.mockResolvedValue({
       status: 200,
       ok: true,
@@ -114,7 +101,7 @@ describe("UsuariosPage", () => {
   });
 
   it("abre confirmação customizada e confirma redefinição de senha", async () => {
-    useAuthMock.mockReturnValue({ isAdmin: true, podeGerirProjetos: true, logout: logoutMock });
+    useAuthMock.mockReturnValue({ logout: logoutMock });
     apiFetchMock
       .mockResolvedValueOnce({
         status: 200,

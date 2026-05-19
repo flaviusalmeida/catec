@@ -38,9 +38,7 @@ describe("AppLayout logout confirmation", () => {
     vi.clearAllMocks();
     stubMatchMedia(false);
     useAuthMock.mockReturnValue({
-      user: { nome: "Admin", email: "admin@catec.local" },
-      isAdmin: true,
-      podeGerirProjetos: true,
+      user: { nome: "Admin", email: "admin@catec.local", perfis: ["ADMINISTRATIVO"] },
       logout: logoutMock,
     });
   });
@@ -89,9 +87,7 @@ describe("AppLayout mobile menu", () => {
     vi.clearAllMocks();
     stubMatchMedia(true);
     useAuthMock.mockReturnValue({
-      user: { nome: "Admin", email: "admin@catec.local" },
-      isAdmin: true,
-      podeGerirProjetos: true,
+      user: { nome: "Admin", email: "admin@catec.local", perfis: ["ADMINISTRATIVO"] },
       logout: logoutMock,
     });
   });
@@ -127,6 +123,49 @@ describe("AppLayout mobile menu", () => {
 
     fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.getByRole("button", { name: "Abrir menu" })).toBeInTheDocument();
+  });
+});
+
+describe("AppLayout menu por perfil", () => {
+  beforeEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+    stubMatchMedia(false);
+  });
+
+  function renderNav() {
+    return render(
+      <MemoryRouter initialEntries={["/app/inicio"]}>
+        <Routes>
+          <Route path="/app" element={<AppLayout />}>
+            <Route path="inicio" element={<div>Inicio</div>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    );
+  }
+
+  it("colaborador ve Inicio e Projetos, sem Clientes nem Usuarios", () => {
+    useAuthMock.mockReturnValue({
+      user: { nome: "Colab", email: "c@test.local", perfis: ["COLABORADOR"] },
+      logout: logoutMock,
+    });
+    renderNav();
+    expect(screen.getByRole("link", { name: /Início/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Projetos/i })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Clientes/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Usuários/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Fila sócio/i })).not.toBeInTheDocument();
+  });
+
+  it("administrativo ve Clientes e Usuarios", () => {
+    useAuthMock.mockReturnValue({
+      user: { nome: "Admin", email: "admin@catec.local", perfis: ["ADMINISTRATIVO"] },
+      logout: logoutMock,
+    });
+    renderNav();
+    expect(screen.getByRole("link", { name: /Clientes/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Usuários/i })).toBeInTheDocument();
   });
 });
 

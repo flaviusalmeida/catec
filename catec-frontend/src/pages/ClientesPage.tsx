@@ -5,7 +5,6 @@ import { useAuth } from "../auth/AuthContext";
 import FieldControl from "../components/form/FieldControl";
 import PrimaryButton from "../components/buttons/PrimaryButton";
 import DataTableSection from "../components/layout/DataTableSection";
-import AccessDeniedCard from "../components/ui/AccessDeniedCard";
 import InlineAlert from "../components/ui/InlineAlert";
 import ToastAlert from "../components/ui/ToastAlert";
 import FiltersCard from "../components/layout/FiltersCard";
@@ -23,7 +22,7 @@ function documentoParaExibicao(c: Cliente): string {
 }
 
 export default function ClientesPage() {
-  const { isAdmin, logout } = useAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [lista, setLista] = useState<Cliente[]>([]);
@@ -83,8 +82,8 @@ export default function ClientesPage() {
   }, [logout, navigate]);
 
   useEffect(() => {
-    if (isAdmin) void carregar();
-  }, [carregar, isAdmin]);
+    void carregar();
+  }, [carregar]);
 
   useEffect(() => {
     if (!sucesso) return;
@@ -104,20 +103,6 @@ export default function ClientesPage() {
     setFiltroNome("");
     setFiltroDocumento("");
     setFiltroTipo("");
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="clientes-page">
-        <div className="clientes-page-inner">
-          <AccessDeniedCard
-            titleId="clientes-acesso-negado"
-            title="Clientes"
-            message="Seu perfil não inclui permissão de administrador técnico para esta tela."
-          />
-        </div>
-      </div>
-    );
   }
 
   return (
