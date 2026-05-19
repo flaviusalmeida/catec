@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import "./AppLayout.css";
@@ -41,41 +41,154 @@ function IconFolderKanban({ className }: { className?: string }) {
   );
 }
 
+function IconMenu({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <line x1="4" y1="7" x2="20" y2="7" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <line x1="4" y1="17" x2="20" y2="17" />
+    </svg>
+  );
+}
+
+function IconClose({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
+function useNavDrawerMode() {
+  const [navDrawer, setNavDrawer] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia("(max-width: 767px)").matches : false,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const onChange = () => setNavDrawer(mq.matches);
+    onChange();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  return navDrawer;
+}
+
 export default function AppLayout() {
   const { user, logout, isAdmin, podeGerirProjetos } = useAuth();
   const navigate = useNavigate();
+  const navDrawer = useNavDrawerMode();
+  const [menuAberto, setMenuAberto] = useState(false);
   const [confirmarSaidaAberto, setConfirmarSaidaAberto] = useState(false);
+
+  useEffect(() => {
+    if (!navDrawer) {
+      setMenuAberto(false);
+    }
+  }, [navDrawer]);
+
+  useEffect(() => {
+    if (!menuAberto || !navDrawer) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuAberto(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [menuAberto, navDrawer]);
+
+  useEffect(() => {
+    if (!menuAberto || !navDrawer) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [menuAberto, navDrawer]);
+
+  function fecharMenu() {
+    setMenuAberto(false);
+  }
+
+  function alternarMenu() {
+    setMenuAberto((aberto) => !aberto);
+  }
+
+  function abrirConfirmarSaida() {
+    fecharMenu();
+    setConfirmarSaidaAberto(true);
+  }
 
   function handleLogout() {
     logout();
     navigate("/login", { replace: true });
   }
 
+  const sidebarClass = ["app-shell-sidebar", menuAberto && navDrawer ? "app-shell-sidebar--open" : ""]
+    .filter(Boolean)
+    .join(" ");
+
+  const navLinkClass = ({ isActive }: { isActive: boolean }) => `app-shell-nav-link${isActive ? " active" : ""}`;
+
   return (
     <div className="app-shell">
-      <aside className="app-shell-sidebar">
-        <div className="app-shell-brand">
-          <img src="/logo-catec.png" alt="" className="app-shell-logo" width={160} height={90} />
+      <header className="app-shell-topbar">
+        <img src="/logo-catec.png" alt="CATEC" className="app-shell-topbar-logo" width={120} height={68} />
+        <button
+          type="button"
+          className="app-shell-menu-toggle"
+          aria-expanded={menuAberto}
+          aria-controls="app-shell-nav-drawer"
+          onClick={alternarMenu}
+        >
+          {menuAberto ? <IconClose className="app-shell-menu-toggle-icon" /> : <IconMenu className="app-shell-menu-toggle-icon" />}
+          <span className="app-shell-menu-toggle-label">{menuAberto ? "Fechar menu" : "Abrir menu"}</span>
+        </button>
+      </header>
+
+      {menuAberto && navDrawer ? (
+        <button type="button" className="app-shell-overlay" aria-label="Fechar menu" onClick={fecharMenu} />
+      ) : null}
+
+      <aside
+        id="app-shell-nav-drawer"
+        className={sidebarClass}
+        {...(navDrawer && menuAberto
+          ? { role: "dialog", "aria-modal": true, "aria-label": "Menu principal" }
+          : navDrawer
+            ? { "aria-hidden": true }
+            : {})}
+      >
+        <div className="app-shell-sidebar-head">
+          <div className="app-shell-brand">
+            <img src="/logo-catec.png" alt="" className="app-shell-logo" width={160} height={90} />
+          </div>
+          {navDrawer ? (
+            <button type="button" className="app-shell-sidebar-close" onClick={fecharMenu} aria-label="Fechar menu">
+              <IconClose />
+            </button>
+          ) : null}
         </div>
         <nav className="app-shell-nav">
-          <NavLink to="/app/inicio" className={({ isActive }) => `app-shell-nav-link${isActive ? " active" : ""}`} end>
+          <NavLink to="/app/inicio" className={navLinkClass} end onClick={fecharMenu}>
             <IconHome className="app-shell-nav-icon" />
             <span>Início</span>
           </NavLink>
           {podeGerirProjetos ? (
-            <NavLink to="/app/projetos" className={({ isActive }) => `app-shell-nav-link${isActive ? " active" : ""}`}>
+            <NavLink to="/app/projetos" className={navLinkClass} onClick={fecharMenu}>
               <IconFolderKanban className="app-shell-nav-icon" />
               <span>Projetos</span>
             </NavLink>
           ) : null}
           {isAdmin ? (
-            <NavLink to="/app/clientes" className={({ isActive }) => `app-shell-nav-link${isActive ? " active" : ""}`}>
+            <NavLink to="/app/clientes" className={navLinkClass} onClick={fecharMenu}>
               <IconClients className="app-shell-nav-icon" />
               <span>Clientes</span>
             </NavLink>
           ) : null}
           {isAdmin ? (
-            <NavLink to="/app/usuarios" className={({ isActive }) => `app-shell-nav-link${isActive ? " active" : ""}`}>
+            <NavLink to="/app/usuarios" className={navLinkClass} onClick={fecharMenu}>
               <IconUsers className="app-shell-nav-icon" />
               <span>Usuários</span>
             </NavLink>
@@ -86,7 +199,7 @@ export default function AppLayout() {
             <p className="app-shell-user-name">{user?.nome}</p>
             <p className="app-shell-user-email">{user?.email}</p>
           </div>
-          <button type="button" className="app-shell-logout" onClick={() => setConfirmarSaidaAberto(true)}>
+          <button type="button" className="app-shell-logout" onClick={abrirConfirmarSaida}>
             Sair
           </button>
         </div>
@@ -96,7 +209,13 @@ export default function AppLayout() {
       </main>
       {confirmarSaidaAberto ? (
         <div className="app-shell-confirm-backdrop" role="presentation" onClick={() => setConfirmarSaidaAberto(false)}>
-          <div className="app-shell-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmar-saida-titulo" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="app-shell-confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirmar-saida-titulo"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 id="confirmar-saida-titulo" className="app-shell-confirm-title">
               Confirmar saida
             </h2>
@@ -115,3 +234,4 @@ export default function AppLayout() {
     </div>
   );
 }
+
