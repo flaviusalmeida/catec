@@ -1,16 +1,28 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { apiFetch } from "../api/http";
 import { useAuth } from "../auth/AuthContext";
-import PropostaPanel from "../components/proposta/PropostaPanel";
-import ProjetoStatusBadge from "../components/projeto/ProjetoStatusBadge";
+import TextLinkButton from "../components/buttons/TextLinkButton";
 import GhostButton from "../components/buttons/GhostButton";
-import PageToolbar from "../components/layout/PageToolbar";
+import FieldControl from "../components/form/FieldControl";
+import FormField from "../components/form/FormField";
+import AdminEntityFormPage from "../components/layout/AdminEntityFormPage";
+import AdminEntityFormActions from "../components/layout/AdminEntityFormActions";
+import ModalFormGrid from "../components/layout/ModalFormGrid";
+import {
+  AdminEntityFormAlerts,
+  AdminEntityFormHeadline,
+  AdminFormDivider,
+  AdminFormFields,
+  AdminFormSection,
+} from "../components/layout/entityFormKit";
+import PropostaPanel from "../components/proposta/PropostaPanel";
 import InlineAlert from "../components/ui/InlineAlert";
 import { mensagemErroApi } from "../utils/apiError";
-import type { Projeto } from "./projetoTypes";
+import { STATUS_PROJETO_ROTULO, type Projeto } from "./projetoTypes";
 import "./ClientesPage.css";
-import "./ProjetoDetalhePage.css";
+
+const LIST_PATH = "/app/projetos";
 
 export default function ProjetoDetalhePage() {
   const { id } = useParams<{ id: string }>();
@@ -58,56 +70,114 @@ export default function ProjetoDetalhePage() {
     void carregar();
   }, [carregar]);
 
+  const tituloProjeto = carregando ? "…" : (projeto?.titulo ?? "Projeto");
+
   return (
-    <div className="clientes-page">
-      <div className="clientes-page-inner clientes-page-stack">
-        <PageToolbar
-          title={carregando ? "Projeto" : (projeto?.titulo ?? "Projeto")}
-          subtitle="Detalhe da demanda e fluxo de proposta comercial."
-          actions={
-            <GhostButton onClick={() => navigate("/app/projetos")}>
-              Voltar à lista
-            </GhostButton>
-          }
-        />
-
+    <AdminEntityFormPage
+      listPath={LIST_PATH}
+      titleId="projeto-detalhe-titulo"
+      title={<AdminEntityFormHeadline action="Projeto" entityLabel={tituloProjeto} />}
+      subtitle="Detalhe da demanda e fluxo de proposta comercial."
+      footer={
+        <AdminEntityFormActions>
+          <GhostButton onClick={() => navigate(LIST_PATH)} disabled={carregando}>
+            Voltar à lista
+          </GhostButton>
+        </AdminEntityFormActions>
+      }
+    >
+      <AdminEntityFormAlerts>
         {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
-
         {carregando ? (
-          <p className="projeto-detalhe__hint" role="status">
-            Carregando…
+          <p className="admin-entity-form-loading" role="status">
+            Carregando dados…
           </p>
-        ) : projeto ? (
-          <>
-            <section className="projeto-detalhe__resumo" aria-labelledby="proj-resumo-heading">
-              <h2 id="proj-resumo-heading" className="visually-hidden">
-                Resumo
-              </h2>
-              <p>
-                <strong>Cliente:</strong> {projeto.clienteNome ?? "—"}
-              </p>
-              <p>
-                <strong>Criado por:</strong> {projeto.criadoPorNome}
-              </p>
-              <p className="projeto-detalhe__status-linha">
-                <strong>Status:</strong> <ProjetoStatusBadge status={projeto.status} />
-              </p>
-              <p className="projeto-detalhe__escopo">{projeto.escopo}</p>
-              {isAdmin && projeto.clienteId != null ? (
-                <p>
-                  <Link to={`/app/clientes/${projeto.clienteId}/editar`}>Editar cadastro do cliente</Link>
-                </p>
-              ) : null}
-            </section>
-
-            <PropostaPanel
-              projetoId={projeto.id}
-              projetoTemCliente={projeto.clienteId != null}
-              onPropostaAtualizada={() => void carregar()}
-            />
-          </>
         ) : null}
-      </div>
-    </div>
+      </AdminEntityFormAlerts>
+
+      {!carregando && projeto ? (
+        <>
+          <AdminFormSection title="Demanda" titleId="proj-sec-demanda">
+            <AdminFormFields>
+              <ModalFormGrid balanced>
+                <FormField label="Cliente" htmlFor="pd-cliente">
+                  <FieldControl
+                    id="pd-cliente"
+                    className="clientes-input"
+                    variant="modal"
+                    readOnly
+                    value={projeto.clienteNome ?? "—"}
+                  />
+                </FormField>
+                <FormField label="Criado por" htmlFor="pd-criado-por">
+                  <FieldControl
+                    id="pd-criado-por"
+                    className="clientes-input"
+                    variant="modal"
+                    readOnly
+                    value={projeto.criadoPorNome}
+                  />
+                </FormField>
+              </ModalFormGrid>
+              <AdminFormDivider />
+              <ModalFormGrid balanced>
+                <FormField label="Status" htmlFor="pd-status">
+                  <FieldControl
+                    id="pd-status"
+                    className="clientes-input"
+                    variant="modal"
+                    readOnly
+                    value={STATUS_PROJETO_ROTULO[projeto.status]}
+                  />
+                </FormField>
+                <FormField label="E-mail de contato" htmlFor="pd-email">
+                  <FieldControl
+                    id="pd-email"
+                    className="clientes-input"
+                    variant="modal"
+                    readOnly
+                    value={projeto.emailContato ?? "—"}
+                  />
+                </FormField>
+              </ModalFormGrid>
+              <ModalFormGrid balanced>
+                <FormField label="Telefone de contato" htmlFor="pd-telefone">
+                  <FieldControl
+                    id="pd-telefone"
+                    className="clientes-input"
+                    variant="modal"
+                    readOnly
+                    value={projeto.telefoneContato ?? "—"}
+                  />
+                </FormField>
+              </ModalFormGrid>
+              <AdminFormDivider />
+              <FormField label="Escopo da demanda" htmlFor="pd-escopo">
+                <FieldControl
+                  as="textarea"
+                  id="pd-escopo"
+                  className="clientes-input clientes-textarea"
+                  variant="modal"
+                  readOnly
+                  rows={4}
+                  value={projeto.escopo.trim() || "—"}
+                />
+              </FormField>
+              {isAdmin && projeto.clienteId != null ? (
+                <TextLinkButton onClick={() => navigate(`/app/clientes/${projeto.clienteId}/editar`)}>
+                  Editar cadastro do cliente
+                </TextLinkButton>
+              ) : null}
+            </AdminFormFields>
+          </AdminFormSection>
+
+          <PropostaPanel
+            projetoId={projeto.id}
+            projetoTemCliente={projeto.clienteId != null}
+            onPropostaAtualizada={() => void carregar()}
+          />
+        </>
+      ) : null}
+    </AdminEntityFormPage>
   );
 }

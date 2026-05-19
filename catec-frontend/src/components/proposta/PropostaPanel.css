@@ -1,58 +1,10 @@
-.proposta-panel {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--color-border, #e2e8f0);
-}
-
-.proposta-panel__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.proposta-panel__title {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-}
-
-.proposta-panel__criar {
+.proposta-panel__toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
-}
-
-.proposta-panel__check {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.875rem;
-}
-
-.proposta-panel__hint {
-  margin: 0;
-  font-size: 0.875rem;
-  color: var(--color-text-muted, #64748b);
-}
-
-.proposta-panel__versoes {
-  margin-bottom: 1rem;
-  max-width: 20rem;
-}
-
-.proposta-panel__detalhe {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.proposta-panel__meta {
-  margin: 0;
-  font-size: 0.875rem;
+  justify-content: flex-end;
+  gap: 1rem 1.25rem;
+  margin-bottom: 18px;
 }
 
 .proposta-panel__acoes {
@@ -63,7 +15,7 @@
 
 .proposta-panel__lista {
   list-style: none;
-  margin: 0 0 0.75rem;
+  margin: 0;
   padding: 0;
 }
 
@@ -73,27 +25,20 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.35rem 0;
-  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e2e8f0;
   font-size: 0.875rem;
-}
-
-.proposta-panel__upload {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
 }
 
 .proposta-panel__interacoes {
   list-style: none;
-  margin: 0 0 1rem;
+  margin: 0;
   padding: 0;
 }
 
 .proposta-panel__interacoes li {
   padding: 0.75rem 0;
-  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  border-bottom: 1px solid #e2e8f0;
   font-size: 0.875rem;
 }
 
@@ -105,13 +50,6 @@
 .proposta-panel__interacao-meta {
   display: block;
   font-size: 0.75rem;
-  color: var(--color-text-muted, #64748b);
+  color: #64748b;
   margin-top: 0.15rem;
-}
-
-.proposta-panel__form-interacao {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  max-width: 32rem;
 }
