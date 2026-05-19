@@ -34,3 +34,14 @@
   gap: 0.5rem;
   flex-shrink: 0;
 }
+
+@media (max-width: 480px) {
+  .page-toolbar__actions {
+    width: 100%;
+  }
+
+  .page-toolbar__actions .primary-button {
+    width: 100%;
+    justify-content: center;
+  }
+}

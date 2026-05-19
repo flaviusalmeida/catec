@@ -17,3 +17,9 @@
 .data-table-section__wrap--filter-pending {
   opacity: 0.52;
 }
+
+@media (max-width: 640px) {
+  .data-table-section__wrap {
+    overflow-x: visible;
+  }
+}

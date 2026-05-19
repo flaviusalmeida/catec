@@ -35,3 +35,23 @@
 .row-edit-button__icon {
   flex-shrink: 0;
 }
+
+@media (max-width: 640px) {
+  .row-edit-button {
+    min-width: 2.5rem;
+    padding: 0.45rem 0.55rem;
+    gap: 0;
+  }
+
+  .row-edit-button > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}

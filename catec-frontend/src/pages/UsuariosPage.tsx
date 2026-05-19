@@ -455,13 +455,19 @@ export default function UsuariosPage() {
                     className={`admin-crud-table__row${idx % 2 === 1 ? " admin-crud-table__row--alt" : ""}`}
                     onClick={() => abrirEditar(u)}
                   >
-                    <td className="admin-crud-table__cell-primary">{u.nome}</td>
-                    <td className="admin-crud-table__cell-muted">{u.email}</td>
-                    <td className="usuarios-perfis">{u.perfis.join(", ")}</td>
-                    <td>
+                    <td className="admin-crud-table__cell-primary" data-label="Nome">
+                      {u.nome}
+                    </td>
+                    <td className="admin-crud-table__cell-muted" data-label="E-mail">
+                      {u.email}
+                    </td>
+                    <td className="usuarios-perfis" data-label="Perfis">
+                      {u.perfis.join(", ")}
+                    </td>
+                    <td data-label="Status">
                       <UsuarioStatusBadge requerTrocaSenha={u.requerTrocaSenha} ativo={u.ativo} />
                     </td>
-                    <td className="admin-crud-table__td-actions">
+                    <td className="admin-crud-table__td-actions" data-label="Ações">
                       <RowEditButton ariaLabel={`Editar ${u.nome}`} onClick={() => abrirEditar(u)} />
                     </td>
                   </tr>

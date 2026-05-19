@@ -229,13 +229,17 @@ export default function ClientesPage() {
                     className={`admin-crud-table__row${idx % 2 === 1 ? " admin-crud-table__row--alt" : ""}`}
                     onClick={() => navigate(`/app/clientes/${c.id}/editar`)}
                   >
-                    <td className="admin-crud-table__cell-primary">{c.razaoSocialOuNome}</td>
-                    <td>{documentoParaExibicao(c)}</td>
-                    <td className="admin-crud-table__cell-muted">
+                    <td className="admin-crud-table__cell-primary" data-label="Nome / Razão social">
+                      {c.razaoSocialOuNome}
+                    </td>
+                    <td data-label="CPF/CNPJ">{documentoParaExibicao(c)}</td>
+                    <td className="admin-crud-table__cell-muted" data-label="Telefone">
                       {c.telefone ? formatTelefoneBrasil(c.telefone) : "—"}
                     </td>
-                    <td className="admin-crud-table__cell-muted">{c.email ?? "-"}</td>
-                    <td className="admin-crud-table__td-actions">
+                    <td className="admin-crud-table__cell-muted" data-label="E-mail">
+                      {c.email ?? "-"}
+                    </td>
+                    <td className="admin-crud-table__td-actions" data-label="Ações">
                       <RowEditButton
                         ariaLabel={`Editar ${c.razaoSocialOuNome}`}
                         onClick={() => navigate(`/app/clientes/${c.id}/editar`)}

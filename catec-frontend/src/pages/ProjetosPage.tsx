@@ -416,13 +416,17 @@ export default function ProjetosPage() {
                     className={`admin-crud-table__row${idx % 2 === 1 ? " admin-crud-table__row--alt" : ""}`}
                     onClick={() => abrirEditar(p)}
                   >
-                    <td className="admin-crud-table__cell-primary">{p.titulo}</td>
-                    <td>{p.clienteNome ?? "—"}</td>
-                    <td className="admin-crud-table__cell-muted">{p.criadoPorNome}</td>
-                    <td>
+                    <td className="admin-crud-table__cell-primary" data-label="Título">
+                      {p.titulo}
+                    </td>
+                    <td data-label="Cliente">{p.clienteNome ?? "—"}</td>
+                    <td className="admin-crud-table__cell-muted" data-label="Criado por">
+                      {p.criadoPorNome}
+                    </td>
+                    <td data-label="Status">
                       <ProjetoStatusBadge status={p.status} />
                     </td>
-                    <td className="admin-crud-table__td-actions">
+                    <td className="admin-crud-table__td-actions" data-label="Ações">
                       <RowEditButton ariaLabel={`Abrir ${p.titulo}`} onClick={() => abrirEditar(p)} />
                     </td>
                   </tr>

@@ -27,3 +27,43 @@
 .admin-entity-form-actions__danger {
   flex-shrink: 0;
 }
+
+@media (max-width: 640px) {
+  .admin-entity-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .admin-entity-form-actions__danger ~ .admin-entity-form-actions__main {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+  }
+
+  .admin-entity-form-actions__main {
+    order: 1;
+    width: 100%;
+    margin-left: 0;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .admin-entity-form-actions__danger {
+    order: 2;
+    width: 100%;
+    margin-top: 0.25rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e8eef4;
+  }
+
+  .admin-entity-form-actions .ghost-button,
+  .admin-entity-form-actions .primary-button {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+  }
+}

@@ -7,3 +7,20 @@
   padding-top: 0.85rem;
   border-top: 1px solid #eef2f6;
 }
+
+@media (max-width: 640px) {
+  .modal-footer:not(.admin-entity-form-actions) {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .modal-footer:not(.admin-entity-form-actions) .ghost-button,
+  .modal-footer:not(.admin-entity-form-actions) .primary-button {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+  }
+}

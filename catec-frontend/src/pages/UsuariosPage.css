@@ -17,37 +17,50 @@
   gap: 1.5rem;
 }
 
-/* Larguras da tabela de usuários (base: `admin-crud-table`). */
-.usuarios-data-table th:nth-child(1) {
-  width: 18%;
-}
-.usuarios-data-table th:nth-child(2) {
-  width: 30%;
-}
-.usuarios-data-table th:nth-child(3) {
-  width: 16%;
-}
-.usuarios-data-table th:nth-child(4) {
-  width: 24%;
-}
-.usuarios-data-table th:nth-child(5) {
-  width: 12%;
+/* Larguras da tabela de usuários (desktop) */
+@media (min-width: 641px) {
+  .usuarios-data-table th:nth-child(1) {
+    width: 18%;
+  }
+  .usuarios-data-table th:nth-child(2) {
+    width: 30%;
+  }
+  .usuarios-data-table th:nth-child(3) {
+    width: 16%;
+  }
+  .usuarios-data-table th:nth-child(4) {
+    width: 24%;
+  }
+  .usuarios-data-table th:nth-child(5) {
+    width: 12%;
+  }
+
+  .usuarios-data-table th:nth-child(4),
+  .usuarios-data-table td:nth-child(4) {
+    text-align: center;
+  }
+
+  .usuarios-data-table td:nth-child(4) .status-badge-group {
+    justify-content: center;
+  }
+
+  .usuarios-data-table .admin-crud-table__th-actions,
+  .usuarios-data-table .admin-crud-table__td-actions {
+    text-align: center;
+    vertical-align: middle;
+  }
 }
 
-.usuarios-data-table th:nth-child(4),
-.usuarios-data-table td:nth-child(4) {
-  text-align: center;
-}
+@media (max-width: 640px) {
+  .usuarios-data-table .usuarios-perfis {
+    text-align: right;
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
 
-.usuarios-data-table td:nth-child(4) .status-badge-group {
-  justify-content: center;
-}
-
-/* Ações: mantém a última coluna (larguras em `th:nth-child(5)`) e reforça alinhamento ao centro. */
-.usuarios-data-table .admin-crud-table__th-actions,
-.usuarios-data-table .admin-crud-table__td-actions {
-  text-align: center;
-  vertical-align: middle;
+  .usuarios-data-table .admin-crud-table__row td:nth-child(4) .status-badge-group {
+    justify-content: flex-end;
+  }
 }
 
 .usuarios-perfis {

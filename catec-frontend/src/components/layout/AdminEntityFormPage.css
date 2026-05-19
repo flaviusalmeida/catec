@@ -87,3 +87,14 @@
   padding-top: 0;
   border-top: none;
 }
+
+@media (max-width: 640px) {
+  .admin-entity-form-page__inner {
+    padding: 1rem 0.85rem 0.5rem;
+  }
+
+  .admin-entity-form-page__footer {
+    margin-top: 1rem;
+    padding: 0.75rem 0 0.5rem;
+  }
+}
