@@ -60,7 +60,7 @@ public class PropostaService {
     public PropostaResponse criar(Long projetoId, boolean requerAvaliacaoSocio, UsuarioAutenticado principal) {
         exigirAdministrativo(principal);
         Projeto projeto = loadProjeto(projetoId);
-        validarProjetoParaNovaProposta(projeto);
+        validarProjetoParaNovaProposta(projetoId, projeto);
 
         if (propostaRepository.existsByProjetoIdAndStatusIn(projetoId, STATUS_PROPOSTA_ATIVA)) {
             throw badRequest("Já existe uma proposta em elaboração ou aprovação para este projeto.");
@@ -88,11 +88,26 @@ public class PropostaService {
                 PropostaStatus.RASCUNHO.name(),
                 principal.id());
 
-        if (projeto.getStatus() == ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL) {
+        if (projeto.getStatus() == ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL
+                || projeto.getStatus() == ProjetoStatus.PROPOSTA_CONCLUIDA) {
             sincronizarProjeto(projeto, ProjetoStatus.ELABORANDO_PROPOSTA, principal.id());
         }
 
         return toResponse(salva);
+    }
+
+    /** Atualiza flag de avaliação do sócio enquanto a proposta está em rascunho (após anexo, antes de submeter). */
+    @Transactional
+    public PropostaResponse atualizarConfiguracaoRascunho(
+            Long projetoId, Long propostaId, boolean requerAvaliacaoSocio, UsuarioAutenticado principal) {
+        exigirAdministrativo(principal);
+        Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
+        if (proposta.getStatus() != PropostaStatus.RASCUNHO) {
+            throw badRequest("Só é possível alterar a configuração em proposta em rascunho.");
+        }
+        proposta.setRequerAvaliacaoSocio(requerAvaliacaoSocio);
+        proposta.setAtualizadoEm(Instant.now());
+        return toResponse(propostaRepository.save(proposta));
     }
 
     @Transactional(readOnly = true)
@@ -316,13 +331,22 @@ public class PropostaService {
         }
     }
 
-    private void validarProjetoParaNovaProposta(Projeto projeto) {
+    private void validarProjetoParaNovaProposta(Long projetoId, Projeto projeto) {
         if (projeto.getStatus() == ProjetoStatus.PENDENTE_CLIENTE) {
             throw badRequest("Associe um cliente ao projeto antes de criar a proposta comercial.");
+        }
+        if (existePendenciaRevisaoProposta(projetoId)) {
+            return;
         }
         if (projeto.getStatus() == ProjetoStatus.PROPOSTA_CONCLUIDA) {
             throw badRequest("Projeto já possui proposta comercial concluída neste ciclo.");
         }
+    }
+
+    /** Cliente pediu ajustes: permite nova versão (v2+) mesmo com projeto em PROPOSTA_CONCLUIDA. */
+    private boolean existePendenciaRevisaoProposta(Long projetoId) {
+        return propostaRepository.existsByProjetoIdAndStatus(projetoId, PropostaStatus.AGUARDANDO_AJUSTE_ADM)
+                || propostaRepository.existsByProjetoIdAndConsideracoesPendentesTrue(projetoId);
     }
 
     private void sincronizarProjeto(Projeto projeto, ProjetoStatus novoStatus, Long usuarioId) {

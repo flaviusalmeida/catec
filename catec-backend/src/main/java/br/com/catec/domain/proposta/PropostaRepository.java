@@ -22,6 +22,10 @@ public interface PropostaRepository extends JpaRepository<Proposta, Long> {
 
     boolean existsByProjetoIdAndStatusIn(Long projetoId, Iterable<PropostaStatus> statuses);
 
+    boolean existsByProjetoIdAndStatus(Long projetoId, PropostaStatus status);
+
+    boolean existsByProjetoIdAndConsideracoesPendentesTrue(Long projetoId);
+
     @EntityGraph(attributePaths = {"projeto", "projeto.cliente", "elaboradoPor"})
     List<Proposta> findByStatusOrderByCriadoEmAsc(PropostaStatus status);
 

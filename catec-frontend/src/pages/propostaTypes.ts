@@ -89,3 +89,12 @@ export const STATUS_PROPOSTA_RESPOSTA_CLIENTE: PropostaStatus[] = [
   "EM_AVALIACAO_CLIENTE",
   "AGUARDANDO_AJUSTE_ADM",
 ];
+
+/** Propostas já encaminhadas ao cliente (histórico de envio). */
+export const STATUS_PROPOSTA_ENVIADA: PropostaStatus[] = [
+  "ENVIADA_AO_CLIENTE",
+  "EM_AVALIACAO_CLIENTE",
+  "AGUARDANDO_AJUSTE_ADM",
+  "ACEITA",
+  "NEGADA",
+];

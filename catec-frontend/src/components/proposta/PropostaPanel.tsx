@@ -5,6 +5,8 @@ import GhostButton from "../buttons/GhostButton";
 import PrimaryButton from "../buttons/PrimaryButton";
 import FieldControl from "../form/FieldControl";
 import FormField from "../form/FormField";
+import FormDialog from "../layout/FormDialog";
+import ModalFooter from "../layout/ModalFooter";
 import ModalFormGrid from "../layout/ModalFormGrid";
 import {
   AdminFormDivider,
@@ -13,16 +15,17 @@ import {
 } from "../layout/entityFormKit";
 import EmptyState from "../ui/EmptyState";
 import InlineAlert from "../ui/InlineAlert";
-import LabeledSwitch from "../ui/LabeledSwitch";
 import { mensagemErroApi } from "../../utils/apiError";
 import { downloadDocumento } from "../../utils/downloadDocumento";
 import type {
   DocumentoAnexo,
   InteracaoFluxo,
   Proposta,
+  PropostaStatus,
   TipoInteracaoFluxo,
 } from "../../pages/propostaTypes";
 import {
+  STATUS_PROPOSTA_ENVIADA,
   STATUS_PROPOSTA_RESPOSTA_CLIENTE,
   STATUS_PROPOSTA_ROTULO,
   STATUS_PROPOSTA_UPLOAD,
@@ -37,22 +40,125 @@ type Props = {
   onPropostaAtualizada?: () => void;
 };
 
+type DocumentoHistorico = DocumentoAnexo & {
+  propostaId: number;
+  propostaVersao: number;
+  propostaStatus: PropostaStatus;
+};
+
+type InteracaoHistorico = InteracaoFluxo & {
+  propostaId: number;
+  propostaVersao: number;
+};
+
+const STATUS_PROPOSTA_ATIVA: PropostaStatus[] = [
+  "RASCUNHO",
+  "PENDENTE_AVALIACAO_SOCIO",
+  "APROVADA_INTERNA",
+];
+
+function formatarDataHora(iso: string | null): string {
+  if (!iso) return "";
+  return new Date(iso).toLocaleString("pt-BR");
+}
+
+function tituloHistoricoProposta(proposta: Proposta): string {
+  if (proposta.enviadaClienteEm) {
+    return `v${proposta.versao} — enviada em ${formatarDataHora(proposta.enviadaClienteEm)}`;
+  }
+  return `v${proposta.versao} — ${STATUS_PROPOSTA_ROTULO[proposta.status]}`;
+}
+
 export default function PropostaPanel({ projetoId, projetoTemCliente, onPropostaAtualizada }: Props) {
   const { isAdmin, isSocio, logout } = useAuth();
   const [propostas, setPropostas] = useState<Proposta[]>([]);
   const [selecionadaId, setSelecionadaId] = useState<number | null>(null);
-  const [documentos, setDocumentos] = useState<DocumentoAnexo[]>([]);
-  const [interacoes, setInteracoes] = useState<InteracaoFluxo[]>([]);
+  const [documentosVersao, setDocumentosVersao] = useState<DocumentoAnexo[]>([]);
+  const [documentosEnviados, setDocumentosEnviados] = useState<DocumentoHistorico[]>([]);
+  const [interacoesHistorico, setInteracoesHistorico] = useState<InteracaoHistorico[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [acaoErro, setAcaoErro] = useState<string | null>(null);
   const [processando, setProcessando] = useState(false);
-  const [requerSocio, setRequerSocio] = useState(false);
   const [arquivoUpload, setArquivoUpload] = useState<File | null>(null);
   const [tipoInteracao, setTipoInteracao] = useState<TipoInteracaoFluxo>("CONSIDERACOES_CLIENTE");
   const [textoInteracao, setTextoInteracao] = useState("");
+  const [modalRespostaAberto, setModalRespostaAberto] = useState(false);
 
   const selecionada = propostas.find((p) => p.id === selecionadaId) ?? null;
+  const temAnexo = documentosVersao.length > 0;
+  const temPropostaAtiva = propostas.some((p) => STATUS_PROPOSTA_ATIVA.includes(p.status));
+  const aguardandoAjusteCliente = propostas.some(
+    (p) => p.status === "AGUARDANDO_AJUSTE_ADM" || p.consideracoesPendentes,
+  );
+  const podeCriarNova =
+    isAdmin &&
+    projetoTemCliente &&
+    !temPropostaAtiva &&
+    !processando &&
+    (propostas.length === 0 || aguardandoAjusteCliente);
+
+  const propostaParaResposta =
+    propostas.find((p) => STATUS_PROPOSTA_RESPOSTA_CLIENTE.includes(p.status)) ?? null;
+
+  const carregarHistorico = useCallback(
+    async (lista: Proposta[], propostaSelecionadaId: number | null) => {
+      if (lista.length === 0) {
+        setDocumentosVersao([]);
+        setDocumentosEnviados([]);
+        setInteracoesHistorico([]);
+        return;
+      }
+
+      try {
+        const detalhes = await Promise.all(
+          lista.map(async (p) => {
+            const [resDoc, resInt] = await Promise.all([
+              apiFetch(`/api/v1/projetos/${projetoId}/propostas/${p.id}/documentos`),
+              apiFetch(`/api/v1/projetos/${projetoId}/propostas/${p.id}/interacoes`),
+            ]);
+            const docs = resDoc.ok ? ((await resDoc.json()) as DocumentoAnexo[]) : [];
+            const ints = resInt.ok ? ((await resInt.json()) as InteracaoFluxo[]) : [];
+            return { proposta: p, docs, ints };
+          }),
+        );
+
+        const selecionadaDetalhe = detalhes.find((d) => d.proposta.id === propostaSelecionadaId);
+        setDocumentosVersao(selecionadaDetalhe?.docs ?? []);
+
+        const enviados: DocumentoHistorico[] = detalhes
+          .filter((d) => STATUS_PROPOSTA_ENVIADA.includes(d.proposta.status) && d.docs.length > 0)
+          .flatMap((d) =>
+            d.docs.map((doc) => ({
+              ...doc,
+              propostaId: d.proposta.id,
+              propostaVersao: d.proposta.versao,
+              propostaStatus: d.proposta.status,
+            })),
+          )
+          .sort((a, b) => b.propostaVersao - a.propostaVersao);
+
+        setDocumentosEnviados(enviados);
+
+        const interacoes: InteracaoHistorico[] = detalhes
+          .flatMap((d) =>
+            d.ints.map((i) => ({
+              ...i,
+              propostaId: d.proposta.id,
+              propostaVersao: d.proposta.versao,
+            })),
+          )
+          .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime());
+
+        setInteracoesHistorico(interacoes);
+      } catch {
+        setDocumentosVersao([]);
+        setDocumentosEnviados([]);
+        setInteracoesHistorico([]);
+      }
+    },
+    [projetoId],
+  );
 
   const carregarPropostas = useCallback(async () => {
     setCarregando(true);
@@ -70,6 +176,7 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
       }
       const lista = (await res.json()) as Proposta[];
       setPropostas(lista);
+      setAcaoErro(null);
       setSelecionadaId((atual) => {
         if (lista.length === 0) return null;
         if (atual != null && lista.some((p) => p.id === atual)) return atual;
@@ -82,32 +189,28 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
     }
   }, [projetoId, logout]);
 
-  const carregarDetalhe = useCallback(
-    async (propostaId: number) => {
-      try {
-        const [resDoc, resInt] = await Promise.all([
-          apiFetch(`/api/v1/projetos/${projetoId}/propostas/${propostaId}/documentos`),
-          apiFetch(`/api/v1/projetos/${projetoId}/propostas/${propostaId}/interacoes`),
-        ]);
-        if (resDoc.ok) setDocumentos((await resDoc.json()) as DocumentoAnexo[]);
-        else setDocumentos([]);
-        if (resInt.ok) setInteracoes((await resInt.json()) as InteracaoFluxo[]);
-        else setInteracoes([]);
-      } catch {
-        setDocumentos([]);
-        setInteracoes([]);
-      }
-    },
-    [projetoId],
-  );
-
   useEffect(() => {
     void carregarPropostas();
   }, [carregarPropostas]);
 
   useEffect(() => {
-    if (selecionadaId != null) void carregarDetalhe(selecionadaId);
-  }, [selecionadaId, carregarDetalhe]);
+    if (propostas.length > 0 && selecionadaId != null) {
+      void carregarHistorico(propostas, selecionadaId);
+    }
+  }, [selecionadaId, propostas, carregarHistorico]);
+
+  async function recarregarTudo(manterSelecaoId?: number) {
+    const res = await apiFetch(`/api/v1/projetos/${projetoId}/propostas`);
+    if (!res.ok) return;
+    const lista = (await res.json()) as Proposta[];
+    setPropostas(lista);
+    const id =
+      manterSelecaoId != null && lista.some((p) => p.id === manterSelecaoId)
+        ? manterSelecaoId
+        : lista[0]?.id ?? null;
+    setSelecionadaId(id);
+    await carregarHistorico(lista, id);
+  }
 
   async function executarAcao(path: string, metodo: "POST" = "POST", body?: unknown): Promise<boolean> {
     if (selecionadaId == null) return false;
@@ -122,8 +225,7 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
         setAcaoErro(await mensagemErroApi(res, "Ação não concluída"));
         return false;
       }
-      await carregarPropostas();
-      await carregarDetalhe(selecionadaId);
+      await recarregarTudo(selecionadaId);
       onPropostaAtualizada?.();
       return true;
     } catch {
@@ -135,24 +237,92 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
   }
 
   async function criarProposta() {
-    if (!isAdmin || !projetoTemCliente) return;
+    if (!podeCriarNova) return;
     setProcessando(true);
     setAcaoErro(null);
     try {
       const res = await apiFetch(`/api/v1/projetos/${projetoId}/propostas`, {
         method: "POST",
-        body: JSON.stringify({ requerAvaliacaoSocio: requerSocio }),
+        body: JSON.stringify({ requerAvaliacaoSocio: false }),
       });
       if (!res.ok) {
         setAcaoErro(await mensagemErroApi(res, "Erro ao criar proposta"));
         return;
       }
       const nova = (await res.json()) as Proposta;
-      setSelecionadaId(nova.id);
-      await carregarPropostas();
+      await recarregarTudo(nova.id);
       onPropostaAtualizada?.();
     } catch {
       setAcaoErro("Falha de rede ao criar proposta.");
+    } finally {
+      setProcessando(false);
+    }
+  }
+
+  async function definirRequerSocio(requer: boolean): Promise<boolean> {
+    if (selecionadaId == null || selecionada?.status !== "RASCUNHO") return false;
+    if (selecionada.requerAvaliacaoSocio === requer) return true;
+    try {
+      const res = await apiFetch(
+        `/api/v1/projetos/${projetoId}/propostas/${selecionadaId}/configuracao-rascunho`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ requerAvaliacaoSocio: requer }),
+        },
+      );
+      if (!res.ok) {
+        setAcaoErro(await mensagemErroApi(res, "Erro ao atualizar configuração"));
+        return false;
+      }
+      await recarregarTudo(selecionadaId);
+      return true;
+    } catch {
+      setAcaoErro("Falha de rede ao atualizar configuração.");
+      return false;
+    }
+  }
+
+  async function enviarParaAvaliacao() {
+    if (selecionadaId == null || !rascunhoComAnexo) return;
+    setProcessando(true);
+    setAcaoErro(null);
+    try {
+      if (!(await definirRequerSocio(true))) return;
+      const res = await apiFetch(
+        `/api/v1/projetos/${projetoId}/propostas/${selecionadaId}/submeter-avaliacao-socio`,
+        { method: "POST" },
+      );
+      if (!res.ok) {
+        setAcaoErro(await mensagemErroApi(res, "Não foi possível enviar para avaliação"));
+        return;
+      }
+      await recarregarTudo(selecionadaId);
+      onPropostaAtualizada?.();
+    } catch {
+      setAcaoErro("Falha de rede ao enviar para avaliação.");
+    } finally {
+      setProcessando(false);
+    }
+  }
+
+  async function aprovarProposta() {
+    if (selecionadaId == null || !rascunhoComAnexo) return;
+    setProcessando(true);
+    setAcaoErro(null);
+    try {
+      if (selecionada?.requerAvaliacaoSocio && !(await definirRequerSocio(false))) return;
+      const res = await apiFetch(
+        `/api/v1/projetos/${projetoId}/propostas/${selecionadaId}/aprovar-interna`,
+        { method: "POST" },
+      );
+      if (!res.ok) {
+        setAcaoErro(await mensagemErroApi(res, "Não foi possível aprovar a proposta"));
+        return;
+      }
+      await recarregarTudo(selecionadaId);
+      onPropostaAtualizada?.();
+    } catch {
+      setAcaoErro("Falha de rede ao aprovar.");
     } finally {
       setProcessando(false);
     }
@@ -175,7 +345,7 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
         return;
       }
       setArquivoUpload(null);
-      await carregarDetalhe(selecionadaId);
+      await recarregarTudo(selecionadaId);
     } catch {
       setAcaoErro("Falha de rede no upload.");
     } finally {
@@ -184,24 +354,28 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
   }
 
   async function registrarRespostaCliente() {
-    if (!selecionadaId || !textoInteracao.trim()) {
+    if (!propostaParaResposta || !textoInteracao.trim()) {
       setAcaoErro("Informe o texto do registro.");
       return;
     }
     setProcessando(true);
     setAcaoErro(null);
     try {
-      const res = await apiFetch(`/api/v1/projetos/${projetoId}/propostas/${selecionadaId}/interacoes`, {
-        method: "POST",
-        body: JSON.stringify({ tipoInteracao, texto: textoInteracao.trim() }),
-      });
+      const res = await apiFetch(
+        `/api/v1/projetos/${projetoId}/propostas/${propostaParaResposta.id}/interacoes`,
+        {
+          method: "POST",
+          body: JSON.stringify({ tipoInteracao, texto: textoInteracao.trim() }),
+        },
+      );
       if (!res.ok) {
         setAcaoErro(await mensagemErroApi(res, "Erro ao registrar resposta"));
         return;
       }
       setTextoInteracao("");
-      await carregarPropostas();
-      await carregarDetalhe(selecionadaId);
+      setTipoInteracao("CONSIDERACOES_CLIENTE");
+      setModalRespostaAberto(false);
+      await recarregarTudo(selecionadaId ?? propostaParaResposta.id);
       onPropostaAtualizada?.();
     } catch {
       setAcaoErro("Falha de rede ao registrar.");
@@ -210,33 +384,65 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
     }
   }
 
-  const podeUpload = isAdmin && selecionada && STATUS_PROPOSTA_UPLOAD.includes(selecionada.status);
-  const podeRespostaCliente =
-    isAdmin && selecionada && STATUS_PROPOSTA_RESPOSTA_CLIENTE.includes(selecionada.status);
+  function fecharModalResposta() {
+    if (processando) return;
+    setModalRespostaAberto(false);
+    setTextoInteracao("");
+    setTipoInteracao("CONSIDERACOES_CLIENTE");
+  }
 
-  const mostrarDetalhe = !carregando && propostas.length > 0 && selecionada != null;
-  const elaboracaoTexto = selecionada
-    ? `${selecionada.elaboradoPorNome}${selecionada.requerAvaliacaoSocio ? " · Exige parecer do sócio" : ""}`
-    : "";
+  const podeUpload = isAdmin && selecionada && STATUS_PROPOSTA_UPLOAD.includes(selecionada.status);
+  const mostrarFormularioUpload = podeUpload && selecionada?.status === "RASCUNHO" && !temAnexo;
+  const podeRespostaCliente = isAdmin && propostaParaResposta != null;
+  const mostrarProposta = !carregando && propostas.length > 0 && selecionada != null;
+  const mostrarRespostaCliente =
+    mostrarProposta &&
+    (documentosEnviados.length > 0 ||
+      interacoesHistorico.length > 0 ||
+      propostas.some((p) => STATUS_PROPOSTA_ENVIADA.includes(p.status)));
+
+  const rascunhoComAnexo = isAdmin && selecionada?.status === "RASCUNHO" && temAnexo;
+
+  const elaboracaoTexto = selecionada ? selecionada.elaboradoPorNome : "";
+
+  const versaoSomenteHistorico =
+    selecionada != null &&
+    STATUS_PROPOSTA_ENVIADA.includes(selecionada.status) &&
+    propostas.length === 1;
+
+  const mostrarDocumentoVersaoAtual =
+    selecionada != null &&
+    !versaoSomenteHistorico &&
+    (mostrarFormularioUpload ||
+      !STATUS_PROPOSTA_ENVIADA.includes(selecionada.status) ||
+      documentosVersao.length > 0);
+
+  function baixarDocumento(doc: DocumentoAnexo) {
+    void downloadDocumento(doc.id, doc.nomeOriginal).catch(() => setAcaoErro("Download falhou."));
+  }
+
+  const acoesComercial = podeCriarNova ? (
+    <PrimaryButton variant="toolbar" onClick={() => void criarProposta()} disabled={processando}>
+      Nova
+    </PrimaryButton>
+  ) : undefined;
+
+  const acoesResposta = podeRespostaCliente ? (
+    <PrimaryButton
+      variant="toolbar"
+      onClick={() => {
+        setAcaoErro(null);
+        setModalRespostaAberto(true);
+      }}
+      disabled={processando}
+    >
+      Registrar
+    </PrimaryButton>
+  ) : undefined;
 
   return (
     <>
-      <AdminFormSection title="Proposta comercial" titleId="prop-sec-comercial">
-        {isAdmin && projetoTemCliente ? (
-          <div className="proposta-panel__toolbar">
-            <LabeledSwitch
-              id="prop-requer-socio"
-              label="Requer avaliação do sócio"
-              checked={requerSocio}
-              onChange={setRequerSocio}
-              disabled={processando}
-            />
-            <PrimaryButton variant="toolbar" onClick={() => void criarProposta()} disabled={processando}>
-              Nova proposta
-            </PrimaryButton>
-          </div>
-        ) : null}
-
+      <AdminFormSection title="Proposta comercial" titleId="prop-sec-comercial" actions={acoesComercial}>
         {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
         {acaoErro ? <InlineAlert variant="error">{acaoErro}</InlineAlert> : null}
 
@@ -245,213 +451,278 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
             Carregando propostas…
           </p>
         ) : propostas.length === 0 ? (
-          <EmptyState
-            variant="inline"
-            title="Nenhuma proposta"
-            description={
-              projetoTemCliente
-                ? "O administrativo pode iniciar uma nova proposta comercial neste projeto."
-                : "Associe um cliente ao projeto antes de criar a proposta comercial."
-            }
-          />
-        ) : (
+          <div className="proposta-panel__vazio">
+            <EmptyState
+              variant="inline"
+              title="Nenhuma proposta"
+              description={
+                projetoTemCliente
+                  ? "Inicie uma proposta comercial para anexar o documento e seguir com a aprovação."
+                  : "Associe um cliente ao projeto antes de criar a proposta comercial."
+              }
+            />
+          </div>
+        ) : mostrarProposta ? (
           <AdminFormFields>
-            <ModalFormGrid balanced>
-              <FormField label="Versão" htmlFor="sel-proposta">
-                <FieldControl
-                  as="select"
-                  id="sel-proposta"
-                  className="clientes-select"
-                  variant="modal"
-                  value={selecionadaId ?? ""}
-                  onChange={(e) => setSelecionadaId(Number(e.target.value))}
-                  disabled={processando}
-                >
-                  {propostas.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      v{p.versao} — {STATUS_PROPOSTA_ROTULO[p.status]}
-                    </option>
-                  ))}
-                </FieldControl>
-              </FormField>
-              {selecionada ? (
+            {propostas.length > 1 ? (
+              <ModalFormGrid balanced>
+                <FormField label="Versão" htmlFor="sel-proposta">
+                  <FieldControl
+                    as="select"
+                    id="sel-proposta"
+                    className="clientes-select"
+                    variant="modal"
+                    value={selecionadaId ?? ""}
+                    onChange={(e) => setSelecionadaId(Number(e.target.value))}
+                    disabled={processando}
+                  >
+                    {propostas.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        v{p.versao} — {STATUS_PROPOSTA_ROTULO[p.status]}
+                      </option>
+                    ))}
+                  </FieldControl>
+                </FormField>
                 <FormField label="Status" htmlFor="prop-status">
                   <FieldControl
                     id="prop-status"
                     className="clientes-input"
                     variant="modal"
                     readOnly
-                    value={STATUS_PROPOSTA_ROTULO[selecionada.status]}
+                    value={STATUS_PROPOSTA_ROTULO[selecionada!.status]}
                   />
                 </FormField>
-              ) : null}
-            </ModalFormGrid>
-
-            {selecionada ? (
-              <FormField label="Elaboração" htmlFor="prop-elaboracao">
+              </ModalFormGrid>
+            ) : (
+              <FormField label="Status" htmlFor="prop-status">
                 <FieldControl
-                  id="prop-elaboracao"
+                  id="prop-status"
                   className="clientes-input"
                   variant="modal"
                   readOnly
-                  value={elaboracaoTexto}
+                  value={STATUS_PROPOSTA_ROTULO[selecionada!.status]}
                 />
               </FormField>
+            )}
+
+            <FormField label="Elaboração" htmlFor="prop-elaboracao">
+              <FieldControl
+                id="prop-elaboracao"
+                className="clientes-input"
+                variant="modal"
+                readOnly
+                value={elaboracaoTexto}
+              />
+            </FormField>
+
+            {selecionada!.status === "AGUARDANDO_AJUSTE_ADM" && podeCriarNova ? (
+              <p className="proposta-panel__hint" role="status">
+                O cliente solicitou ajustes. Use <strong>Nova</strong> para elaborar uma nova versão, anexe o
+                documento e siga com aprovação e envio ao cliente.
+              </p>
             ) : null}
 
-            {mostrarDetalhe ? (
-              <div className="proposta-panel__acoes">
-                {isAdmin && selecionada!.status === "RASCUNHO" && selecionada!.requerAvaliacaoSocio ? (
-                  <GhostButton
+            {mostrarDocumentoVersaoAtual || mostrarFormularioUpload || documentosEnviados.length > 0 ? (
+              <AdminFormDivider />
+            ) : null}
+
+            {mostrarDocumentoVersaoAtual ? (
+              <>
+                <p className="proposta-panel__subtitulo">
+                  {STATUS_PROPOSTA_ENVIADA.includes(selecionada!.status)
+                    ? "Documento da proposta"
+                    : "Documento da proposta em elaboração"}
+                </p>
+
+                {documentosVersao.length > 0 ? (
+                  <ul className="proposta-panel__lista proposta-panel__lista--documento">
+                    {documentosVersao.map((d) => (
+                      <li key={d.id}>
+                        <span className="proposta-panel__doc-nome">{d.nomeOriginal}</span>
+                        <GhostButton onClick={() => baixarDocumento(d)}>Baixar</GhostButton>
+                      </li>
+                    ))}
+                  </ul>
+                ) : mostrarFormularioUpload ? (
+                  <p className="proposta-panel__hint">
+                    Anexe o arquivo da proposta comercial para enviar para avaliação ou aprovar.
+                  </p>
+                ) : (
+                  <p className="proposta-panel__hint" role="status">
+                    Nenhum documento nesta versão.
+                  </p>
+                )}
+              </>
+            ) : null}
+
+            {mostrarFormularioUpload ? (
+              <div className="proposta-panel__upload">
+                <FormField label="Arquivo" htmlFor="prop-arquivo-upload">
+                  <FieldControl
+                    id="prop-arquivo-upload"
+                    type="file"
+                    className="clientes-input"
+                    variant="modal"
+                    accept=".pdf,.doc,.docx,image/jpeg,image/png"
+                    onChange={(e) => setArquivoUpload(e.target.files?.[0] ?? null)}
                     disabled={processando}
-                    onClick={() => void executarAcao("/submeter-avaliacao-socio")}
-                  >
-                    Submeter ao sócio
+                  />
+                </FormField>
+                <PrimaryButton disabled={processando || !arquivoUpload} onClick={() => void enviarDocumento()}>
+                  Anexar arquivo
+                </PrimaryButton>
+              </div>
+            ) : null}
+
+            {documentosEnviados.length > 0 ? (
+              <>
+                {mostrarDocumentoVersaoAtual ? <AdminFormDivider /> : null}
+                <p className="proposta-panel__subtitulo">Propostas enviadas</p>
+                <ul className="proposta-panel__lista proposta-panel__lista--historico">
+                  {documentosEnviados.map((d) => {
+                    const propostaRef = propostas.find((p) => p.id === d.propostaId);
+                    if (!propostaRef) return null;
+                    return (
+                      <li key={`${d.propostaId}-${d.id}`}>
+                        <span className="proposta-panel__lista-texto">
+                          <span className="proposta-panel__lista-titulo">
+                            {tituloHistoricoProposta(propostaRef)}
+                          </span>
+                          <span className="proposta-panel__lista-detalhe">{d.nomeOriginal}</span>
+                        </span>
+                        <GhostButton onClick={() => baixarDocumento(d)}>Baixar</GhostButton>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            ) : null}
+
+            {rascunhoComAnexo ? (
+              <>
+                <AdminFormDivider />
+                <div className="proposta-panel__acoes">
+                  <GhostButton disabled={processando} onClick={() => void enviarParaAvaliacao()}>
+                    Enviar para avaliação
                   </GhostButton>
-                ) : null}
-                {isAdmin && selecionada!.status === "RASCUNHO" && !selecionada!.requerAvaliacaoSocio ? (
-                  <GhostButton disabled={processando} onClick={() => void executarAcao("/aprovar-interna")}>
-                    Aprovar internamente
+                  <PrimaryButton disabled={processando} onClick={() => void aprovarProposta()}>
+                    Aprovar
+                  </PrimaryButton>
+                </div>
+              </>
+            ) : null}
+
+            {selecionada!.status === "PENDENTE_AVALIACAO_SOCIO" && isSocio ? (
+              <>
+                <AdminFormDivider />
+                <div className="proposta-panel__acoes">
+                  <PrimaryButton disabled={processando} onClick={() => void executarAcao("/aprovar-socio")}>
+                    Aprovar (sócio)
+                  </PrimaryButton>
+                  <GhostButton disabled={processando} onClick={() => void executarAcao("/devolver-rascunho")}>
+                    Devolver para rascunho
                   </GhostButton>
-                ) : null}
-                {isSocio && selecionada!.status === "PENDENTE_AVALIACAO_SOCIO" ? (
-                  <>
-                    <PrimaryButton disabled={processando} onClick={() => void executarAcao("/aprovar-socio")}>
-                      Aprovar (sócio)
-                    </PrimaryButton>
-                    <GhostButton disabled={processando} onClick={() => void executarAcao("/devolver-rascunho")}>
-                      Devolver para rascunho
-                    </GhostButton>
-                  </>
-                ) : null}
-                {isAdmin && selecionada!.status === "APROVADA_INTERNA" ? (
+                </div>
+              </>
+            ) : null}
+
+            {selecionada!.status === "APROVADA_INTERNA" && isAdmin ? (
+              <>
+                <AdminFormDivider />
+                <p className="proposta-panel__subtitulo">Envio ao cliente</p>
+                <p className="proposta-panel__hint">
+                  A proposta foi aprovada internamente. Envie ao cliente para dar sequência ao fluxo.
+                </p>
+                <div className="proposta-panel__acoes">
                   <PrimaryButton disabled={processando} onClick={() => void executarAcao("/enviar-cliente")}>
                     Enviar ao cliente
                   </PrimaryButton>
-                ) : null}
-              </div>
+                </div>
+              </>
             ) : null}
           </AdminFormFields>
-        )}
+        ) : null}
       </AdminFormSection>
 
-      {mostrarDetalhe ? (
-        <>
-          <AdminFormSection title="Documentos" titleId="prop-sec-docs">
-            <AdminFormFields>
-              {documentos.length === 0 ? (
-                <EmptyState
-                  variant="inline"
-                  title="Nenhum anexo"
-                  description="Anexe arquivos da proposta comercial quando permitido."
-                />
-              ) : (
-                <ul className="proposta-panel__lista">
-                  {documentos.map((d) => (
-                    <li key={d.id}>
-                      <span>
-                        {d.nomeOriginal} (v{d.versao})
-                      </span>
-                      <GhostButton
-                        onClick={() =>
-                          void downloadDocumento(d.id, d.nomeOriginal).catch(() =>
-                            setAcaoErro("Download falhou."),
-                          )
-                        }
-                      >
-                        Baixar
-                      </GhostButton>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {podeUpload ? (
-                <>
-                  <AdminFormDivider />
-                  <FormField label="Arquivo" htmlFor="prop-arquivo-upload">
-                    <FieldControl
-                      id="prop-arquivo-upload"
-                      type="file"
-                      className="clientes-input"
-                      variant="modal"
-                      accept=".pdf,.doc,.docx,image/jpeg,image/png"
-                      onChange={(e) => setArquivoUpload(e.target.files?.[0] ?? null)}
-                      disabled={processando}
-                    />
-                  </FormField>
-                  <PrimaryButton disabled={processando || !arquivoUpload} onClick={() => void enviarDocumento()}>
-                    Anexar arquivo
-                  </PrimaryButton>
-                </>
-              ) : null}
-            </AdminFormFields>
-          </AdminFormSection>
-
-          <AdminFormSection title="Resposta do cliente" titleId="prop-sec-resposta">
-            <AdminFormFields>
-              {interacoes.length > 0 ? (
-                <ul className="proposta-panel__interacoes">
-                  {interacoes.map((i) => (
-                    <li key={i.id}>
-                      <strong>{TIPO_INTERACAO_ROTULO[i.tipoInteracao]}</strong>
-                      <span className="proposta-panel__interacao-meta">
-                        {i.registradoPorNome} · {new Date(i.criadoEm).toLocaleString("pt-BR")}
-                      </span>
-                      <p>{i.texto}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <EmptyState
-                  variant="inline"
-                  title="Nenhum registro"
-                  description="Registros internos da resposta do cliente aparecem aqui."
-                />
-              )}
-
-              {podeRespostaCliente ? (
-                <>
-                  <AdminFormDivider />
-                  <ModalFormGrid balanced>
-                    <FormField label="Tipo" htmlFor="tipo-interacao">
-                      <FieldControl
-                        as="select"
-                        id="tipo-interacao"
-                        className="clientes-select"
-                        variant="modal"
-                        value={tipoInteracao}
-                        onChange={(e) => setTipoInteracao(e.target.value as TipoInteracaoFluxo)}
-                        disabled={processando}
-                      >
-                        {(Object.keys(TIPO_INTERACAO_ROTULO) as TipoInteracaoFluxo[]).map((t) => (
-                          <option key={t} value={t}>
-                            {TIPO_INTERACAO_ROTULO[t]}
-                          </option>
-                        ))}
-                      </FieldControl>
-                    </FormField>
-                  </ModalFormGrid>
-                  <FormField label="Texto / motivo" htmlFor="texto-interacao" required>
-                    <FieldControl
-                      as="textarea"
-                      id="texto-interacao"
-                      className="clientes-input clientes-textarea"
-                      variant="modal"
-                      value={textoInteracao}
-                      onChange={(e) => setTextoInteracao(e.target.value)}
-                      disabled={processando}
-                      rows={4}
-                    />
-                  </FormField>
-                  <PrimaryButton disabled={processando} onClick={() => void registrarRespostaCliente()}>
-                    Registrar resposta do cliente
-                  </PrimaryButton>
-                </>
-              ) : null}
-            </AdminFormFields>
-          </AdminFormSection>
-        </>
+      {mostrarRespostaCliente ? (
+        <AdminFormSection title="Resposta do cliente" titleId="prop-sec-resposta" actions={acoesResposta}>
+          {interacoesHistorico.length > 0 ? (
+            <ul className="proposta-panel__interacoes">
+              {interacoesHistorico.map((i) => (
+                <li key={i.id}>
+                  <strong>
+                    {TIPO_INTERACAO_ROTULO[i.tipoInteracao]}
+                    <span className="proposta-panel__interacao-versao"> · v{i.propostaVersao}</span>
+                  </strong>
+                  <span className="proposta-panel__interacao-meta">
+                    {i.registradoPorNome} · {formatarDataHora(i.criadoEm)}
+                  </span>
+                  <p>{i.texto}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="proposta-panel__hint" role="status">
+              Nenhum registro da resposta do cliente ainda.
+            </p>
+          )}
+        </AdminFormSection>
       ) : null}
+
+      <FormDialog
+        open={modalRespostaAberto}
+        titleId="prop-modal-resposta-titulo"
+        title="Registrar resposta do cliente"
+        panelClassName="proposta-resposta-dialog"
+        onBackdropClick={fecharModalResposta}
+      >
+        {acaoErro && modalRespostaAberto ? <InlineAlert variant="error">{acaoErro}</InlineAlert> : null}
+        {propostaParaResposta ? (
+          <p className="proposta-panel__hint">
+            Registro vinculado à <strong>v{propostaParaResposta.versao}</strong> (
+            {STATUS_PROPOSTA_ROTULO[propostaParaResposta.status]}).
+          </p>
+        ) : null}
+        <AdminFormFields>
+          <FormField label="Tipo" htmlFor="tipo-interacao-modal">
+            <FieldControl
+              as="select"
+              id="tipo-interacao-modal"
+              className="clientes-select"
+              variant="modal"
+              value={tipoInteracao}
+              onChange={(e) => setTipoInteracao(e.target.value as TipoInteracaoFluxo)}
+              disabled={processando}
+            >
+              {(Object.keys(TIPO_INTERACAO_ROTULO) as TipoInteracaoFluxo[]).map((t) => (
+                <option key={t} value={t}>
+                  {TIPO_INTERACAO_ROTULO[t]}
+                </option>
+              ))}
+            </FieldControl>
+          </FormField>
+          <FormField label="Texto / motivo" htmlFor="texto-interacao-modal" required>
+            <FieldControl
+              as="textarea"
+              id="texto-interacao-modal"
+              className="clientes-input clientes-textarea"
+              variant="modal"
+              value={textoInteracao}
+              onChange={(e) => setTextoInteracao(e.target.value)}
+              disabled={processando}
+              rows={4}
+            />
+          </FormField>
+        </AdminFormFields>
+        <ModalFooter>
+          <GhostButton onClick={fecharModalResposta} disabled={processando}>
+            Cancelar
+          </GhostButton>
+          <PrimaryButton disabled={processando} onClick={() => void registrarRespostaCliente()}>
+            {processando ? "Registrando…" : "Registrar"}
+          </PrimaryButton>
+        </ModalFooter>
+      </FormDialog>
     </>
   );
 }

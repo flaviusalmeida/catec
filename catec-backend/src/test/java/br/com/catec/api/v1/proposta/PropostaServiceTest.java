@@ -104,6 +104,52 @@ class PropostaServiceTest {
     }
 
     @Test
+    void criar_quandoProjetoPropostaConcluidaComAjustePendente_devePermitirNovaVersao() {
+        projeto.setStatus(ProjetoStatus.PROPOSTA_CONCLUIDA);
+        when(projetoRepository.findById(10L)).thenReturn(Optional.of(projeto));
+        when(propostaRepository.existsByProjetoIdAndStatus(10L, PropostaStatus.AGUARDANDO_AJUSTE_ADM))
+                .thenReturn(true);
+        when(propostaRepository.existsByProjetoIdAndConsideracoesPendentesTrue(10L)).thenReturn(false);
+        when(propostaRepository.existsByProjetoIdAndStatusIn(eq(10L), any())).thenReturn(false);
+        when(propostaRepository.findMaxVersaoByProjetoId(10L)).thenReturn(1);
+        when(usuarioRepository.getReferenceById(1L)).thenReturn(new Usuario());
+        when(propostaRepository.save(any(Proposta.class))).thenAnswer(inv -> {
+            Proposta p = inv.getArgument(0);
+            org.springframework.test.util.ReflectionTestUtils.setField(p, "id", 101L);
+            return p;
+        });
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PropostaResponse res = service.criar(10L, false, admin);
+
+        assertEquals(2, res.versao());
+        assertEquals(PropostaStatus.RASCUNHO, res.status());
+        verify(auditoriaService)
+                .registrarTransicaoStatus(
+                        eq(TipoEntidadeAuditoria.PROJETO),
+                        eq(10L),
+                        eq("SINCRONIZAR_PROPOSTA"),
+                        eq("PROPOSTA_CONCLUIDA"),
+                        eq("ELABORANDO_PROPOSTA"),
+                        eq(1L));
+    }
+
+    @Test
+    void criar_quandoProjetoPropostaConcluidaSemAjuste_deveRetornar400() {
+        projeto.setStatus(ProjetoStatus.PROPOSTA_CONCLUIDA);
+        when(projetoRepository.findById(10L)).thenReturn(Optional.of(projeto));
+        when(propostaRepository.existsByProjetoIdAndStatus(10L, PropostaStatus.AGUARDANDO_AJUSTE_ADM))
+                .thenReturn(false);
+        when(propostaRepository.existsByProjetoIdAndConsideracoesPendentesTrue(10L)).thenReturn(false);
+
+        ResponseStatusException ex =
+                assertThrows(ResponseStatusException.class, () -> service.criar(10L, false, admin));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        verify(propostaRepository, never()).save(any());
+    }
+
+    @Test
     void enviarAoCliente_fluxoSemSocio_deveChegarEnviada() {
         Proposta proposta = proposta(50L, PropostaStatus.APROVADA_INTERNA, false);
         when(propostaRepository.findById(50L)).thenReturn(Optional.of(proposta));

@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -59,6 +60,16 @@ public class PropostaController {
             @Valid @RequestBody PropostaCreateRequest body,
             @AuthenticationPrincipal UsuarioAutenticado principal) {
         return propostaService.criar(projetoId, body.requerAvaliacaoSocio(), principal);
+    }
+
+    @PatchMapping("/{propostaId}/configuracao-rascunho")
+    public PropostaResponse atualizarConfiguracaoRascunho(
+            @PathVariable Long projetoId,
+            @PathVariable Long propostaId,
+            @Valid @RequestBody PropostaConfiguracaoRequest body,
+            @AuthenticationPrincipal UsuarioAutenticado principal) {
+        return propostaService.atualizarConfiguracaoRascunho(
+                projetoId, propostaId, body.requerAvaliacaoSocio(), principal);
     }
 
     @PostMapping("/{propostaId}/submeter-avaliacao-socio")

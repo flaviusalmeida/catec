@@ -17,6 +17,38 @@
   max-width: 24rem;
 }
 
+.empty-state--inline,
+.empty-state--compact {
+  margin: 0;
+  max-width: none;
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  min-height: auto;
+  display: block;
+  box-sizing: border-box;
+}
+
+.empty-state--compact {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+}
+
+.empty-state--inline .empty-state__title,
+.empty-state--compact .empty-state__title {
+  margin: 0 0 0.15rem;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: #475569;
+}
+
+.empty-state--inline .empty-state__text,
+.empty-state--compact .empty-state__text {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: #64748b;
+}
+
 .empty-state__title {
   margin: 0 0 0.5rem;
   font-size: 1.05rem;

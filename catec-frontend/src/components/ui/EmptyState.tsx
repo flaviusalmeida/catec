@@ -4,8 +4,8 @@ import "./EmptyState.css";
 export type EmptyStateProps = {
   title: string;
   description: string;
-  /** `standalone`: área centralizada em cartão largo (ex.: lista CRUD vazia). `inline`: só o bloco tracejado. */
-  variant?: "standalone" | "inline";
+  /** `standalone`: lista vazia ampla. `inline`: bloco tracejado compacto. `compact`: ainda menor (formulários). */
+  variant?: "standalone" | "inline" | "compact";
   className?: string;
 } & Pick<HTMLAttributes<HTMLDivElement>, "role">;
 
@@ -19,6 +19,8 @@ export default function EmptyState({
   const rootClass = [
     "empty-state",
     variant === "standalone" ? "empty-state--standalone" : null,
+    variant === "inline" ? "empty-state--inline" : null,
+    variant === "compact" ? "empty-state--compact" : null,
     className,
   ]
     .filter(Boolean)
