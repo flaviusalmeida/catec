@@ -7,7 +7,6 @@ import FieldControl from "../form/FieldControl";
 import FormField from "../form/FormField";
 import FormDialog from "../layout/FormDialog";
 import ModalFooter from "../layout/ModalFooter";
-import ModalFormGrid from "../layout/ModalFormGrid";
 import {
   AdminFormDivider,
   AdminFormFields,
@@ -67,6 +66,13 @@ function tituloHistoricoProposta(proposta: Proposta): string {
     return `v${proposta.versao} — enviada em ${formatarDataHora(proposta.enviadaClienteEm)}`;
   }
   return `v${proposta.versao} — ${STATUS_PROPOSTA_ROTULO[proposta.status]}`;
+}
+
+/** Versão mais recente do projeto (lista vem ordenada por versão desc). */
+function idPropostaAtual(lista: Proposta[], preferirId?: number | null): number | null {
+  if (lista.length === 0) return null;
+  if (preferirId != null && lista.some((p) => p.id === preferirId)) return preferirId;
+  return lista[0].id;
 }
 
 export default function PropostaPanel({ projetoId, projetoTemCliente, onPropostaAtualizada }: Props) {
@@ -177,11 +183,7 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
       const lista = (await res.json()) as Proposta[];
       setPropostas(lista);
       setAcaoErro(null);
-      setSelecionadaId((atual) => {
-        if (lista.length === 0) return null;
-        if (atual != null && lista.some((p) => p.id === atual)) return atual;
-        return lista[0].id;
-      });
+      setSelecionadaId(idPropostaAtual(lista));
     } catch {
       setErro("Falha de rede ao carregar propostas.");
     } finally {
@@ -204,10 +206,7 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
     if (!res.ok) return;
     const lista = (await res.json()) as Proposta[];
     setPropostas(lista);
-    const id =
-      manterSelecaoId != null && lista.some((p) => p.id === manterSelecaoId)
-        ? manterSelecaoId
-        : lista[0]?.id ?? null;
+    const id = idPropostaAtual(lista, manterSelecaoId);
     setSelecionadaId(id);
     await carregarHistorico(lista, id);
   }
@@ -395,6 +394,11 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
   const mostrarFormularioUpload = podeUpload && selecionada?.status === "RASCUNHO" && !temAnexo;
   const podeRespostaCliente = isAdmin && propostaParaResposta != null;
   const mostrarProposta = !carregando && propostas.length > 0 && selecionada != null;
+  const documentosEnviadosHistorico =
+    selecionadaId != null
+      ? documentosEnviados.filter((d) => d.propostaId !== selecionadaId)
+      : documentosEnviados;
+
   const mostrarRespostaCliente =
     mostrarProposta &&
     (documentosEnviados.length > 0 ||
@@ -405,17 +409,7 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
 
   const elaboracaoTexto = selecionada ? selecionada.elaboradoPorNome : "";
 
-  const versaoSomenteHistorico =
-    selecionada != null &&
-    STATUS_PROPOSTA_ENVIADA.includes(selecionada.status) &&
-    propostas.length === 1;
-
-  const mostrarDocumentoVersaoAtual =
-    selecionada != null &&
-    !versaoSomenteHistorico &&
-    (mostrarFormularioUpload ||
-      !STATUS_PROPOSTA_ENVIADA.includes(selecionada.status) ||
-      documentosVersao.length > 0);
+  const mostrarDocumentoVersaoAtual = selecionada != null;
 
   function baixarDocumento(doc: DocumentoAnexo) {
     void downloadDocumento(doc.id, doc.nomeOriginal).catch(() => setAcaoErro("Download falhou."));
@@ -464,46 +458,15 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
           </div>
         ) : mostrarProposta ? (
           <AdminFormFields>
-            {propostas.length > 1 ? (
-              <ModalFormGrid balanced>
-                <FormField label="Versão" htmlFor="sel-proposta">
-                  <FieldControl
-                    as="select"
-                    id="sel-proposta"
-                    className="clientes-select"
-                    variant="modal"
-                    value={selecionadaId ?? ""}
-                    onChange={(e) => setSelecionadaId(Number(e.target.value))}
-                    disabled={processando}
-                  >
-                    {propostas.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        v{p.versao} — {STATUS_PROPOSTA_ROTULO[p.status]}
-                      </option>
-                    ))}
-                  </FieldControl>
-                </FormField>
-                <FormField label="Status" htmlFor="prop-status">
-                  <FieldControl
-                    id="prop-status"
-                    className="clientes-input"
-                    variant="modal"
-                    readOnly
-                    value={STATUS_PROPOSTA_ROTULO[selecionada!.status]}
-                  />
-                </FormField>
-              </ModalFormGrid>
-            ) : (
-              <FormField label="Status" htmlFor="prop-status">
-                <FieldControl
-                  id="prop-status"
-                  className="clientes-input"
-                  variant="modal"
-                  readOnly
-                  value={STATUS_PROPOSTA_ROTULO[selecionada!.status]}
-                />
-              </FormField>
-            )}
+            <FormField label="Status" htmlFor="prop-status">
+              <FieldControl
+                id="prop-status"
+                className="clientes-input"
+                variant="modal"
+                readOnly
+                value={STATUS_PROPOSTA_ROTULO[selecionada!.status]}
+              />
+            </FormField>
 
             <FormField label="Elaboração" htmlFor="prop-elaboracao">
               <FieldControl
@@ -515,14 +478,7 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
               />
             </FormField>
 
-            {selecionada!.status === "AGUARDANDO_AJUSTE_ADM" && podeCriarNova ? (
-              <p className="proposta-panel__hint" role="status">
-                O cliente solicitou ajustes. Use <strong>Nova</strong> para elaborar uma nova versão, anexe o
-                documento e siga com aprovação e envio ao cliente.
-              </p>
-            ) : null}
-
-            {mostrarDocumentoVersaoAtual || mostrarFormularioUpload || documentosEnviados.length > 0 ? (
+            {mostrarDocumentoVersaoAtual || mostrarFormularioUpload || documentosEnviadosHistorico.length > 0 ? (
               <AdminFormDivider />
             ) : null}
 
@@ -538,7 +494,9 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
                   <ul className="proposta-panel__lista proposta-panel__lista--documento">
                     {documentosVersao.map((d) => (
                       <li key={d.id}>
-                        <span className="proposta-panel__doc-nome">{d.nomeOriginal}</span>
+                        <span className="proposta-panel__doc-nome">
+                          {d.nomeOriginal} (v{selecionada!.versao})
+                        </span>
                         <GhostButton onClick={() => baixarDocumento(d)}>Baixar</GhostButton>
                       </li>
                     ))}
@@ -574,12 +532,12 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
               </div>
             ) : null}
 
-            {documentosEnviados.length > 0 ? (
+            {documentosEnviadosHistorico.length > 0 ? (
               <>
                 {mostrarDocumentoVersaoAtual ? <AdminFormDivider /> : null}
-                <p className="proposta-panel__subtitulo">Propostas enviadas</p>
+                <p className="proposta-panel__subtitulo">Versões anteriores</p>
                 <ul className="proposta-panel__lista proposta-panel__lista--historico">
-                  {documentosEnviados.map((d) => {
+                  {documentosEnviadosHistorico.map((d) => {
                     const propostaRef = propostas.find((p) => p.id === d.propostaId);
                     if (!propostaRef) return null;
                     return (
