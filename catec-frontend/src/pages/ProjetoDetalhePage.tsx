@@ -164,9 +164,6 @@ export default function ProjetoDetalhePage() {
                   {tab === "interacoes" ? (
                     <>
                       <ProjetoTabInteracoes interacoes={fluxo.interacoes} />
-                      <p className="proj-detalhe-hint proj-detalhe-block">
-                        Use &quot;Registrar interação&quot; no topo da página para incluir uma nova entrada.
-                      </p>
                     </>
                   ) : null}
 
