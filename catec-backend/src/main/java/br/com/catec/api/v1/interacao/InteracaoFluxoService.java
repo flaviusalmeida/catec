@@ -1,7 +1,11 @@
 package br.com.catec.api.v1.interacao;
 
+import br.com.catec.api.v1.contrato.ContratoResponse;
 import br.com.catec.api.v1.proposta.PropostaResponse;
 import br.com.catec.domain.auditoria.AuditoriaService;
+import br.com.catec.domain.contrato.Contrato;
+import br.com.catec.domain.contrato.ContratoRepository;
+import br.com.catec.domain.contrato.ContratoStatus;
 import br.com.catec.domain.auditoria.TipoEntidadeAuditoria;
 import br.com.catec.domain.documento.Documento;
 import br.com.catec.domain.documento.DocumentoRepository;
@@ -10,6 +14,9 @@ import br.com.catec.domain.interacao.InteracaoFluxo;
 import br.com.catec.domain.interacao.InteracaoFluxoRepository;
 import br.com.catec.domain.interacao.TipoEntidadeInteracao;
 import br.com.catec.domain.interacao.TipoInteracaoFluxo;
+import br.com.catec.domain.projeto.Projeto;
+import br.com.catec.domain.projeto.ProjetoRepository;
+import br.com.catec.domain.projeto.ProjetoStatus;
 import br.com.catec.domain.proposta.Proposta;
 import br.com.catec.domain.proposta.PropostaRepository;
 import br.com.catec.domain.proposta.PropostaStatus;
@@ -34,8 +41,13 @@ public class InteracaoFluxoService {
             PropostaStatus.EM_AVALIACAO_CLIENTE,
             PropostaStatus.AGUARDANDO_AJUSTE_ADM);
 
+    private static final EnumSet<ContratoStatus> STATUS_INTERACAO_CLIENTE_CONTRATO = EnumSet.of(
+            ContratoStatus.ENVIADO_AO_CLIENTE, ContratoStatus.AGUARDANDO_AJUSTE_ADM);
+
     private final InteracaoFluxoRepository interacaoFluxoRepository;
     private final PropostaRepository propostaRepository;
+    private final ContratoRepository contratoRepository;
+    private final ProjetoRepository projetoRepository;
     private final DocumentoRepository documentoRepository;
     private final UsuarioRepository usuarioRepository;
     private final AuditoriaService auditoriaService;
@@ -43,11 +55,15 @@ public class InteracaoFluxoService {
     public InteracaoFluxoService(
             InteracaoFluxoRepository interacaoFluxoRepository,
             PropostaRepository propostaRepository,
+            ContratoRepository contratoRepository,
+            ProjetoRepository projetoRepository,
             DocumentoRepository documentoRepository,
             UsuarioRepository usuarioRepository,
             AuditoriaService auditoriaService) {
         this.interacaoFluxoRepository = interacaoFluxoRepository;
         this.propostaRepository = propostaRepository;
+        this.contratoRepository = contratoRepository;
+        this.projetoRepository = projetoRepository;
         this.documentoRepository = documentoRepository;
         this.usuarioRepository = usuarioRepository;
         this.auditoriaService = auditoriaService;
@@ -117,7 +133,104 @@ public class InteracaoFluxoService {
                 novoStatus.name(),
                 principal.id());
 
+        if (novoStatus == PropostaStatus.NEGADA) {
+            sincronizarProjeto(salva.getProjeto(), ProjetoStatus.CANCELADO, "PROPOSTA_NEGADA_CLIENTE", principal.id());
+        } else if (novoStatus == PropostaStatus.ACEITA) {
+            sincronizarProjeto(
+                    salva.getProjeto(), ProjetoStatus.AGUARDANDO_CONTRATO, "PROPOSTA_ACEITA_CLIENTE", principal.id());
+        }
+
         return new RegistroInteracaoResult(toResponse(salvaInteracao), toPropostaResponse(salva));
+    }
+
+    @Transactional(readOnly = true)
+    public List<InteracaoFluxoResponse> listarPorContrato(
+            Long projetoId, Long contratoId, UsuarioAutenticado principal) {
+        Contrato contrato = loadContratoDoProjeto(projetoId, contratoId);
+        garantirLeituraContrato(contrato, principal);
+        return interacaoFluxoRepository
+                .findByTipoEntidadeAndEntidadeIdOrderByCriadoEmDesc(TipoEntidadeInteracao.CONTRATO, contratoId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional
+    public RegistroInteracaoContratoResult registrarInteracaoClienteContrato(
+            Long projetoId, Long contratoId, InteracaoFluxoCreateRequest request, UsuarioAutenticado principal) {
+        exigirAdministrativo(principal);
+        Contrato contrato = loadContratoDoProjeto(projetoId, contratoId);
+        String texto = request.texto().trim();
+        if (!StringUtils.hasText(texto)) {
+            throw badRequest("Informe o texto da interação.");
+        }
+
+        Documento documento = resolverDocumentoOpcionalContrato(request.documentoId(), contratoId);
+
+        ContratoStatus novoStatus = aplicarTransicaoContratoPorTipo(contrato, request.tipoInteracao());
+        ContratoStatus anterior = contrato.getStatus();
+        Instant agora = Instant.now();
+
+        contrato.setStatus(novoStatus);
+        contrato.setAtualizadoEm(agora);
+        switch (request.tipoInteracao()) {
+            case CONSIDERACOES_CLIENTE -> contrato.setConsideracoesPendentes(true);
+            case ACEITE_CLIENTE -> {
+                contrato.setAceitoClienteEm(agora);
+                contrato.setConsideracoesPendentes(false);
+            }
+            case RECUSA_CLIENTE -> {
+                contrato.setRecusadoClienteEm(agora);
+                contrato.setMotivoRecusaCliente(texto);
+                contrato.setConsideracoesPendentes(false);
+            }
+        }
+
+        Contrato salvo = contratoRepository.save(contrato);
+
+        Usuario registrador = usuarioRepository.getReferenceById(principal.id());
+        InteracaoFluxo interacao = new InteracaoFluxo();
+        interacao.setTipoEntidade(TipoEntidadeInteracao.CONTRATO);
+        interacao.setEntidadeId(contratoId);
+        interacao.setTipoInteracao(request.tipoInteracao());
+        interacao.setTexto(texto);
+        interacao.setRegistradoPor(registrador);
+        interacao.setDocumento(documento);
+        interacao.setCriadoEm(agora);
+        InteracaoFluxo salvaInteracao = interacaoFluxoRepository.save(interacao);
+
+        auditoriaService.registrarTransicaoStatus(
+                TipoEntidadeAuditoria.CONTRATO,
+                salvo.getId(),
+                "REGISTRO_" + request.tipoInteracao().name(),
+                anterior.name(),
+                novoStatus.name(),
+                principal.id());
+
+        if (novoStatus == ContratoStatus.RECUSADO) {
+            sincronizarProjeto(salvo.getProjeto(), ProjetoStatus.CANCELADO, "CONTRATO_RECUSADO_CLIENTE", principal.id());
+        } else if (novoStatus == ContratoStatus.ACEITO) {
+            sincronizarProjeto(salvo.getProjeto(), ProjetoStatus.EM_EXECUCAO, "CONTRATO_ACEITO_CLIENTE", principal.id());
+        }
+
+        return new RegistroInteracaoContratoResult(toResponse(salvaInteracao), toContratoResponse(salvo));
+    }
+
+    private void sincronizarProjeto(Projeto projeto, ProjetoStatus novoStatus, String evento, Long usuarioId) {
+        ProjetoStatus anterior = projeto.getStatus();
+        if (anterior == novoStatus) {
+            return;
+        }
+        projeto.setStatus(novoStatus);
+        projeto.setAtualizadoEm(Instant.now());
+        projetoRepository.save(projeto);
+        auditoriaService.registrarTransicaoStatus(
+                TipoEntidadeAuditoria.PROJETO,
+                projeto.getId(),
+                evento,
+                anterior.name(),
+                novoStatus.name(),
+                usuarioId);
     }
 
     private PropostaStatus aplicarTransicaoPorTipo(Proposta proposta, TipoInteracaoFluxo tipo) {
@@ -142,6 +255,64 @@ public class InteracaoFluxoService {
                 yield PropostaStatus.NEGADA;
             }
         };
+    }
+
+    private ContratoStatus aplicarTransicaoContratoPorTipo(Contrato contrato, TipoInteracaoFluxo tipo) {
+        ContratoStatus atual = contrato.getStatus();
+        return switch (tipo) {
+            case CONSIDERACOES_CLIENTE -> {
+                if (atual != ContratoStatus.ENVIADO_AO_CLIENTE) {
+                    throw badRequest("Considerações do cliente só podem ser registradas após o envio do contrato.");
+                }
+                yield ContratoStatus.AGUARDANDO_AJUSTE_ADM;
+            }
+            case ACEITE_CLIENTE -> {
+                if (!STATUS_INTERACAO_CLIENTE_CONTRATO.contains(atual)) {
+                    throw badRequest("Aceite do cliente não é permitido no estado atual do contrato.");
+                }
+                yield ContratoStatus.ACEITO;
+            }
+            case RECUSA_CLIENTE -> {
+                if (!STATUS_INTERACAO_CLIENTE_CONTRATO.contains(atual)) {
+                    throw badRequest("Recusa do cliente não é permitida no estado atual do contrato.");
+                }
+                yield ContratoStatus.RECUSADO;
+            }
+        };
+    }
+
+    private Documento resolverDocumentoOpcionalContrato(Long documentoId, Long contratoId) {
+        if (documentoId == null) {
+            return null;
+        }
+        Documento doc = documentoRepository
+                .findById(documentoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Documento não encontrado."));
+        if (doc.getTipoVinculo() != TipoVinculoDocumento.CONTRATO || !contratoId.equals(doc.getVinculoId())) {
+            throw badRequest("Documento não pertence a este contrato.");
+        }
+        return doc;
+    }
+
+    private Contrato loadContratoDoProjeto(Long projetoId, Long contratoId) {
+        Contrato contrato = contratoRepository
+                .findById(contratoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contrato não encontrado."));
+        if (!contrato.getProjeto().getId().equals(projetoId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Contrato não encontrado neste projeto.");
+        }
+        return contrato;
+    }
+
+    private void garantirLeituraContrato(Contrato contrato, UsuarioAutenticado principal) {
+        if (isAdministrativo(principal) || isSocio(principal)) {
+            return;
+        }
+        if (isColaborador(principal)
+                && contrato.getProjeto().getCriadoPor().getId().equals(principal.id())) {
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado a interações deste contrato.");
     }
 
     private Documento resolverDocumentoOpcional(Long documentoId, Long propostaId) {
@@ -238,5 +409,22 @@ public class InteracaoFluxoService {
         return new ResponseStatusException(HttpStatus.BAD_REQUEST, msg);
     }
 
+    private static ContratoResponse toContratoResponse(Contrato c) {
+        return new ContratoResponse(
+                c.getId(),
+                c.getProjeto().getId(),
+                c.getStatus(),
+                c.getElaboradoPor().getId(),
+                c.getElaboradoPor().getNome(),
+                c.getEnviadoClienteEm(),
+                c.getAceitoClienteEm(),
+                c.getRecusadoClienteEm(),
+                c.isConsideracoesPendentes(),
+                c.getCriadoEm(),
+                c.getAtualizadoEm());
+    }
+
     public record RegistroInteracaoResult(InteracaoFluxoResponse interacao, PropostaResponse proposta) {}
+
+    public record RegistroInteracaoContratoResult(InteracaoFluxoResponse interacao, ContratoResponse contrato) {}
 }

@@ -33,6 +33,9 @@ class DocumentoAutorizacaoServiceTest {
     @Mock
     private PropostaRepository propostaRepository;
 
+    @Mock
+    private br.com.catec.domain.contrato.ContratoRepository contratoRepository;
+
     @InjectMocks
     private DocumentoAutorizacaoService service;
 

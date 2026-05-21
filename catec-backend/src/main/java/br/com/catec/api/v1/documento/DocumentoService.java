@@ -4,6 +4,7 @@ import br.com.catec.config.AppDocumentoProperties;
 import br.com.catec.domain.documento.Documento;
 import br.com.catec.domain.documento.DocumentoRepository;
 import br.com.catec.domain.documento.TipoVinculoDocumento;
+import br.com.catec.domain.contrato.ContratoRepository;
 import br.com.catec.domain.projeto.ProjetoRepository;
 import br.com.catec.domain.proposta.PropostaRepository;
 import br.com.catec.domain.usuario.Usuario;
@@ -31,6 +32,7 @@ public class DocumentoService {
     private final UsuarioRepository usuarioRepository;
     private final ProjetoRepository projetoRepository;
     private final PropostaRepository propostaRepository;
+    private final ContratoRepository contratoRepository;
     private final DocumentoAutorizacaoService documentoAutorizacaoService;
     private final DocumentStorage documentStorage;
     private final AppDocumentoProperties properties;
@@ -40,6 +42,7 @@ public class DocumentoService {
             UsuarioRepository usuarioRepository,
             ProjetoRepository projetoRepository,
             PropostaRepository propostaRepository,
+            ContratoRepository contratoRepository,
             DocumentoAutorizacaoService documentoAutorizacaoService,
             DocumentStorage documentStorage,
             AppDocumentoProperties properties) {
@@ -47,6 +50,7 @@ public class DocumentoService {
         this.usuarioRepository = usuarioRepository;
         this.projetoRepository = projetoRepository;
         this.propostaRepository = propostaRepository;
+        this.contratoRepository = contratoRepository;
         this.documentoAutorizacaoService = documentoAutorizacaoService;
         this.documentStorage = documentStorage;
         this.properties = properties;
@@ -64,6 +68,11 @@ public class DocumentoService {
                     HttpStatus.BAD_REQUEST,
                     "Use POST /api/v1/projetos/{projetoId}/propostas/{propostaId}/documentos para anexar à proposta.");
         }
+        if (tipoVinculo == TipoVinculoDocumento.CONTRATO) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Use POST /api/v1/projetos/{projetoId}/contratos/{contratoId}/documentos para anexar ao contrato.");
+        }
         return persistirUpload(tipoVinculo, vinculoId, tipoArquivo, file, principal);
     }
 
@@ -71,6 +80,12 @@ public class DocumentoService {
     public DocumentoResponse uploadProposta(
             Long propostaId, String tipoArquivo, MultipartFile file, UsuarioAutenticado principal) {
         return persistirUpload(TipoVinculoDocumento.PROPOSTA, propostaId, tipoArquivo, file, principal);
+    }
+
+    @Transactional
+    public DocumentoResponse uploadContrato(
+            Long contratoId, String tipoArquivo, MultipartFile file, UsuarioAutenticado principal) {
+        return persistirUpload(TipoVinculoDocumento.CONTRATO, contratoId, tipoArquivo, file, principal);
     }
 
     private DocumentoResponse persistirUpload(
@@ -153,6 +168,9 @@ public class DocumentoService {
         }
         if (tipoVinculo == TipoVinculoDocumento.PROPOSTA && !propostaRepository.existsById(vinculoId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Proposta não encontrada para o vínculo informado.");
+        }
+        if (tipoVinculo == TipoVinculoDocumento.CONTRATO && !contratoRepository.existsById(vinculoId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Contrato não encontrado para o vínculo informado.");
         }
     }
 

@@ -16,7 +16,9 @@ import {
   AdminFormFields,
   AdminFormSection,
 } from "../components/layout/entityFormKit";
+import ContratoPanel from "../components/contrato/ContratoPanel";
 import PropostaPanel from "../components/proposta/PropostaPanel";
+import InteracoesClientePanel from "../components/projeto/InteracoesClientePanel";
 import InlineAlert from "../components/ui/InlineAlert";
 import { mensagemErroApi } from "../utils/apiError";
 import { STATUS_PROJETO_ROTULO, type Projeto } from "./projetoTypes";
@@ -32,6 +34,7 @@ export default function ProjetoDetalhePage() {
   const [projeto, setProjeto] = useState<Projeto | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [refreshFluxo, setRefreshFluxo] = useState(0);
 
   const carregar = useCallback(async () => {
     if (!Number.isFinite(projetoId) || projetoId < 1) {
@@ -66,6 +69,11 @@ export default function ProjetoDetalhePage() {
     }
   }, [projetoId, logout, navigate]);
 
+  const atualizarFluxo = useCallback(() => {
+    void carregar();
+    setRefreshFluxo((k) => k + 1);
+  }, [carregar]);
+
   useEffect(() => {
     void carregar();
   }, [carregar]);
@@ -77,7 +85,7 @@ export default function ProjetoDetalhePage() {
       listPath={LIST_PATH}
       titleId="projeto-detalhe-titulo"
       title={<AdminEntityFormHeadline action="Projeto" entityLabel={tituloProjeto} />}
-      subtitle="Detalhe da demanda e fluxo de proposta comercial."
+      subtitle="Detalhe da demanda, proposta comercial e contrato."
       footer={
         <AdminEntityFormActions>
           <GhostButton onClick={() => navigate(LIST_PATH)} disabled={carregando}>
@@ -174,7 +182,17 @@ export default function ProjetoDetalhePage() {
           <PropostaPanel
             projetoId={projeto.id}
             projetoTemCliente={projeto.clienteId != null}
-            onPropostaAtualizada={() => void carregar()}
+            onPropostaAtualizada={atualizarFluxo}
+          />
+
+          {projeto.status === "AGUARDANDO_CONTRATO" || projeto.status === "EM_EXECUCAO" ? (
+            <ContratoPanel projetoId={projeto.id} onContratoAtualizado={atualizarFluxo} />
+          ) : null}
+
+          <InteracoesClientePanel
+            projetoId={projeto.id}
+            refreshKey={refreshFluxo}
+            onAtualizado={atualizarFluxo}
           />
         </>
       ) : null}

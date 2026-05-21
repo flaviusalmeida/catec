@@ -4,6 +4,8 @@ import { FASE_MACRO_ROTULO } from "../../pages/painelTypes";
 
 function variantFor(fase: FaseMacro): StatusBadgeVariant {
   switch (fase) {
+    case "AGUARDANDO_CONTRATO":
+    case "EM_EXECUCAO":
     case "ENCERRADA_ACEITA":
     case "PROPOSTA_CONCLUIDA":
       return "ativo";

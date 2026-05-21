@@ -34,6 +34,39 @@ class FaseMacroResolverTest {
     }
 
     @Test
+    void projetoAguardandoContrato_mapeiaAguardandoContrato() {
+        Projeto projeto = mock(Projeto.class);
+        when(projeto.getStatus()).thenReturn(ProjetoStatus.AGUARDANDO_CONTRATO);
+
+        assertEquals(FaseMacro.AGUARDANDO_CONTRATO, resolver.resolver(projeto, null));
+    }
+
+    @Test
+    void projetoEmExecucao_mapeiaEmExecucao() {
+        Projeto projeto = mock(Projeto.class);
+        when(projeto.getStatus()).thenReturn(ProjetoStatus.EM_EXECUCAO);
+
+        assertEquals(FaseMacro.EM_EXECUCAO, resolver.resolver(projeto, null));
+    }
+
+    @Test
+    void propostaAceita_mapeiaAguardandoContrato() {
+        Projeto projeto = mock(Projeto.class);
+        Proposta proposta = mock(Proposta.class);
+        when(proposta.getStatus()).thenReturn(PropostaStatus.ACEITA);
+
+        assertEquals(FaseMacro.AGUARDANDO_CONTRATO, resolver.resolver(projeto, proposta));
+    }
+
+    @Test
+    void projetoCancelado_mapeiaEncerradaNegada() {
+        Projeto projeto = mock(Projeto.class);
+        when(projeto.getStatus()).thenReturn(ProjetoStatus.CANCELADO);
+
+        assertEquals(FaseMacro.ENCERRADA_NEGADA, resolver.resolver(projeto, null));
+    }
+
+    @Test
     void propostaEnviadaAoCliente_mapeiaAguardandoResposta() {
         Projeto projeto = mock(Projeto.class);
         Proposta proposta = mock(Proposta.class);

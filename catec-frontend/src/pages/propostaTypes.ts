@@ -72,11 +72,18 @@ export const STATUS_PROPOSTA_ROTULO: Record<PropostaStatus, string> = {
   NEGADA: "Negada pelo cliente",
 };
 
-export const TIPO_INTERACAO_ROTULO: Record<TipoInteracaoFluxo, string> = {
-  CONSIDERACOES_CLIENTE: "Considerações do cliente",
-  ACEITE_CLIENTE: "Aceite do cliente",
-  RECUSA_CLIENTE: "Recusa do cliente",
+/** Rótulos no histórico e no modal de interação (proposta comercial). */
+export const TIPO_INTERACAO_ROTULO_PROPOSTA: Record<TipoInteracaoFluxo, string> = {
+  ACEITE_CLIENTE: "Proposta aceita",
+  RECUSA_CLIENTE: "Proposta recusada",
+  CONSIDERACOES_CLIENTE: "Ajustar proposta",
 };
+
+export const ORDEM_TIPO_INTERACAO: TipoInteracaoFluxo[] = [
+  "ACEITE_CLIENTE",
+  "RECUSA_CLIENTE",
+  "CONSIDERACOES_CLIENTE",
+];
 
 export const STATUS_PROPOSTA_UPLOAD: PropostaStatus[] = [
   "RASCUNHO",

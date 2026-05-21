@@ -105,7 +105,7 @@ class PropostaServiceTest {
 
     @Test
     void criar_quandoProjetoPropostaConcluidaComAjustePendente_devePermitirNovaVersao() {
-        projeto.setStatus(ProjetoStatus.PROPOSTA_CONCLUIDA);
+        projeto.setStatus(ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA);
         when(projetoRepository.findById(10L)).thenReturn(Optional.of(projeto));
         when(propostaRepository.existsByProjetoIdAndStatus(10L, PropostaStatus.AGUARDANDO_AJUSTE_ADM))
                 .thenReturn(true);
@@ -129,14 +129,14 @@ class PropostaServiceTest {
                         eq(TipoEntidadeAuditoria.PROJETO),
                         eq(10L),
                         eq("SINCRONIZAR_PROPOSTA"),
-                        eq("PROPOSTA_CONCLUIDA"),
+                        eq("AGUARDANDO_ACEITE_PROPOSTA"),
                         eq("ELABORANDO_PROPOSTA"),
                         eq(1L));
     }
 
     @Test
     void criar_quandoProjetoPropostaConcluidaSemAjuste_deveRetornar400() {
-        projeto.setStatus(ProjetoStatus.PROPOSTA_CONCLUIDA);
+        projeto.setStatus(ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA);
         when(projetoRepository.findById(10L)).thenReturn(Optional.of(projeto));
         when(propostaRepository.existsByProjetoIdAndStatus(10L, PropostaStatus.AGUARDANDO_AJUSTE_ADM))
                 .thenReturn(false);

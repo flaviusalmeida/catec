@@ -10,6 +10,12 @@ public enum ProjetoStatus {
     /** Com cliente; aguardando início da elaboração da proposta comercial. */
     AGUARDANDO_PROPOSTA_COMERCIAL,
     ELABORANDO_PROPOSTA,
-    /** Proposta comercial pronta no âmbito do projeto; etapas seguintes na entidade Proposta (futuro). */
-    PROPOSTA_CONCLUIDA
+    /** Proposta comercial enviada ao cliente; aguardando aceite, recusa ou considerações. */
+    AGUARDANDO_ACEITE_PROPOSTA,
+    /** Proposta comercial aceita pelo cliente; aguardando formalização do contrato. */
+    AGUARDANDO_CONTRATO,
+    /** Contrato aceito pelo cliente; demanda em execução. */
+    EM_EXECUCAO,
+    /** Proposta ou contrato recusado pelo cliente; demanda encerrada. */
+    CANCELADO
 }

@@ -5,8 +5,6 @@ import GhostButton from "../buttons/GhostButton";
 import PrimaryButton from "../buttons/PrimaryButton";
 import FieldControl from "../form/FieldControl";
 import FormField from "../form/FormField";
-import FormDialog from "../layout/FormDialog";
-import ModalFooter from "../layout/ModalFooter";
 import {
   AdminFormDivider,
   AdminFormFields,
@@ -18,17 +16,13 @@ import { mensagemErroApi } from "../../utils/apiError";
 import { downloadDocumento } from "../../utils/downloadDocumento";
 import type {
   DocumentoAnexo,
-  InteracaoFluxo,
   Proposta,
   PropostaStatus,
-  TipoInteracaoFluxo,
 } from "../../pages/propostaTypes";
 import {
   STATUS_PROPOSTA_ENVIADA,
-  STATUS_PROPOSTA_RESPOSTA_CLIENTE,
   STATUS_PROPOSTA_ROTULO,
   STATUS_PROPOSTA_UPLOAD,
-  TIPO_INTERACAO_ROTULO,
 } from "../../pages/propostaTypes";
 import "../../pages/ClientesPage.css";
 import "./PropostaPanel.css";
@@ -43,11 +37,6 @@ type DocumentoHistorico = DocumentoAnexo & {
   propostaId: number;
   propostaVersao: number;
   propostaStatus: PropostaStatus;
-};
-
-type InteracaoHistorico = InteracaoFluxo & {
-  propostaId: number;
-  propostaVersao: number;
 };
 
 const STATUS_PROPOSTA_ATIVA: PropostaStatus[] = [
@@ -81,16 +70,11 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
   const [selecionadaId, setSelecionadaId] = useState<number | null>(null);
   const [documentosVersao, setDocumentosVersao] = useState<DocumentoAnexo[]>([]);
   const [documentosEnviados, setDocumentosEnviados] = useState<DocumentoHistorico[]>([]);
-  const [interacoesHistorico, setInteracoesHistorico] = useState<InteracaoHistorico[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [acaoErro, setAcaoErro] = useState<string | null>(null);
   const [processando, setProcessando] = useState(false);
   const [arquivoUpload, setArquivoUpload] = useState<File | null>(null);
-  const [tipoInteracao, setTipoInteracao] = useState<TipoInteracaoFluxo>("CONSIDERACOES_CLIENTE");
-  const [textoInteracao, setTextoInteracao] = useState("");
-  const [modalRespostaAberto, setModalRespostaAberto] = useState(false);
-
   const selecionada = propostas.find((p) => p.id === selecionadaId) ?? null;
   const temAnexo = documentosVersao.length > 0;
   const temPropostaAtiva = propostas.some((p) => STATUS_PROPOSTA_ATIVA.includes(p.status));
@@ -104,28 +88,20 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
     !processando &&
     (propostas.length === 0 || aguardandoAjusteCliente);
 
-  const propostaParaResposta =
-    propostas.find((p) => STATUS_PROPOSTA_RESPOSTA_CLIENTE.includes(p.status)) ?? null;
-
   const carregarHistorico = useCallback(
     async (lista: Proposta[], propostaSelecionadaId: number | null) => {
       if (lista.length === 0) {
         setDocumentosVersao([]);
         setDocumentosEnviados([]);
-        setInteracoesHistorico([]);
         return;
       }
 
       try {
         const detalhes = await Promise.all(
           lista.map(async (p) => {
-            const [resDoc, resInt] = await Promise.all([
-              apiFetch(`/api/v1/projetos/${projetoId}/propostas/${p.id}/documentos`),
-              apiFetch(`/api/v1/projetos/${projetoId}/propostas/${p.id}/interacoes`),
-            ]);
+            const resDoc = await apiFetch(`/api/v1/projetos/${projetoId}/propostas/${p.id}/documentos`);
             const docs = resDoc.ok ? ((await resDoc.json()) as DocumentoAnexo[]) : [];
-            const ints = resInt.ok ? ((await resInt.json()) as InteracaoFluxo[]) : [];
-            return { proposta: p, docs, ints };
+            return { proposta: p, docs };
           }),
         );
 
@@ -145,22 +121,9 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
           .sort((a, b) => b.propostaVersao - a.propostaVersao);
 
         setDocumentosEnviados(enviados);
-
-        const interacoes: InteracaoHistorico[] = detalhes
-          .flatMap((d) =>
-            d.ints.map((i) => ({
-              ...i,
-              propostaId: d.proposta.id,
-              propostaVersao: d.proposta.versao,
-            })),
-          )
-          .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime());
-
-        setInteracoesHistorico(interacoes);
       } catch {
         setDocumentosVersao([]);
         setDocumentosEnviados([]);
-        setInteracoesHistorico([]);
       }
     },
     [projetoId],
@@ -352,58 +315,13 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
     }
   }
 
-  async function registrarRespostaCliente() {
-    if (!propostaParaResposta || !textoInteracao.trim()) {
-      setAcaoErro("Informe o texto do registro.");
-      return;
-    }
-    setProcessando(true);
-    setAcaoErro(null);
-    try {
-      const res = await apiFetch(
-        `/api/v1/projetos/${projetoId}/propostas/${propostaParaResposta.id}/interacoes`,
-        {
-          method: "POST",
-          body: JSON.stringify({ tipoInteracao, texto: textoInteracao.trim() }),
-        },
-      );
-      if (!res.ok) {
-        setAcaoErro(await mensagemErroApi(res, "Erro ao registrar resposta"));
-        return;
-      }
-      setTextoInteracao("");
-      setTipoInteracao("CONSIDERACOES_CLIENTE");
-      setModalRespostaAberto(false);
-      await recarregarTudo(selecionadaId ?? propostaParaResposta.id);
-      onPropostaAtualizada?.();
-    } catch {
-      setAcaoErro("Falha de rede ao registrar.");
-    } finally {
-      setProcessando(false);
-    }
-  }
-
-  function fecharModalResposta() {
-    if (processando) return;
-    setModalRespostaAberto(false);
-    setTextoInteracao("");
-    setTipoInteracao("CONSIDERACOES_CLIENTE");
-  }
-
   const podeUpload = isAdmin && selecionada && STATUS_PROPOSTA_UPLOAD.includes(selecionada.status);
   const mostrarFormularioUpload = podeUpload && selecionada?.status === "RASCUNHO" && !temAnexo;
-  const podeRespostaCliente = isAdmin && propostaParaResposta != null;
   const mostrarProposta = !carregando && propostas.length > 0 && selecionada != null;
   const documentosEnviadosHistorico =
     selecionadaId != null
       ? documentosEnviados.filter((d) => d.propostaId !== selecionadaId)
       : documentosEnviados;
-
-  const mostrarRespostaCliente =
-    mostrarProposta &&
-    (documentosEnviados.length > 0 ||
-      interacoesHistorico.length > 0 ||
-      propostas.some((p) => STATUS_PROPOSTA_ENVIADA.includes(p.status)));
 
   const rascunhoComAnexo = isAdmin && selecionada?.status === "RASCUNHO" && temAnexo;
 
@@ -421,22 +339,8 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
     </PrimaryButton>
   ) : undefined;
 
-  const acoesResposta = podeRespostaCliente ? (
-    <PrimaryButton
-      variant="toolbar"
-      onClick={() => {
-        setAcaoErro(null);
-        setModalRespostaAberto(true);
-      }}
-      disabled={processando}
-    >
-      Registrar
-    </PrimaryButton>
-  ) : undefined;
-
   return (
-    <>
-      <AdminFormSection title="Proposta comercial" titleId="prop-sec-comercial" actions={acoesComercial}>
+    <AdminFormSection title="Proposta comercial" titleId="prop-sec-comercial" actions={acoesComercial}>
         {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
         {acaoErro ? <InlineAlert variant="error">{acaoErro}</InlineAlert> : null}
 
@@ -600,87 +504,6 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
             ) : null}
           </AdminFormFields>
         ) : null}
-      </AdminFormSection>
-
-      {mostrarRespostaCliente ? (
-        <AdminFormSection title="Resposta do cliente" titleId="prop-sec-resposta" actions={acoesResposta}>
-          {interacoesHistorico.length > 0 ? (
-            <ul className="proposta-panel__interacoes">
-              {interacoesHistorico.map((i) => (
-                <li key={i.id}>
-                  <strong>
-                    {TIPO_INTERACAO_ROTULO[i.tipoInteracao]}
-                    <span className="proposta-panel__interacao-versao"> · v{i.propostaVersao}</span>
-                  </strong>
-                  <span className="proposta-panel__interacao-meta">
-                    {i.registradoPorNome} · {formatarDataHora(i.criadoEm)}
-                  </span>
-                  <p>{i.texto}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="proposta-panel__hint" role="status">
-              Nenhum registro da resposta do cliente ainda.
-            </p>
-          )}
-        </AdminFormSection>
-      ) : null}
-
-      <FormDialog
-        open={modalRespostaAberto}
-        titleId="prop-modal-resposta-titulo"
-        title="Registrar resposta do cliente"
-        panelClassName="proposta-resposta-dialog"
-        onBackdropClick={fecharModalResposta}
-      >
-        {acaoErro && modalRespostaAberto ? <InlineAlert variant="error">{acaoErro}</InlineAlert> : null}
-        {propostaParaResposta ? (
-          <p className="proposta-panel__hint">
-            Registro vinculado à <strong>v{propostaParaResposta.versao}</strong> (
-            {STATUS_PROPOSTA_ROTULO[propostaParaResposta.status]}).
-          </p>
-        ) : null}
-        <AdminFormFields>
-          <FormField label="Tipo" htmlFor="tipo-interacao-modal">
-            <FieldControl
-              as="select"
-              id="tipo-interacao-modal"
-              className="clientes-select"
-              variant="modal"
-              value={tipoInteracao}
-              onChange={(e) => setTipoInteracao(e.target.value as TipoInteracaoFluxo)}
-              disabled={processando}
-            >
-              {(Object.keys(TIPO_INTERACAO_ROTULO) as TipoInteracaoFluxo[]).map((t) => (
-                <option key={t} value={t}>
-                  {TIPO_INTERACAO_ROTULO[t]}
-                </option>
-              ))}
-            </FieldControl>
-          </FormField>
-          <FormField label="Texto / motivo" htmlFor="texto-interacao-modal" required>
-            <FieldControl
-              as="textarea"
-              id="texto-interacao-modal"
-              className="clientes-input clientes-textarea"
-              variant="modal"
-              value={textoInteracao}
-              onChange={(e) => setTextoInteracao(e.target.value)}
-              disabled={processando}
-              rows={4}
-            />
-          </FormField>
-        </AdminFormFields>
-        <ModalFooter>
-          <GhostButton onClick={fecharModalResposta} disabled={processando}>
-            Cancelar
-          </GhostButton>
-          <PrimaryButton disabled={processando} onClick={() => void registrarRespostaCliente()}>
-            {processando ? "Registrando…" : "Registrar"}
-          </PrimaryButton>
-        </ModalFooter>
-      </FormDialog>
-    </>
+    </AdminFormSection>
   );
 }

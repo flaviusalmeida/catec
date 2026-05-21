@@ -89,7 +89,7 @@ public class PropostaService {
                 principal.id());
 
         if (projeto.getStatus() == ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL
-                || projeto.getStatus() == ProjetoStatus.PROPOSTA_CONCLUIDA) {
+                || projeto.getStatus() == ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA) {
             sincronizarProjeto(projeto, ProjetoStatus.ELABORANDO_PROPOSTA, principal.id());
         }
 
@@ -255,7 +255,7 @@ public class PropostaService {
 
         Projeto projeto = salva.getProjeto();
         if (projeto.getStatus() == ProjetoStatus.ELABORANDO_PROPOSTA) {
-            sincronizarProjeto(projeto, ProjetoStatus.PROPOSTA_CONCLUIDA, principal.id());
+            sincronizarProjeto(projeto, ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA, principal.id());
         }
 
         return toResponse(salva);
@@ -338,12 +338,19 @@ public class PropostaService {
         if (existePendenciaRevisaoProposta(projetoId)) {
             return;
         }
-        if (projeto.getStatus() == ProjetoStatus.PROPOSTA_CONCLUIDA) {
-            throw badRequest("Projeto já possui proposta comercial concluída neste ciclo.");
+        if (projeto.getStatus() == ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA) {
+            throw badRequest("Projeto já possui proposta comercial aguardando resposta do cliente.");
+        }
+        if (projeto.getStatus() == ProjetoStatus.AGUARDANDO_CONTRATO
+                || projeto.getStatus() == ProjetoStatus.EM_EXECUCAO) {
+            throw badRequest("Projeto com contrato em andamento ou em execução; não é possível criar nova proposta comercial.");
+        }
+        if (projeto.getStatus() == ProjetoStatus.CANCELADO) {
+            throw badRequest("Projeto cancelado; não é possível criar nova proposta comercial.");
         }
     }
 
-    /** Cliente pediu ajustes: permite nova versão (v2+) mesmo com projeto em PROPOSTA_CONCLUIDA. */
+    /** Cliente pediu ajustes: permite nova versão (v2+) mesmo com projeto aguardando aceite. */
     private boolean existePendenciaRevisaoProposta(Long projetoId) {
         return propostaRepository.existsByProjetoIdAndStatus(projetoId, PropostaStatus.AGUARDANDO_AJUSTE_ADM)
                 || propostaRepository.existsByProjetoIdAndConsideracoesPendentesTrue(projetoId);
@@ -437,7 +444,7 @@ public class PropostaService {
 
     private static String labelEstado(PropostaStatus status) {
         return switch (status) {
-            case RASCUNHO -> "Rascunho";
+            case RASCUNHO -> "Em elaboração";
             case PENDENTE_AVALIACAO_SOCIO -> "Pendente avaliação sócio";
             case APROVADA_INTERNA -> "Aprovada internamente";
             case ENVIADA_AO_CLIENTE -> "Enviada ao cliente";

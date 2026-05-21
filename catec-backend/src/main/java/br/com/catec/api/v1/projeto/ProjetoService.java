@@ -180,8 +180,11 @@ public class ProjetoService {
                 switch (atual) {
                     case PENDENTE_CLIENTE -> false;
                     case AGUARDANDO_PROPOSTA_COMERCIAL -> novo == ProjetoStatus.ELABORANDO_PROPOSTA;
-                    case ELABORANDO_PROPOSTA -> novo == ProjetoStatus.PROPOSTA_CONCLUIDA;
-                    case PROPOSTA_CONCLUIDA -> false;
+                    case ELABORANDO_PROPOSTA -> novo == ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA;
+                    case AGUARDANDO_ACEITE_PROPOSTA -> false;
+                    case AGUARDANDO_CONTRATO -> false;
+                    case EM_EXECUCAO -> false;
+                    case CANCELADO -> false;
                 };
         if (!ok) {
             throw badRequest(
@@ -195,7 +198,10 @@ public class ProjetoService {
             case PENDENTE_CLIENTE -> "Pendente de cliente";
             case AGUARDANDO_PROPOSTA_COMERCIAL -> "Aguardando proposta comercial";
             case ELABORANDO_PROPOSTA -> "Elaborando proposta";
-            case PROPOSTA_CONCLUIDA -> "Proposta concluída";
+            case AGUARDANDO_ACEITE_PROPOSTA -> "Aguardando aceite da proposta";
+            case AGUARDANDO_CONTRATO -> "Aguardando contrato";
+            case EM_EXECUCAO -> "Em execução";
+            case CANCELADO -> "Cancelado";
         };
     }
 

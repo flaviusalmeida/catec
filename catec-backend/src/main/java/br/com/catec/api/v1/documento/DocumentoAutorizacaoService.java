@@ -3,6 +3,8 @@ package br.com.catec.api.v1.documento;
 import br.com.catec.domain.documento.Documento;
 import br.com.catec.domain.documento.TipoVinculoDocumento;
 import br.com.catec.domain.projeto.Projeto;
+import br.com.catec.domain.contrato.Contrato;
+import br.com.catec.domain.contrato.ContratoRepository;
 import br.com.catec.domain.projeto.ProjetoRepository;
 import br.com.catec.domain.proposta.Proposta;
 import br.com.catec.domain.proposta.PropostaRepository;
@@ -20,10 +22,15 @@ public class DocumentoAutorizacaoService {
 
     private final ProjetoRepository projetoRepository;
     private final PropostaRepository propostaRepository;
+    private final ContratoRepository contratoRepository;
 
-    public DocumentoAutorizacaoService(ProjetoRepository projetoRepository, PropostaRepository propostaRepository) {
+    public DocumentoAutorizacaoService(
+            ProjetoRepository projetoRepository,
+            PropostaRepository propostaRepository,
+            ContratoRepository contratoRepository) {
         this.projetoRepository = projetoRepository;
         this.propostaRepository = propostaRepository;
+        this.contratoRepository = contratoRepository;
     }
 
     public void garantirLeitura(Documento documento, UsuarioAutenticado principal) {
@@ -36,9 +43,9 @@ public class DocumentoAutorizacaoService {
     }
 
     public void garantirEscrita(TipoVinculoDocumento tipoVinculo, Long vinculoId, UsuarioAutenticado principal) {
-        if (tipoVinculo == TipoVinculoDocumento.PROPOSTA) {
+        if (tipoVinculo == TipoVinculoDocumento.PROPOSTA || tipoVinculo == TipoVinculoDocumento.CONTRATO) {
             if (!isAdministrativo(principal)) {
-                negado("Upload de documentos da proposta é restrito ao perfil administrativo.");
+                negado("Upload de documentos deste vínculo é restrito ao perfil administrativo.");
             }
             return;
         }
@@ -52,7 +59,8 @@ public class DocumentoAutorizacaoService {
         switch (tipoVinculo) {
             case PROJETO -> garantirAcessoProjeto(vinculoId, principal);
             case PROPOSTA -> garantirAcessoProposta(vinculoId, principal);
-            case CONTRATO, RELATORIO_ENTREGA, NF, BOLETO, OUTRO -> negado(
+            case CONTRATO -> garantirAcessoContrato(vinculoId, principal);
+            case RELATORIO_ENTREGA, NF, BOLETO, OUTRO -> negado(
                     "Acesso a documentos deste vínculo é restrito ao perfil administrativo.");
             default -> negado("Tipo de vínculo não suportado para este perfil.");
         }
@@ -71,6 +79,19 @@ public class DocumentoAutorizacaoService {
         if (!projeto.getCriadoPor().getId().equals(principal.id())) {
             negado("Acesso negado a documentos deste projeto.");
         }
+    }
+
+    private void garantirAcessoContrato(Long contratoId, UsuarioAutenticado principal) {
+        if (isSocio(principal)) {
+            return;
+        }
+        if (!isColaborador(principal)) {
+            negado("Perfil sem permissão para documentos deste contrato.");
+        }
+        Contrato contrato = contratoRepository
+                .findById(contratoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contrato não encontrado."));
+        garantirAcessoProjeto(contrato.getProjeto().getId(), principal);
     }
 
     private void garantirAcessoProposta(Long propostaId, UsuarioAutenticado principal) {

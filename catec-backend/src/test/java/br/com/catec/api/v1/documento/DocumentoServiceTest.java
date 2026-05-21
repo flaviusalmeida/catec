@@ -51,6 +51,9 @@ class DocumentoServiceTest {
     private br.com.catec.domain.proposta.PropostaRepository propostaRepository;
 
     @Mock
+    private br.com.catec.domain.contrato.ContratoRepository contratoRepository;
+
+    @Mock
     private DocumentoAutorizacaoService documentoAutorizacaoService;
 
     @Mock
@@ -78,6 +81,7 @@ class DocumentoServiceTest {
                 usuarioRepository,
                 projetoRepository,
                 propostaRepository,
+                contratoRepository,
                 documentoAutorizacaoService,
                 documentStorage,
                 properties);

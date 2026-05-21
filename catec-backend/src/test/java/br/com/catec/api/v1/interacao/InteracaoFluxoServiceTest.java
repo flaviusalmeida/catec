@@ -14,6 +14,8 @@ import br.com.catec.domain.interacao.InteracaoFluxo;
 import br.com.catec.domain.interacao.InteracaoFluxoRepository;
 import br.com.catec.domain.interacao.TipoInteracaoFluxo;
 import br.com.catec.domain.projeto.Projeto;
+import br.com.catec.domain.projeto.ProjetoRepository;
+import br.com.catec.domain.projeto.ProjetoStatus;
 import br.com.catec.domain.proposta.Proposta;
 import br.com.catec.domain.proposta.PropostaRepository;
 import br.com.catec.domain.proposta.PropostaStatus;
@@ -41,6 +43,12 @@ class InteracaoFluxoServiceTest {
     private PropostaRepository propostaRepository;
 
     @Mock
+    private br.com.catec.domain.contrato.ContratoRepository contratoRepository;
+
+    @Mock
+    private ProjetoRepository projetoRepository;
+
+    @Mock
     private DocumentoRepository documentoRepository;
 
     @Mock
@@ -53,11 +61,12 @@ class InteracaoFluxoServiceTest {
     private InteracaoFluxoService service;
 
     @Test
-    void registrarAceite_deveAtualizarPropostaParaAceita() {
-        Proposta proposta = proposta(5L, PropostaStatus.ENVIADA_AO_CLIENTE);
+    void registrarAceite_deveAtualizarPropostaParaAceitaEProjetoAguardandoContrato() {
+        Proposta proposta = proposta(5L, PropostaStatus.ENVIADA_AO_CLIENTE, ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA);
         when(propostaRepository.findById(5L)).thenReturn(Optional.of(proposta));
         when(usuarioRepository.getReferenceById(1L)).thenReturn(new Usuario());
         when(propostaRepository.save(any(Proposta.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
         when(interacaoFluxoRepository.save(any(InteracaoFluxo.class))).thenAnswer(inv -> {
             InteracaoFluxo i = inv.getArgument(0);
             org.springframework.test.util.ReflectionTestUtils.setField(i, "id", 99L);
@@ -72,6 +81,7 @@ class InteracaoFluxoServiceTest {
         var res = service.registrarRespostaCliente(10L, 5L, req, admin());
 
         assertEquals(PropostaStatus.ACEITA, res.proposta().status());
+        assertEquals(ProjetoStatus.AGUARDANDO_CONTRATO, proposta.getProjeto().getStatus());
         assertEquals(TipoInteracaoFluxo.ACEITE_CLIENTE, res.interacao().tipoInteracao());
         verify(auditoriaService)
                 .registrarTransicaoStatus(
@@ -80,6 +90,14 @@ class InteracaoFluxoServiceTest {
                         eq("REGISTRO_ACEITE_CLIENTE"),
                         eq("ENVIADA_AO_CLIENTE"),
                         eq("ACEITA"),
+                        eq(1L));
+        verify(auditoriaService)
+                .registrarTransicaoStatus(
+                        eq(TipoEntidadeAuditoria.PROJETO),
+                        eq(10L),
+                        eq("PROPOSTA_ACEITA_CLIENTE"),
+                        eq("AGUARDANDO_ACEITE_PROPOSTA"),
+                        eq("AGUARDANDO_CONTRATO"),
                         eq(1L));
     }
 
@@ -96,6 +114,38 @@ class InteracaoFluxoServiceTest {
     }
 
     @Test
+    void registrarRecusa_deveAtualizarPropostaParaNegadaECancelarProjeto() {
+        Proposta proposta = proposta(8L, PropostaStatus.ENVIADA_AO_CLIENTE, ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA);
+        when(propostaRepository.findById(8L)).thenReturn(Optional.of(proposta));
+        when(usuarioRepository.getReferenceById(1L)).thenReturn(new Usuario());
+        when(propostaRepository.save(any(Proposta.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(interacaoFluxoRepository.save(any(InteracaoFluxo.class))).thenAnswer(inv -> {
+            InteracaoFluxo i = inv.getArgument(0);
+            org.springframework.test.util.ReflectionTestUtils.setField(i, "id", 100L);
+            Usuario u = new Usuario();
+            org.springframework.test.util.ReflectionTestUtils.setField(u, "id", 1L);
+            u.setNome("Admin");
+            i.setRegistradoPor(u);
+            return i;
+        });
+
+        var req = new InteracaoFluxoCreateRequest(TipoInteracaoFluxo.RECUSA_CLIENTE, "Não aprovou.", null);
+        var res = service.registrarRespostaCliente(10L, 8L, req, admin());
+
+        assertEquals(PropostaStatus.NEGADA, res.proposta().status());
+        assertEquals(ProjetoStatus.CANCELADO, proposta.getProjeto().getStatus());
+        verify(auditoriaService)
+                .registrarTransicaoStatus(
+                        eq(TipoEntidadeAuditoria.PROJETO),
+                        eq(10L),
+                        eq("PROPOSTA_NEGADA_CLIENTE"),
+                        eq("AGUARDANDO_ACEITE_PROPOSTA"),
+                        eq("CANCELADO"),
+                        eq(1L));
+    }
+
+    @Test
     void registrarRecusa_quandoColaborador_deveRetornar403() {
         Proposta proposta = proposta(7L, PropostaStatus.ENVIADA_AO_CLIENTE);
         when(propostaRepository.findById(7L)).thenReturn(Optional.of(proposta));
@@ -109,10 +159,15 @@ class InteracaoFluxoServiceTest {
     }
 
     private static Proposta proposta(long id, PropostaStatus status) {
+        return proposta(id, status, ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL);
+    }
+
+    private static Proposta proposta(long id, PropostaStatus status, ProjetoStatus projetoStatus) {
         Proposta p = new Proposta();
         org.springframework.test.util.ReflectionTestUtils.setField(p, "id", id);
         Projeto proj = new Projeto();
         org.springframework.test.util.ReflectionTestUtils.setField(proj, "id", 10L);
+        proj.setStatus(projetoStatus);
         Usuario criador = new Usuario();
         org.springframework.test.util.ReflectionTestUtils.setField(criador, "id", 2L);
         proj.setCriadoPor(criador);
