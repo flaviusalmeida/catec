@@ -3,8 +3,12 @@ import PaginationBar from "../../table/PaginationBar";
 import EmptyState from "../../ui/EmptyState";
 import InlineAlert from "../../ui/InlineAlert";
 import { useProjetoHistoricoFluxo } from "../../../hooks/useProjetoHistoricoFluxo";
-import { detalheTransicaoHistorico, rotuloHistoricoItem } from "../../../utils/painelHistoricoFormat";
-import { formatInstantBr } from "../../../utils/dateTimeBr";
+import {
+  metaHistoricoItem,
+  rotuloHistoricoItem,
+  textoHistoricoItem,
+} from "../../../utils/painelHistoricoFormat";
+import ProjetoTimeline from "./ProjetoTimeline";
 
 type Props = {
   projetoId: number;
@@ -33,30 +37,16 @@ export default function ProjetoTabHistorico({ projetoId, refreshKey = 0 }: Props
     );
   }
 
+  const timeline = fluxo.itens.map((item) => ({
+    key: `${item.origem}-${item.registroId}`,
+    titulo: rotuloHistoricoItem(item),
+    meta: metaHistoricoItem(item),
+    texto: textoHistoricoItem(item),
+  }));
+
   return (
     <div className="proj-detalhe-historico-fluxo">
-      <p className="proj-detalhe-historico-fluxo__hint">
-        Auditoria de status e interações do fluxo comercial, em ordem cronológica reversa.
-      </p>
-
-      <ul className="proj-detalhe-historico-fluxo__lista" aria-busy={fluxo.carregando}>
-        {fluxo.itens.map((item) => (
-          <li key={`${item.origem}-${item.registroId}`} className="proj-detalhe-historico-fluxo__item">
-            <div className="proj-detalhe-historico-fluxo__item-head">
-              <span className="proj-detalhe-historico-fluxo__item-tipo">{rotuloHistoricoItem(item)}</span>
-              <time className="proj-detalhe-historico-fluxo__item-data" dateTime={item.ocorridoEm}>
-                {formatInstantBr(item.ocorridoEm)}
-              </time>
-            </div>
-            <p className="proj-detalhe-historico-fluxo__item-meta">
-              {item.usuarioNome}
-              {detalheTransicaoHistorico(item) ? ` · ${detalheTransicaoHistorico(item)}` : null}
-            </p>
-            {item.texto ? <p className="proj-detalhe-historico-fluxo__item-texto">{item.texto}</p> : null}
-          </li>
-        ))}
-      </ul>
-
+      <ProjetoTimeline items={timeline} busy={fluxo.carregando} />
       <PaginationBar
         className="proj-detalhe-historico-fluxo__paginacao"
         page={fluxo.page}
