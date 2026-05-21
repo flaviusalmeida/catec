@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState, type ReactNode } from "react";
 import { apiFetch } from "../../api/http";
 import { useAuth } from "../../auth/AuthContext";
 import GhostButton from "../buttons/GhostButton";
@@ -10,6 +10,14 @@ import {
   AdminFormFields,
   AdminFormSection,
 } from "../layout/entityFormKit";
+import FileRow from "../projeto/detalhe/FileRow";
+import {
+  DashboardCard,
+  formatarDataCurta,
+  InfoGrid,
+  InfoItem,
+  SectionLabel,
+} from "../projeto/detalhe/detalheUi";
 import EmptyState from "../ui/EmptyState";
 import InlineAlert from "../ui/InlineAlert";
 import { mensagemErroApi } from "../../utils/apiError";
@@ -27,10 +35,17 @@ import {
 import "../../pages/ClientesPage.css";
 import "./PropostaPanel.css";
 
+export type PropostaPanelHandle = {
+  criarProposta: () => void;
+  podeCriarNova: boolean;
+};
+
 type Props = {
   projetoId: number;
   projetoTemCliente: boolean;
   onPropostaAtualizada?: () => void;
+  embedded?: boolean;
+  hideHeaderActions?: boolean;
 };
 
 type DocumentoHistorico = DocumentoAnexo & {
@@ -38,6 +53,18 @@ type DocumentoHistorico = DocumentoAnexo & {
   propostaVersao: number;
   propostaStatus: PropostaStatus;
 };
+
+function PanelDivider({ embedded }: { embedded?: boolean }) {
+  return embedded ? null : <AdminFormDivider />;
+}
+
+function PanelBloco({ embedded, children }: { embedded?: boolean; children: ReactNode }) {
+  return embedded ? <div className="proj-detalhe-block">{children}</div> : <>{children}</>;
+}
+
+function PanelSubtitulo({ embedded, children }: { embedded?: boolean; children: ReactNode }) {
+  return embedded ? <SectionLabel>{children}</SectionLabel> : <p className="proposta-panel__subtitulo">{children}</p>;
+}
 
 const STATUS_PROPOSTA_ATIVA: PropostaStatus[] = [
   "RASCUNHO",
@@ -64,7 +91,10 @@ function idPropostaAtual(lista: Proposta[], preferirId?: number | null): number 
   return lista[0].id;
 }
 
-export default function PropostaPanel({ projetoId, projetoTemCliente, onPropostaAtualizada }: Props) {
+const PropostaPanel = forwardRef<PropostaPanelHandle, Props>(function PropostaPanel(
+  { projetoId, projetoTemCliente, onPropostaAtualizada, embedded = false, hideHeaderActions = false },
+  ref,
+) {
   const { isAdmin, isSocio, logout } = useAuth();
   const [propostas, setPropostas] = useState<Proposta[]>([]);
   const [selecionadaId, setSelecionadaId] = useState<number | null>(null);
@@ -333,14 +363,20 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
     void downloadDocumento(doc.id, doc.nomeOriginal).catch(() => setAcaoErro("Download falhou."));
   }
 
-  const acoesComercial = podeCriarNova ? (
-    <PrimaryButton variant="toolbar" onClick={() => void criarProposta()} disabled={processando}>
-      Nova
-    </PrimaryButton>
-  ) : undefined;
+  useImperativeHandle(ref, () => ({
+    criarProposta: () => void criarProposta(),
+    podeCriarNova,
+  }));
 
-  return (
-    <AdminFormSection title="Proposta comercial" titleId="prop-sec-comercial" actions={acoesComercial}>
+  const acoesComercial =
+    !hideHeaderActions && podeCriarNova ? (
+      <PrimaryButton variant="toolbar" onClick={() => void criarProposta()} disabled={processando}>
+        Nova
+      </PrimaryButton>
+    ) : undefined;
+
+  const conteudo = (
+    <>
         {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
         {acaoErro ? <InlineAlert variant="error">{acaoErro}</InlineAlert> : null}
 
@@ -361,108 +397,116 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
             />
           </div>
         ) : mostrarProposta ? (
-          <AdminFormFields>
-            <FormField label="Status" htmlFor="prop-status">
-              <FieldControl
-                id="prop-status"
-                className="clientes-input"
-                variant="modal"
-                readOnly
-                value={STATUS_PROPOSTA_ROTULO[selecionada!.status]}
-              />
-            </FormField>
+          embedded ? (
+            <InfoGrid>
+              <InfoItem label="Status">{STATUS_PROPOSTA_ROTULO[selecionada!.status]}</InfoItem>
+              <InfoItem label="Responsável">{elaboracaoTexto || "—"}</InfoItem>
+            </InfoGrid>
+          ) : (
+            <AdminFormFields>
+              <FormField label="Status" htmlFor="prop-status">
+                <FieldControl
+                  id="prop-status"
+                  className="clientes-input"
+                  variant="modal"
+                  readOnly
+                  value={STATUS_PROPOSTA_ROTULO[selecionada!.status]}
+                />
+              </FormField>
 
-            <FormField label="Elaboração" htmlFor="prop-elaboracao">
-              <FieldControl
-                id="prop-elaboracao"
-                className="clientes-input"
-                variant="modal"
-                readOnly
-                value={elaboracaoTexto}
-              />
-            </FormField>
+              <FormField label="Elaboração" htmlFor="prop-elaboracao">
+                <FieldControl
+                  id="prop-elaboracao"
+                  className="clientes-input"
+                  variant="modal"
+                  readOnly
+                  value={elaboracaoTexto}
+                />
+              </FormField>
+            </AdminFormFields>
+          )
+        ) : null}
 
-            {mostrarDocumentoVersaoAtual || mostrarFormularioUpload || documentosEnviadosHistorico.length > 0 ? (
-              <AdminFormDivider />
-            ) : null}
+        {mostrarProposta ? (
+          <>
+            {(mostrarDocumentoVersaoAtual || mostrarFormularioUpload) && (
+              <PanelBloco embedded={embedded}>
+                {mostrarDocumentoVersaoAtual ? (
+                  <>
+                    <PanelSubtitulo embedded={embedded}>
+                      {STATUS_PROPOSTA_ENVIADA.includes(selecionada!.status)
+                        ? "Documento da proposta"
+                        : "Documento da proposta em elaboração"}
+                    </PanelSubtitulo>
 
-            {mostrarDocumentoVersaoAtual ? (
-              <>
-                <p className="proposta-panel__subtitulo">
-                  {STATUS_PROPOSTA_ENVIADA.includes(selecionada!.status)
-                    ? "Documento da proposta"
-                    : "Documento da proposta em elaboração"}
-                </p>
+                    {documentosVersao.length > 0 ? (
+                      <div className="proj-detalhe-file-rows">
+                        {documentosVersao.map((d) => (
+                          <FileRow
+                            key={d.id}
+                            nomeArquivo={d.nomeOriginal}
+                            meta={`Versão ${selecionada!.versao}${d.criadoEm ? ` • ${formatarDataCurta(d.criadoEm)}` : ""}`}
+                            onDownload={() => baixarDocumento(d)}
+                          />
+                        ))}
+                      </div>
+                    ) : mostrarFormularioUpload ? (
+                      <p className="proposta-panel__hint">
+                        Anexe o arquivo da proposta comercial para enviar para avaliação ou aprovar.
+                      </p>
+                    ) : (
+                      <p className="proposta-panel__hint" role="status">
+                        Nenhum documento nesta versão.
+                      </p>
+                    )}
+                  </>
+                ) : null}
 
-                {documentosVersao.length > 0 ? (
-                  <ul className="proposta-panel__lista proposta-panel__lista--documento">
-                    {documentosVersao.map((d) => (
-                      <li key={d.id}>
-                        <span className="proposta-panel__doc-nome">
-                          {d.nomeOriginal} (v{selecionada!.versao})
-                        </span>
-                        <GhostButton onClick={() => baixarDocumento(d)}>Baixar</GhostButton>
-                      </li>
-                    ))}
-                  </ul>
-                ) : mostrarFormularioUpload ? (
-                  <p className="proposta-panel__hint">
-                    Anexe o arquivo da proposta comercial para enviar para avaliação ou aprovar.
-                  </p>
-                ) : (
-                  <p className="proposta-panel__hint" role="status">
-                    Nenhum documento nesta versão.
-                  </p>
-                )}
-              </>
-            ) : null}
-
-            {mostrarFormularioUpload ? (
-              <div className="proposta-panel__upload">
-                <FormField label="Arquivo" htmlFor="prop-arquivo-upload">
-                  <FieldControl
-                    id="prop-arquivo-upload"
-                    type="file"
-                    className="clientes-input"
-                    variant="modal"
-                    accept=".pdf,.doc,.docx,image/jpeg,image/png"
-                    onChange={(e) => setArquivoUpload(e.target.files?.[0] ?? null)}
-                    disabled={processando}
-                  />
-                </FormField>
-                <PrimaryButton disabled={processando || !arquivoUpload} onClick={() => void enviarDocumento()}>
-                  Anexar arquivo
-                </PrimaryButton>
-              </div>
-            ) : null}
+                {mostrarFormularioUpload ? (
+                  <div className="proposta-panel__upload">
+                    <FormField label="Arquivo" htmlFor="prop-arquivo-upload">
+                      <FieldControl
+                        id="prop-arquivo-upload"
+                        type="file"
+                        className="clientes-input"
+                        variant="modal"
+                        accept=".pdf,.doc,.docx,image/jpeg,image/png"
+                        onChange={(e) => setArquivoUpload(e.target.files?.[0] ?? null)}
+                        disabled={processando}
+                      />
+                    </FormField>
+                    <PrimaryButton disabled={processando || !arquivoUpload} onClick={() => void enviarDocumento()}>
+                      Anexar arquivo
+                    </PrimaryButton>
+                  </div>
+                ) : null}
+              </PanelBloco>
+            )}
 
             {documentosEnviadosHistorico.length > 0 ? (
-              <>
-                {mostrarDocumentoVersaoAtual ? <AdminFormDivider /> : null}
-                <p className="proposta-panel__subtitulo">Versões anteriores</p>
-                <ul className="proposta-panel__lista proposta-panel__lista--historico">
+              <PanelBloco embedded={embedded}>
+                {!embedded && mostrarDocumentoVersaoAtual ? <AdminFormDivider /> : null}
+                <PanelSubtitulo embedded={embedded}>Versões anteriores</PanelSubtitulo>
+                <div className="proj-detalhe-file-rows">
                   {documentosEnviadosHistorico.map((d) => {
                     const propostaRef = propostas.find((p) => p.id === d.propostaId);
                     if (!propostaRef) return null;
                     return (
-                      <li key={`${d.propostaId}-${d.id}`}>
-                        <span className="proposta-panel__lista-texto">
-                          <span className="proposta-panel__lista-titulo">
-                            {tituloHistoricoProposta(propostaRef)}
-                          </span>
-                          <span className="proposta-panel__lista-detalhe">{d.nomeOriginal}</span>
-                        </span>
-                        <GhostButton onClick={() => baixarDocumento(d)}>Baixar</GhostButton>
-                      </li>
+                      <FileRow
+                        key={`${d.propostaId}-${d.id}`}
+                        nomeArquivo={d.nomeOriginal}
+                        meta={`Versão ${d.propostaVersao} • ${tituloHistoricoProposta(propostaRef)}`}
+                        onDownload={() => baixarDocumento(d)}
+                      />
                     );
                   })}
-                </ul>
-              </>
+                </div>
+              </PanelBloco>
             ) : null}
 
             {rascunhoComAnexo ? (
-              <>
-                <AdminFormDivider />
+              <PanelBloco embedded={embedded}>
+                <PanelDivider embedded={embedded} />
                 <div className="proposta-panel__acoes">
                   <GhostButton disabled={processando} onClick={() => void enviarParaAvaliacao()}>
                     Enviar para avaliação
@@ -471,12 +515,12 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
                     Aprovar
                   </PrimaryButton>
                 </div>
-              </>
+              </PanelBloco>
             ) : null}
 
             {selecionada!.status === "PENDENTE_AVALIACAO_SOCIO" && isSocio ? (
-              <>
-                <AdminFormDivider />
+              <PanelBloco embedded={embedded}>
+                <PanelDivider embedded={embedded} />
                 <div className="proposta-panel__acoes">
                   <PrimaryButton disabled={processando} onClick={() => void executarAcao("/aprovar-socio")}>
                     Aprovar (sócio)
@@ -485,13 +529,13 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
                     Devolver para rascunho
                   </GhostButton>
                 </div>
-              </>
+              </PanelBloco>
             ) : null}
 
             {selecionada!.status === "APROVADA_INTERNA" && isAdmin ? (
-              <>
-                <AdminFormDivider />
-                <p className="proposta-panel__subtitulo">Envio ao cliente</p>
+              <PanelBloco embedded={embedded}>
+                <PanelDivider embedded={embedded} />
+                <PanelSubtitulo embedded={embedded}>Envio ao cliente</PanelSubtitulo>
                 <p className="proposta-panel__hint">
                   A proposta foi aprovada internamente. Envie ao cliente para dar sequência ao fluxo.
                 </p>
@@ -500,10 +544,26 @@ export default function PropostaPanel({ projetoId, projetoTemCliente, onProposta
                     Enviar ao cliente
                   </PrimaryButton>
                 </div>
-              </>
+              </PanelBloco>
             ) : null}
-          </AdminFormFields>
+          </>
         ) : null}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <DashboardCard title="Proposta comercial" titleId="prop-sec-comercial" actions={acoesComercial}>
+        {conteudo}
+      </DashboardCard>
+    );
+  }
+
+  return (
+    <AdminFormSection title="Proposta comercial" titleId="prop-sec-comercial" actions={acoesComercial}>
+      {conteudo}
     </AdminFormSection>
   );
-}
+});
+
+export default PropostaPanel;
