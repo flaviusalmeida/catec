@@ -1,102 +1,71 @@
-import GhostButton from "../../buttons/GhostButton";
-import { downloadDocumento } from "../../../utils/downloadDocumento";
-import type { HistoricoDocumentoRow } from "../../../hooks/useProjetoFluxoData";
+import { useAuth } from "../../../auth/AuthContext";
+import PaginationBar from "../../table/PaginationBar";
+import EmptyState from "../../ui/EmptyState";
+import InlineAlert from "../../ui/InlineAlert";
+import { useProjetoHistoricoFluxo } from "../../../hooks/useProjetoHistoricoFluxo";
+import { detalheTransicaoHistorico, rotuloHistoricoItem } from "../../../utils/painelHistoricoFormat";
+import { formatInstantBr } from "../../../utils/dateTimeBr";
 
 type Props = {
-  rows: HistoricoDocumentoRow[];
-  carregando?: boolean;
+  projetoId: number;
+  refreshKey?: number;
 };
 
-export default function ProjetoTabHistorico({ rows, carregando }: Props) {
-  if (carregando) {
+export default function ProjetoTabHistorico({ projetoId, refreshKey = 0 }: Props) {
+  const { logout } = useAuth();
+  const fluxo = useProjetoHistoricoFluxo(projetoId, refreshKey, logout);
+
+  if (fluxo.erro) {
+    return <InlineAlert variant="error">{fluxo.erro}</InlineAlert>;
+  }
+
+  if (fluxo.carregando && fluxo.itens.length === 0) {
     return <p className="proj-detalhe-loading">Carregando histórico…</p>;
   }
 
-  if (rows.length === 0) {
-    return <p className="proj-detalhe-hint">Nenhum documento registrado neste projeto.</p>;
+  if (!fluxo.carregando && fluxo.itens.length === 0) {
+    return (
+      <EmptyState
+        variant="inline"
+        title="Sem registros"
+        description="Ainda não há auditoria ou interações registradas para este projeto."
+      />
+    );
   }
 
   return (
-    <>
-      <div className="proj-detalhe-table-wrap proj-detalhe-table-wrap--desktop">
-        <table className="proj-detalhe-table">
-          <thead>
-            <tr>
-              <th>Tipo</th>
-              <th>Versão</th>
-              <th>Data</th>
-              <th>Autor</th>
-              <th>Arquivo</th>
-              <th>Ação</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.key}>
-                <td>{r.tipo}</td>
-                <td>v{r.versao}</td>
-                <td>{r.data}</td>
-                <td>{r.autor}</td>
-                <td>
-                  <span className="proj-detalhe-table__arquivo">
-                    <span className="proj-detalhe-table__arquivo-icon" aria-hidden>
-                      📄
-                    </span>
-                    {r.nomeArquivo}
-                  </span>
-                </td>
-                <td>
-                  <GhostButton
-                    className="proj-detalhe-table__download-btn"
-                    onClick={() => void downloadDocumento(r.documentoId, r.nomeArquivo)}
-                  >
-                    <span aria-hidden>⬇ </span>
-                    Baixar
-                  </GhostButton>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="proj-detalhe-historico-fluxo">
+      <p className="proj-detalhe-historico-fluxo__hint">
+        Auditoria de status e interações do fluxo comercial, em ordem cronológica reversa.
+      </p>
 
-      <div className="proj-detalhe-historico-cards">
-        {rows.map((r) => (
-          <article key={r.key} className="proj-detalhe-historico-card">
-            <div className="proj-detalhe-historico-card__row">
-              <span className="proj-detalhe-historico-card__label">Tipo</span>
-              <span>{r.tipo}</span>
+      <ul className="proj-detalhe-historico-fluxo__lista" aria-busy={fluxo.carregando}>
+        {fluxo.itens.map((item) => (
+          <li key={`${item.origem}-${item.registroId}`} className="proj-detalhe-historico-fluxo__item">
+            <div className="proj-detalhe-historico-fluxo__item-head">
+              <span className="proj-detalhe-historico-fluxo__item-tipo">{rotuloHistoricoItem(item)}</span>
+              <time className="proj-detalhe-historico-fluxo__item-data" dateTime={item.ocorridoEm}>
+                {formatInstantBr(item.ocorridoEm)}
+              </time>
             </div>
-            <div className="proj-detalhe-historico-card__row">
-              <span className="proj-detalhe-historico-card__label">Versão</span>
-              <span>v{r.versao}</span>
-            </div>
-            <div className="proj-detalhe-historico-card__row">
-              <span className="proj-detalhe-historico-card__label">Data</span>
-              <span>{r.data}</span>
-            </div>
-            <div className="proj-detalhe-historico-card__row">
-              <span className="proj-detalhe-historico-card__label">Autor</span>
-              <span>{r.autor}</span>
-            </div>
-            <div className="proj-detalhe-historico-card__row">
-              <span className="proj-detalhe-historico-card__label">Arquivo</span>
-              <span>
-                📄 {r.nomeArquivo}
-              </span>
-            </div>
-            <div className="proj-detalhe-historico-card__row">
-              <GhostButton
-                className="proj-detalhe-table__download-btn"
-                onClick={() => void downloadDocumento(r.documentoId, r.nomeArquivo)}
-              >
-                <span aria-hidden>⬇ </span>
-                Baixar
-              </GhostButton>
-            </div>
-          </article>
+            <p className="proj-detalhe-historico-fluxo__item-meta">
+              {item.usuarioNome}
+              {detalheTransicaoHistorico(item) ? ` · ${detalheTransicaoHistorico(item)}` : null}
+            </p>
+            {item.texto ? <p className="proj-detalhe-historico-fluxo__item-texto">{item.texto}</p> : null}
+          </li>
         ))}
-      </div>
-    </>
+      </ul>
+
+      <PaginationBar
+        className="proj-detalhe-historico-fluxo__paginacao"
+        page={fluxo.page}
+        pageSize={fluxo.pageSize}
+        totalElements={fluxo.totalElements}
+        totalPages={fluxo.totalPages}
+        onPageChange={fluxo.setPage}
+        disabled={fluxo.carregando}
+      />
+    </div>
   );
 }

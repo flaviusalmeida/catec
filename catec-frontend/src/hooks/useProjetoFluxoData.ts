@@ -3,7 +3,7 @@ import { apiFetch } from "../api/http";
 import { mensagemErroApi } from "../utils/apiError";
 import type { Contrato } from "../pages/contratoTypes";
 import { STATUS_CONTRATO_ROTULO, TIPO_INTERACAO_ROTULO_CONTRATO } from "../pages/contratoTypes";
-import type { DocumentoAnexo, InteracaoFluxo, Proposta, TipoInteracaoFluxo } from "../pages/propostaTypes";
+import type { InteracaoFluxo, Proposta, TipoInteracaoFluxo } from "../pages/propostaTypes";
 import {
   STATUS_PROPOSTA_RESPOSTA_CLIENTE,
   STATUS_PROPOSTA_ROTULO,
@@ -26,22 +26,8 @@ export type InteracaoTimelineItem = {
   criadoEm: string;
 };
 
-export type HistoricoDocumentoRow = {
-  key: string;
-  tipo: "Proposta" | "Contrato";
-  versao: number;
-  data: string;
-  autor: string;
-  nomeArquivo: string;
-  documentoId: number;
-};
-
 function rotuloInteracao(tipo: TipoInteracaoFluxo, origem: "PROPOSTA" | "CONTRATO"): string {
   return origem === "CONTRATO" ? TIPO_INTERACAO_ROTULO_CONTRATO[tipo] : TIPO_INTERACAO_ROTULO_PROPOSTA[tipo];
-}
-
-function formatarDataCurta(iso: string): string {
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" });
 }
 
 function formatarDataHora(iso: string): string {
@@ -53,7 +39,6 @@ export function useProjetoFluxoData(projetoId: number, refreshKey: number, logou
   const [propostas, setPropostas] = useState<Proposta[]>([]);
   const [contrato, setContrato] = useState<Contrato | null>(null);
   const [interacoes, setInteracoes] = useState<InteracaoTimelineItem[]>([]);
-  const [historicoDocs, setHistoricoDocs] = useState<HistoricoDocumentoRow[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -91,27 +76,10 @@ export function useProjetoFluxoData(projetoId: number, refreshKey: number, logou
       setContrato(cont);
 
       const timeline: InteracaoTimelineItem[] = [];
-      const docs: HistoricoDocumentoRow[] = [];
 
       for (const p of listaProp) {
-        const [resDoc, resInt] = await Promise.all([
-          apiFetch(`/api/v1/projetos/${projetoId}/propostas/${p.id}/documentos`),
-          apiFetch(`/api/v1/projetos/${projetoId}/propostas/${p.id}/interacoes`),
-        ]);
-        const documentos: DocumentoAnexo[] = resDoc.ok ? ((await resDoc.json()) as DocumentoAnexo[]) : [];
+        const resInt = await apiFetch(`/api/v1/projetos/${projetoId}/propostas/${p.id}/interacoes`);
         const ints: InteracaoFluxo[] = resInt.ok ? ((await resInt.json()) as InteracaoFluxo[]) : [];
-
-        for (const d of documentos) {
-          docs.push({
-            key: `P-${p.id}-${d.id}`,
-            tipo: "Proposta",
-            versao: p.versao,
-            data: formatarDataCurta(d.criadoEm),
-            autor: d.uploadedPorNome,
-            nomeArquivo: d.nomeOriginal,
-            documentoId: d.id,
-          });
-        }
 
         for (const i of ints) {
           timeline.push({
@@ -125,24 +93,8 @@ export function useProjetoFluxoData(projetoId: number, refreshKey: number, logou
       }
 
       if (cont) {
-        const [resDoc, resInt] = await Promise.all([
-          apiFetch(`/api/v1/projetos/${projetoId}/contratos/${cont.id}/documentos`),
-          apiFetch(`/api/v1/projetos/${projetoId}/contratos/${cont.id}/interacoes`),
-        ]);
-        const documentos: DocumentoAnexo[] = resDoc.ok ? ((await resDoc.json()) as DocumentoAnexo[]) : [];
+        const resInt = await apiFetch(`/api/v1/projetos/${projetoId}/contratos/${cont.id}/interacoes`);
         const ints: InteracaoFluxo[] = resInt.ok ? ((await resInt.json()) as InteracaoFluxo[]) : [];
-
-        for (const d of documentos) {
-          docs.push({
-            key: `C-${cont.id}-${d.id}`,
-            tipo: "Contrato",
-            versao: d.versao,
-            data: formatarDataCurta(d.criadoEm),
-            autor: d.uploadedPorNome,
-            nomeArquivo: d.nomeOriginal,
-            documentoId: d.id,
-          });
-        }
 
         for (const i of ints) {
           timeline.push({
@@ -156,10 +108,8 @@ export function useProjetoFluxoData(projetoId: number, refreshKey: number, logou
       }
 
       timeline.sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime());
-      docs.sort((a, b) => b.documentoId - a.documentoId);
 
       setInteracoes(timeline);
-      setHistoricoDocs(docs);
     } catch {
       setErro("Falha de rede ao carregar dados do projeto.");
     } finally {
@@ -195,7 +145,6 @@ export function useProjetoFluxoData(projetoId: number, refreshKey: number, logou
     propostaAtual,
     contrato,
     interacoes,
-    historicoDocs,
     propostaParaRegistro,
     contratoParaRegistro,
     carregando,

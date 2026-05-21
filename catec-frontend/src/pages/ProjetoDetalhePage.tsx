@@ -167,7 +167,9 @@ export default function ProjetoDetalhePage() {
                     </>
                   ) : null}
 
-                  {tab === "historico" ? <ProjetoTabHistorico rows={fluxo.historicoDocs} /> : null}
+                  {tab === "historico" ? (
+                    <ProjetoTabHistorico projetoId={fluxo.projeto.id} refreshKey={refreshKey} />
+                  ) : null}
                   </div>
                 </div>
               </div>

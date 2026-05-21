@@ -3,24 +3,8 @@ import PaginationBar from "../table/PaginationBar";
 import EmptyState from "../ui/EmptyState";
 import type { PainelHistoricoItem, PainelProjetoResumo } from "../../pages/painelTypes";
 import { formatInstantBr } from "../../utils/dateTimeBr";
+import { detalheTransicaoHistorico, rotuloHistoricoItem } from "../../utils/painelHistoricoFormat";
 import "./PainelHistoricoLista.css";
-
-function rotuloItem(item: PainelHistoricoItem): string {
-  if (item.origem === "INTERACAO" && item.tipoInteracao) {
-    return item.tipoInteracao.replaceAll("_", " ").toLowerCase();
-  }
-  if (item.acao) {
-    return item.acao.replaceAll("_", " ").toLowerCase();
-  }
-  return item.origem === "AUDITORIA" ? "Auditoria" : "Interação";
-}
-
-function detalheTransicao(item: PainelHistoricoItem): string | null {
-  if (item.statusAnterior && item.statusNovo) {
-    return `${item.statusAnterior} → ${item.statusNovo}`;
-  }
-  return null;
-}
 
 export type PainelHistoricoListaProps = {
   projeto: PainelProjetoResumo | null;
@@ -68,14 +52,14 @@ export default function PainelHistoricoLista({
               {itens.map((item) => (
                 <li key={`${item.origem}-${item.registroId}`} className="painel-historico__item">
                   <div className="painel-historico__item-head">
-                    <span className="painel-historico__item-tipo">{rotuloItem(item)}</span>
+                    <span className="painel-historico__item-tipo">{rotuloHistoricoItem(item)}</span>
                     <time className="painel-historico__item-data" dateTime={item.ocorridoEm}>
                       {formatInstantBr(item.ocorridoEm)}
                     </time>
                   </div>
                   <p className="painel-historico__item-meta">
                     {item.usuarioNome}
-                    {detalheTransicao(item) ? ` · ${detalheTransicao(item)}` : null}
+                    {detalheTransicaoHistorico(item) ? ` · ${detalheTransicaoHistorico(item)}` : null}
                   </p>
                   {item.texto ? <p className="painel-historico__item-texto">{item.texto}</p> : null}
                 </li>
