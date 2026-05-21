@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import { apiFetch } from "../../api/http";
 import { useAuth } from "../../auth/AuthContext";
-import GhostButton from "../buttons/GhostButton";
 import PrimaryButton from "../buttons/PrimaryButton";
 import FieldControl from "../form/FieldControl";
 import FormField from "../form/FormField";
@@ -10,6 +9,8 @@ import {
   AdminFormFields,
   AdminFormSection,
 } from "../layout/entityFormKit";
+import FileRow from "../projeto/detalhe/FileRow";
+import { DashboardCard, formatarDataCurta, InfoGrid, InfoItem } from "../projeto/detalhe/detalheUi";
 import EmptyState from "../ui/EmptyState";
 import InlineAlert from "../ui/InlineAlert";
 import { mensagemErroApi } from "../../utils/apiError";
@@ -20,12 +21,22 @@ import { STATUS_CONTRATO_ROTULO, STATUS_CONTRATO_UPLOAD } from "../../pages/cont
 import "../../pages/ClientesPage.css";
 import "../proposta/PropostaPanel.css";
 
+export type ContratoPanelHandle = {
+  criarContrato: () => void;
+  podeCriar: boolean;
+};
+
 type Props = {
   projetoId: number;
   onContratoAtualizado?: () => void;
+  embedded?: boolean;
+  hideHeaderActions?: boolean;
 };
 
-export default function ContratoPanel({ projetoId, onContratoAtualizado }: Props) {
+const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPanel(
+  { projetoId, onContratoAtualizado, embedded = false, hideHeaderActions = false },
+  ref,
+) {
   const { isAdmin, logout } = useAuth();
   const [contrato, setContrato] = useState<Contrato | null>(null);
   const [documentos, setDocumentos] = useState<DocumentoAnexo[]>([]);
@@ -161,14 +172,20 @@ export default function ContratoPanel({ projetoId, onContratoAtualizado }: Props
     void downloadDocumento(doc.id, doc.nomeOriginal).catch(() => setAcaoErro("Download falhou."));
   }
 
-  const acoesNova = podeCriar ? (
-    <PrimaryButton variant="toolbar" onClick={() => void criarContrato()} disabled={processando}>
-      Nova
-    </PrimaryButton>
-  ) : undefined;
+  useImperativeHandle(ref, () => ({
+    criarContrato: () => void criarContrato(),
+    podeCriar,
+  }));
 
-  return (
-    <AdminFormSection title="Contrato" titleId="cont-sec-principal" actions={acoesNova}>
+  const acoesNova =
+    !hideHeaderActions && podeCriar ? (
+      <PrimaryButton variant="toolbar" onClick={() => void criarContrato()} disabled={processando}>
+        Nova
+      </PrimaryButton>
+    ) : undefined;
+
+  const conteudo = (
+    <>
       {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
       {acaoErro ? <InlineAlert variant="error">{acaoErro}</InlineAlert> : null}
 
@@ -185,42 +202,51 @@ export default function ContratoPanel({ projetoId, onContratoAtualizado }: Props
           />
         </div>
       ) : (
-        <AdminFormFields>
-          <FormField label="Status" htmlFor="cont-status">
-            <FieldControl
-              id="cont-status"
-              className="clientes-input"
-              variant="modal"
-              readOnly
-              value={STATUS_CONTRATO_ROTULO[contrato.status]}
-            />
-          </FormField>
+        <>
+          {embedded ? (
+            <InfoGrid>
+              <InfoItem label="Status">{STATUS_CONTRATO_ROTULO[contrato.status]}</InfoItem>
+              <InfoItem label="Elaborado por">{contrato.elaboradoPorNome || "—"}</InfoItem>
+            </InfoGrid>
+          ) : (
+            <AdminFormFields>
+              <FormField label="Status" htmlFor="cont-status">
+                <FieldControl
+                  id="cont-status"
+                  className="clientes-input"
+                  variant="modal"
+                  readOnly
+                  value={STATUS_CONTRATO_ROTULO[contrato.status]}
+                />
+              </FormField>
 
-          <FormField label="Elaboração" htmlFor="cont-elaboracao">
-            <FieldControl
-              id="cont-elaboracao"
-              className="clientes-input"
-              variant="modal"
-              readOnly
-              value={contrato.elaboradoPorNome}
-            />
-          </FormField>
+              <FormField label="Elaboração" htmlFor="cont-elaboracao">
+                <FieldControl
+                  id="cont-elaboracao"
+                  className="clientes-input"
+                  variant="modal"
+                  readOnly
+                  value={contrato.elaboradoPorNome}
+                />
+              </FormField>
+            </AdminFormFields>
+          )}
 
           <AdminFormDivider />
 
           <p className="proposta-panel__subtitulo">Documento do contrato</p>
 
           {temAnexo ? (
-            <ul className="proposta-panel__lista proposta-panel__lista--documento">
+            <div className="proj-detalhe-file-rows">
               {documentos.map((d) => (
-                <li key={d.id}>
-                  <span className="proposta-panel__doc-nome">
-                    {d.nomeOriginal} (v{d.versao})
-                  </span>
-                  <GhostButton onClick={() => baixarDocumento(d)}>Baixar</GhostButton>
-                </li>
+                <FileRow
+                  key={d.id}
+                  nomeArquivo={d.nomeOriginal}
+                  meta={`Versão ${d.versao}${d.criadoEm ? ` • ${formatarDataCurta(d.criadoEm)}` : ""}${d.uploadedPorNome ? ` • ${d.uploadedPorNome}` : ""}`}
+                  onDownload={() => baixarDocumento(d)}
+                />
               ))}
-            </ul>
+            </div>
           ) : podeUpload ? (
             <div className="proposta-panel__upload">
               <p className="proposta-panel__hint">Anexe o arquivo do contrato antes de enviar ao cliente.</p>
@@ -255,8 +281,24 @@ export default function ContratoPanel({ projetoId, onContratoAtualizado }: Props
               </div>
             </>
           ) : null}
-        </AdminFormFields>
+        </>
       )}
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <DashboardCard title="Contrato" titleId="cont-sec-principal" actions={acoesNova}>
+        {conteudo}
+      </DashboardCard>
+    );
+  }
+
+  return (
+    <AdminFormSection title="Contrato" titleId="cont-sec-principal" actions={acoesNova}>
+      {conteudo}
     </AdminFormSection>
   );
-}
+});
+
+export default ContratoPanel;

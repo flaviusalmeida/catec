@@ -152,12 +152,23 @@ export default function ProjetosPage() {
   }, [sucesso]);
 
   useEffect(() => {
-    const msg = (location.state as { sucesso?: string } | null)?.sucesso;
+    const state = location.state as { sucesso?: string; editarProjetoId?: number } | null;
+    const msg = state?.sucesso;
     if (msg) {
       setSucesso(msg);
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.pathname, location.state, navigate]);
+
+  useEffect(() => {
+    const editarId = (location.state as { editarProjetoId?: number } | null)?.editarProjetoId;
+    if (!editarId || carregando || lista.length === 0) return;
+    const p = lista.find((x) => x.id === editarId);
+    if (p) {
+      abrirEditar(p);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, carregando, lista, navigate, location.pathname]);
 
   function limparFiltros() {
     setFiltroTitulo("");
