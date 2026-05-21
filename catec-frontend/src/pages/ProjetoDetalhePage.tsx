@@ -109,32 +109,29 @@ export default function ProjetoDetalhePage() {
 
             <div className="proj-detalhe-layout">
               <div className="proj-detalhe-main">
-                <nav className="proj-detalhe-tabs" aria-label="Seções do projeto">
-                  {TABS.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      className={
-                        tab === t.id ? "proj-detalhe-tabs__btn proj-detalhe-tabs__btn--active" : "proj-detalhe-tabs__btn"
-                      }
-                      aria-selected={tab === t.id}
-                      onClick={() => setTab(t.id)}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </nav>
+                <div className="proj-detalhe-tabs-shell">
+                  <nav className="proj-detalhe-tabs" aria-label="Seções do projeto">
+                    {TABS.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        className={
+                          tab === t.id
+                            ? "proj-detalhe-tabs__btn proj-detalhe-tabs__btn--active"
+                            : "proj-detalhe-tabs__btn"
+                        }
+                        aria-selected={tab === t.id}
+                        onClick={() => setTab(t.id)}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </nav>
 
-                <div className="proj-detalhe-tab-panel">
+                  <div className="proj-detalhe-tab-panel">
                   {tab === "geral" ? (
                     <>
-                      <ProjetoTabGeral
-                        projeto={fluxo.projeto}
-                        isAdmin={isAdmin}
-                        onEditarCliente={() =>
-                          navigate(`/app/clientes/${fluxo.projeto!.clienteId}/editar`)
-                        }
-                      />
+                      <ProjetoTabGeral projeto={fluxo.projeto} />
                       <ProjetoTabGeralEscopo projeto={fluxo.projeto} />
                     </>
                   ) : null}
@@ -167,13 +164,14 @@ export default function ProjetoDetalhePage() {
                   {tab === "interacoes" ? (
                     <>
                       <ProjetoTabInteracoes interacoes={fluxo.interacoes} />
-                      <p className="proj-detalhe-hint" style={{ marginTop: "1rem" }}>
+                      <p className="proj-detalhe-hint proj-detalhe-block">
                         Use &quot;Registrar interação&quot; no topo da página para incluir uma nova entrada.
                       </p>
                     </>
                   ) : null}
 
                   {tab === "historico" ? <ProjetoTabHistorico rows={fluxo.historicoDocs} /> : null}
+                  </div>
                 </div>
               </div>
 

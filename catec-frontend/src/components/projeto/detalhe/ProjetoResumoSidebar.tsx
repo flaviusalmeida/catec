@@ -39,14 +39,14 @@ export default function ProjetoResumoSidebar({ projeto, propostaAtual, contrato,
               {contrato ? STATUS_CONTRATO_ROTULO[contrato.status] : "—"}
             </span>
           </li>
-          {ultimaInteracao ? (
-            <li>
-              <span className="proj-detalhe-resumo-list__label">Última interação</span>
-              <span className="proj-detalhe-resumo-list__value proj-detalhe-resumo-list__value--muted">
-                {new Date(ultimaInteracao.criadoEm).toLocaleDateString("pt-BR")}
-              </span>
-            </li>
-          ) : null}
+          <li>
+            <span className="proj-detalhe-resumo-list__label">Última interação</span>
+            <span className="proj-detalhe-resumo-list__value proj-detalhe-resumo-list__value--muted">
+              {ultimaInteracao
+                ? new Date(ultimaInteracao.criadoEm).toLocaleDateString("pt-BR")
+                : "—"}
+            </span>
+          </li>
         </ul>
       </DashboardCard>
     </div>

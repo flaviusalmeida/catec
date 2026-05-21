@@ -10,7 +10,7 @@ import {
   AdminFormSection,
 } from "../layout/entityFormKit";
 import FileRow from "../projeto/detalhe/FileRow";
-import { DashboardCard, formatarDataCurta, InfoGrid, InfoItem } from "../projeto/detalhe/detalheUi";
+import { DashboardCard, formatarDataCurta, InfoGrid, InfoItem, SectionLabel } from "../projeto/detalhe/detalheUi";
 import EmptyState from "../ui/EmptyState";
 import InlineAlert from "../ui/InlineAlert";
 import { mensagemErroApi } from "../../utils/apiError";
@@ -232,54 +232,104 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
             </AdminFormFields>
           )}
 
-          <AdminFormDivider />
-
-          <p className="proposta-panel__subtitulo">Documento do contrato</p>
-
-          {temAnexo ? (
-            <div className="proj-detalhe-file-rows">
-              {documentos.map((d) => (
-                <FileRow
-                  key={d.id}
-                  nomeArquivo={d.nomeOriginal}
-                  meta={`Versão ${d.versao}${d.criadoEm ? ` • ${formatarDataCurta(d.criadoEm)}` : ""}${d.uploadedPorNome ? ` • ${d.uploadedPorNome}` : ""}`}
-                  onDownload={() => baixarDocumento(d)}
-                />
-              ))}
-            </div>
-          ) : podeUpload ? (
-            <div className="proposta-panel__upload">
-              <p className="proposta-panel__hint">Anexe o arquivo do contrato antes de enviar ao cliente.</p>
-              <FormField label="Arquivo" htmlFor="cont-arquivo-upload">
-                <FieldControl
-                  id="cont-arquivo-upload"
-                  type="file"
-                  className="clientes-input"
-                  variant="modal"
-                  accept=".pdf,.doc,.docx,image/jpeg,image/png"
-                  onChange={(e) => setArquivoUpload(e.target.files?.[0] ?? null)}
-                  disabled={processando}
-                />
-              </FormField>
-              <PrimaryButton disabled={processando || !arquivoUpload} onClick={() => void enviarDocumento()}>
-                Anexar arquivo
-              </PrimaryButton>
+          {embedded ? (
+            <div className="proj-detalhe-block">
+              <SectionLabel>Documento do contrato</SectionLabel>
+              {temAnexo ? (
+                <div className="proj-detalhe-file-rows">
+                  {documentos.map((d) => (
+                    <FileRow
+                      key={d.id}
+                      nomeArquivo={d.nomeOriginal}
+                      meta={`Versão ${d.versao}${d.criadoEm ? ` • ${formatarDataCurta(d.criadoEm)}` : ""}${d.uploadedPorNome ? ` • ${d.uploadedPorNome}` : ""}`}
+                      onDownload={() => baixarDocumento(d)}
+                    />
+                  ))}
+                </div>
+              ) : podeUpload ? (
+                <div className="proposta-panel__upload">
+                  <p className="proposta-panel__hint">Anexe o arquivo do contrato antes de enviar ao cliente.</p>
+                  <FormField label="Arquivo" htmlFor="cont-arquivo-upload">
+                    <FieldControl
+                      id="cont-arquivo-upload"
+                      type="file"
+                      className="clientes-input"
+                      variant="modal"
+                      accept=".pdf,.doc,.docx,image/jpeg,image/png"
+                      onChange={(e) => setArquivoUpload(e.target.files?.[0] ?? null)}
+                      disabled={processando}
+                    />
+                  </FormField>
+                  <PrimaryButton disabled={processando || !arquivoUpload} onClick={() => void enviarDocumento()}>
+                    Anexar arquivo
+                  </PrimaryButton>
+                </div>
+              ) : (
+                <p className="proposta-panel__hint" role="status">
+                  Nenhum documento anexado.
+                </p>
+              )}
             </div>
           ) : (
-            <p className="proposta-panel__hint" role="status">
-              Nenhum documento anexado.
-            </p>
+            <>
+              <AdminFormDivider />
+              <p className="proposta-panel__subtitulo">Documento do contrato</p>
+              {temAnexo ? (
+                <div className="proj-detalhe-file-rows">
+                  {documentos.map((d) => (
+                    <FileRow
+                      key={d.id}
+                      nomeArquivo={d.nomeOriginal}
+                      meta={`Versão ${d.versao}${d.criadoEm ? ` • ${formatarDataCurta(d.criadoEm)}` : ""}${d.uploadedPorNome ? ` • ${d.uploadedPorNome}` : ""}`}
+                      onDownload={() => baixarDocumento(d)}
+                    />
+                  ))}
+                </div>
+              ) : podeUpload ? (
+                <div className="proposta-panel__upload">
+                  <p className="proposta-panel__hint">Anexe o arquivo do contrato antes de enviar ao cliente.</p>
+                  <FormField label="Arquivo" htmlFor="cont-arquivo-upload">
+                    <FieldControl
+                      id="cont-arquivo-upload"
+                      type="file"
+                      className="clientes-input"
+                      variant="modal"
+                      accept=".pdf,.doc,.docx,image/jpeg,image/png"
+                      onChange={(e) => setArquivoUpload(e.target.files?.[0] ?? null)}
+                      disabled={processando}
+                    />
+                  </FormField>
+                  <PrimaryButton disabled={processando || !arquivoUpload} onClick={() => void enviarDocumento()}>
+                    Anexar arquivo
+                  </PrimaryButton>
+                </div>
+              ) : (
+                <p className="proposta-panel__hint" role="status">
+                  Nenhum documento anexado.
+                </p>
+              )}
+            </>
           )}
 
           {podeEnviarCliente ? (
-            <>
-              <AdminFormDivider />
-              <div className="proposta-panel__acoes">
-                <PrimaryButton disabled={processando} onClick={() => void enviarAoCliente()}>
-                  Enviar ao cliente
-                </PrimaryButton>
+            embedded ? (
+              <div className="proj-detalhe-block">
+                <div className="proposta-panel__acoes">
+                  <PrimaryButton disabled={processando} onClick={() => void enviarAoCliente()}>
+                    Enviar ao cliente
+                  </PrimaryButton>
+                </div>
               </div>
-            </>
+            ) : (
+              <>
+                <AdminFormDivider />
+                <div className="proposta-panel__acoes">
+                  <PrimaryButton disabled={processando} onClick={() => void enviarAoCliente()}>
+                    Enviar ao cliente
+                  </PrimaryButton>
+                </div>
+              </>
+            )
           ) : null}
         </>
       )}

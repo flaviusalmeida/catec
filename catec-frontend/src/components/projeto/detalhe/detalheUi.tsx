@@ -40,13 +40,27 @@ export function DashboardCard({
   );
 }
 
-export function InfoItem({ label, children }: { label: string; children: ReactNode }) {
+export function InfoItem({
+  label,
+  children,
+  valueClassName,
+}: {
+  label: string;
+  children: ReactNode;
+  valueClassName?: string;
+}) {
   return (
     <div className="proj-detalhe-info-item">
       <span className="proj-detalhe-info-item__label">{label}</span>
-      <span className="proj-detalhe-info-item__value">{children}</span>
+      <span className={["proj-detalhe-info-item__value", valueClassName].filter(Boolean).join(" ")}>
+        {children}
+      </span>
     </div>
   );
+}
+
+export function SectionLabel({ children }: { children: ReactNode }) {
+  return <p className="proj-detalhe-section-label">{children}</p>;
 }
 
 export function InfoGrid({ children }: { children: ReactNode }) {

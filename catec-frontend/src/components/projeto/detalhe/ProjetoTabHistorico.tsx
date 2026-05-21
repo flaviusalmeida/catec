@@ -46,7 +46,11 @@ export default function ProjetoTabHistorico({ rows, carregando }: Props) {
                   </span>
                 </td>
                 <td>
-                  <GhostButton onClick={() => void downloadDocumento(r.documentoId, r.nomeArquivo)}>
+                  <GhostButton
+                    className="proj-detalhe-table__download-btn"
+                    onClick={() => void downloadDocumento(r.documentoId, r.nomeArquivo)}
+                  >
+                    <span aria-hidden>⬇ </span>
                     Baixar
                   </GhostButton>
                 </td>
@@ -82,7 +86,11 @@ export default function ProjetoTabHistorico({ rows, carregando }: Props) {
               </span>
             </div>
             <div className="proj-detalhe-historico-card__row">
-              <GhostButton onClick={() => void downloadDocumento(r.documentoId, r.nomeArquivo)}>
+              <GhostButton
+                className="proj-detalhe-table__download-btn"
+                onClick={() => void downloadDocumento(r.documentoId, r.nomeArquivo)}
+              >
+                <span aria-hidden>⬇ </span>
                 Baixar
               </GhostButton>
             </div>

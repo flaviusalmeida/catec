@@ -1,25 +1,27 @@
-import GhostButton from "../../buttons/GhostButton";
-
 type Props = {
   nomeArquivo: string;
   meta?: string;
   onDownload: () => void;
-  downloadLabel?: string;
 };
 
-export default function FileRow({ nomeArquivo, meta, onDownload, downloadLabel = "Baixar" }: Props) {
+export default function FileRow({ nomeArquivo, meta, onDownload }: Props) {
   return (
     <div className="proj-detalhe-file-row">
-      <span className="proj-detalhe-file-row__icon" aria-hidden>
-        📄
-      </span>
-      <div className="proj-detalhe-file-row__info">
-        <span className="proj-detalhe-file-row__nome">{nomeArquivo}</span>
+      <div className="proj-detalhe-file-row__content">
+        <div className="proj-detalhe-file-row__file">
+          <span className="proj-detalhe-file-row__icon" aria-hidden>
+            📄
+          </span>
+          <span className="proj-detalhe-file-row__nome">{nomeArquivo}</span>
+        </div>
         {meta ? <span className="proj-detalhe-file-row__meta">{meta}</span> : null}
       </div>
-      <GhostButton className="proj-detalhe-file-row__btn" onClick={onDownload}>
-        {downloadLabel}
-      </GhostButton>
+      <button type="button" className="proj-detalhe-file-row__download" onClick={onDownload}>
+        <span className="proj-detalhe-file-row__download-icon" aria-hidden>
+          ⬇
+        </span>
+        Baixar
+      </button>
     </div>
   );
 }
