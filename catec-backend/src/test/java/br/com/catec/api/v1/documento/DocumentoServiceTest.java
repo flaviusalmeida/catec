@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -165,6 +166,40 @@ class DocumentoServiceTest {
         DocumentoResponse res = service.upload(TipoVinculoDocumento.PROJETO, 5L, null, multipartFile, principal);
 
         assertEquals(3, res.versao());
+    }
+
+    @Test
+    void uploadPropostaSubstituindo_quandoJaExisteAnexo_deveRemoverAnterioresEGerarVersao1() throws Exception {
+        Documento antigo = new Documento();
+        antigo.setChaveStorage("chave-antiga");
+        antigo.setVersao(3);
+        when(propostaRepository.existsById(20L)).thenReturn(true);
+        when(documentoRepository.findByTipoVinculoAndVinculoIdOrderByVersaoDesc(
+                        TipoVinculoDocumento.PROPOSTA, 20L))
+                .thenReturn(List.of(antigo));
+        when(documentoRepository.findMaxVersao(TipoVinculoDocumento.PROPOSTA, 20L)).thenReturn(0);
+        when(multipartFile.isEmpty()).thenReturn(false);
+        when(multipartFile.getSize()).thenReturn(4L);
+        when(multipartFile.getContentType()).thenReturn("application/pdf");
+        when(multipartFile.getOriginalFilename()).thenReturn("novo.pdf");
+        when(multipartFile.getInputStream()).thenReturn(new ByteArrayInputStream("pdf".getBytes(StandardCharsets.UTF_8)));
+        Usuario uploader = new Usuario();
+        org.springframework.test.util.ReflectionTestUtils.setField(uploader, "id", 2L);
+        uploader.setNome("Colab");
+        when(usuarioRepository.getReferenceById(2L)).thenReturn(uploader);
+        when(documentoRepository.save(any(Documento.class))).thenAnswer(inv -> {
+            Documento d = inv.getArgument(0);
+            org.springframework.test.util.ReflectionTestUtils.setField(d, "id", 100L);
+            return d;
+        });
+
+        DocumentoResponse res =
+                service.uploadPropostaSubstituindo(20L, "PROPOSTA_COMERCIAL", multipartFile, principal);
+
+        assertEquals(1, res.versao());
+        verify(documentStorage).delete("chave-antiga");
+        verify(documentoRepository).delete(antigo);
+        verify(documentoRepository).findMaxVersao(TipoVinculoDocumento.PROPOSTA, 20L);
     }
 
     @Test

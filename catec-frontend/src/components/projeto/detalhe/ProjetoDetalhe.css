@@ -618,6 +618,39 @@
   padding-left: 1.625rem;
 }
 
+.proj-detalhe-file-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.proj-detalhe-file-row__replace {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(0, 45, 75, 0.2);
+  border-radius: 8px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--catec-color-brand, #002d4b);
+  cursor: pointer;
+  transition:
+    opacity 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.proj-detalhe-file-row__replace:hover {
+  opacity: 0.92;
+  background: #f8fafc;
+  border-color: var(--catec-color-brand, #002d4b);
+}
+
 .proj-detalhe-file-row__download {
   flex-shrink: 0;
   display: inline-flex;
@@ -870,6 +903,11 @@
 
   .proj-detalhe-file-row {
     grid-template-columns: 1fr;
+  }
+
+  .proj-detalhe-file-row__actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .proj-detalhe-file-row__download {

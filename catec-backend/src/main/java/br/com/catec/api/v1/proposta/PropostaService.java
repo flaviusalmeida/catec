@@ -162,6 +162,9 @@ public class PropostaService {
         exigirAdministrativo(principal);
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
         garantirUploadDocumento(proposta);
+        if (proposta.getStatus() == PropostaStatus.RASCUNHO) {
+            return documentoService.uploadPropostaSubstituindo(propostaId, tipoArquivo, file, principal);
+        }
         return documentoService.uploadProposta(propostaId, tipoArquivo, file, principal);
     }
 

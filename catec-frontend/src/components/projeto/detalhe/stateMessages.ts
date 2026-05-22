@@ -11,3 +11,8 @@ export const STATE_LOCKED_SUBTITLE = "Disponível em etapas posteriores.";
 export const STATE_LOCKED_GENERIC_TITLE = "Indisponível no momento.";
 
 export const STATE_PROPOSTA_SEM_CLIENTE = "Associe um cliente ao projeto.";
+
+export const STATE_PROPOSTA_EM_REVISAO_TITLE = "Em revisão.";
+export const STATE_PROPOSTA_EM_REVISAO_DESC = "Aguardando análise do responsável.";
+export const STATE_PROPOSTA_APROVADA_TITLE = "Proposta aprovada.";
+export const STATE_PROPOSTA_REPROVADA_TITLE = "Proposta reprovada.";

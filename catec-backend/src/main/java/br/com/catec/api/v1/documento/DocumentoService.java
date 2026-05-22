@@ -82,10 +82,35 @@ public class DocumentoService {
         return persistirUpload(TipoVinculoDocumento.PROPOSTA, propostaId, tipoArquivo, file, principal);
     }
 
+    /** Remove anexos atuais e grava um único documento (versão 1) — uso em rascunho / substituir. */
+    @Transactional
+    public DocumentoResponse uploadPropostaSubstituindo(
+            Long propostaId, String tipoArquivo, MultipartFile file, UsuarioAutenticado principal) {
+        removerDocumentosDoVinculo(TipoVinculoDocumento.PROPOSTA, propostaId);
+        return persistirUpload(TipoVinculoDocumento.PROPOSTA, propostaId, tipoArquivo, file, principal);
+    }
+
     @Transactional
     public DocumentoResponse uploadContrato(
             Long contratoId, String tipoArquivo, MultipartFile file, UsuarioAutenticado principal) {
         return persistirUpload(TipoVinculoDocumento.CONTRATO, contratoId, tipoArquivo, file, principal);
+    }
+
+    /** Remove anexos atuais e grava um único documento (versão 1) — uso em rascunho / substituir. */
+    @Transactional
+    public DocumentoResponse uploadContratoSubstituindo(
+            Long contratoId, String tipoArquivo, MultipartFile file, UsuarioAutenticado principal) {
+        removerDocumentosDoVinculo(TipoVinculoDocumento.CONTRATO, contratoId);
+        return persistirUpload(TipoVinculoDocumento.CONTRATO, contratoId, tipoArquivo, file, principal);
+    }
+
+    private void removerDocumentosDoVinculo(TipoVinculoDocumento tipoVinculo, Long vinculoId) {
+        List<Documento> existentes =
+                documentoRepository.findByTipoVinculoAndVinculoIdOrderByVersaoDesc(tipoVinculo, vinculoId);
+        for (Documento doc : existentes) {
+            documentStorage.delete(doc.getChaveStorage());
+            documentoRepository.delete(doc);
+        }
     }
 
     private DocumentoResponse persistirUpload(

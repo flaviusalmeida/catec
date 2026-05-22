@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { apiFetch } from "../../api/http";
 import { useAuth } from "../../auth/AuthContext";
 import PrimaryButton from "../buttons/PrimaryButton";
@@ -13,9 +13,11 @@ import FileRow from "../projeto/detalhe/FileRow";
 import { DashboardCard, formatarDataCurta, InfoGrid, InfoItem, SectionLabel } from "../projeto/detalhe/detalheUi";
 import { STATE_EMPTY_CONTRATO } from "../projeto/detalhe/stateMessages";
 import StateCard from "../ui/StateCard";
+import UploadCard from "../ui/UploadCard";
 import InlineAlert from "../ui/InlineAlert";
 import { mensagemErroApi } from "../../utils/apiError";
 import { downloadDocumento } from "../../utils/downloadDocumento";
+import { documentoMaisRecente, documentosParaExibicao } from "../../utils/documentoUtils";
 import type { DocumentoAnexo } from "../../pages/propostaTypes";
 import type { Contrato } from "../../pages/contratoTypes";
 import { STATUS_CONTRATO_ROTULO, STATUS_CONTRATO_UPLOAD } from "../../pages/contratoTypes";
@@ -45,7 +47,7 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
   const [erro, setErro] = useState<string | null>(null);
   const [acaoErro, setAcaoErro] = useState<string | null>(null);
   const [processando, setProcessando] = useState(false);
-  const [arquivoUpload, setArquivoUpload] = useState<File | null>(null);
+  const uploadEmAndamentoRef = useRef(false);
 
   const temAnexo = documentos.length > 0;
   const podeCriar = isAdmin && !contrato && !processando;
@@ -53,14 +55,17 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
     isAdmin &&
     contrato != null &&
     STATUS_CONTRATO_UPLOAD.includes(contrato.status) &&
-    (contrato.status === "AGUARDANDO_AJUSTE_ADM" || !temAnexo);
+    (contrato.status === "RASCUNHO" ||
+      contrato.status === "AGUARDANDO_AJUSTE_ADM" ||
+      !temAnexo);
   const podeEnviarCliente = isAdmin && contrato?.status === "RASCUNHO" && temAnexo && !processando;
 
   const carregarDocumentos = useCallback(
-    async (contratoId: number) => {
+    async (contratoId: number, status: Contrato["status"] | undefined) => {
       try {
         const res = await apiFetch(`/api/v1/projetos/${projetoId}/contratos/${contratoId}/documentos`);
-        setDocumentos(res.ok ? ((await res.json()) as DocumentoAnexo[]) : []);
+        const docs = res.ok ? ((await res.json()) as DocumentoAnexo[]) : [];
+        setDocumentos(documentosParaExibicao(docs, status === "RASCUNHO"));
       } catch {
         setDocumentos([]);
       }
@@ -88,7 +93,7 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
       setContrato(atual);
       setAcaoErro(null);
       if (atual) {
-        await carregarDocumentos(atual.id);
+        await carregarDocumentos(atual.id, atual.status);
       } else {
         setDocumentos([]);
       }
@@ -122,12 +127,13 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
     }
   }
 
-  async function enviarDocumento() {
-    if (!contrato || !arquivoUpload) return;
+  async function enviarDocumento(arquivo: File) {
+    if (!contrato || uploadEmAndamentoRef.current) return;
+    uploadEmAndamentoRef.current = true;
     setProcessando(true);
     setAcaoErro(null);
     const fd = new FormData();
-    fd.append("file", arquivoUpload);
+    fd.append("file", arquivo);
     fd.append("tipoArquivo", "CONTRATO");
     try {
       const res = await apiFetch(
@@ -138,14 +144,23 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
         setAcaoErro(await mensagemErroApi(res, "Erro no upload"));
         return;
       }
-      setArquivoUpload(null);
-      await carregarDocumentos(contrato.id);
+      await carregarDocumentos(contrato.id, contrato.status);
+      onContratoAtualizado?.();
     } catch {
       setAcaoErro("Falha de rede no upload.");
     } finally {
+      uploadEmAndamentoRef.current = false;
       setProcessando(false);
     }
   }
+
+  const documentoAtual = documentoMaisRecente(documentos);
+  const uploadComSubstituicao = Boolean(
+    podeUpload &&
+      (contrato?.status === "RASCUNHO" ||
+        contrato?.status === "AGUARDANDO_AJUSTE_ADM" ||
+        !temAnexo),
+  );
 
   async function enviarAoCliente() {
     if (!contrato || !podeEnviarCliente) return;
@@ -227,10 +242,55 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
             </AdminFormFields>
           )}
 
-          {embedded ? (
-            <div className="proj-detalhe-block">
-              <SectionLabel>Documento do contrato</SectionLabel>
-              {temAnexo ? (
+          {uploadComSubstituicao ? (
+            embedded ? (
+              <div className="proj-detalhe-block">
+                <UploadCard
+                  title="Enviar contrato"
+                  file={
+                    documentoAtual
+                      ? {
+                          nomeArquivo: documentoAtual.nomeOriginal,
+                          meta: `Versão ${documentoAtual.versao}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ""}${documentoAtual.uploadedPorNome ? ` • ${documentoAtual.uploadedPorNome}` : ""}`,
+                        }
+                      : null
+                  }
+                  documentSectionTitle={documentoAtual ? "Documento do contrato" : undefined}
+                  uploading={processando}
+                  disabled={processando}
+                  onUpload={(arquivo) => void enviarDocumento(arquivo)}
+                  onDownload={documentoAtual ? () => baixarDocumento(documentoAtual) : undefined}
+                  onError={setAcaoErro}
+                  inputId="cont-arquivo-upload"
+                />
+              </div>
+            ) : (
+              <>
+                <AdminFormDivider />
+                <UploadCard
+                  title="Enviar contrato"
+                  file={
+                    documentoAtual
+                      ? {
+                          nomeArquivo: documentoAtual.nomeOriginal,
+                          meta: `Versão ${documentoAtual.versao}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ""}${documentoAtual.uploadedPorNome ? ` • ${documentoAtual.uploadedPorNome}` : ""}`,
+                        }
+                      : null
+                  }
+                  documentSectionTitle={documentoAtual ? "Documento do contrato" : undefined}
+                  uploading={processando}
+                  disabled={processando}
+                  onUpload={(arquivo) => void enviarDocumento(arquivo)}
+                  onDownload={documentoAtual ? () => baixarDocumento(documentoAtual) : undefined}
+                  onError={setAcaoErro}
+                  inputId="cont-arquivo-upload-standalone"
+                />
+              </>
+            )
+          ) : temAnexo ? (
+            embedded ? (
+              <div className="proj-detalhe-block">
+                <SectionLabel>Documento do contrato</SectionLabel>
                 <div className="proj-detalhe-file-rows">
                   {documentos.map((d) => (
                     <FileRow
@@ -241,35 +301,11 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
                     />
                   ))}
                 </div>
-              ) : podeUpload ? (
-                <div className="proposta-panel__upload">
-                  <p className="proposta-panel__hint">Anexe o arquivo do contrato antes de enviar ao cliente.</p>
-                  <FormField label="Arquivo" htmlFor="cont-arquivo-upload">
-                    <FieldControl
-                      id="cont-arquivo-upload"
-                      type="file"
-                      className="clientes-input"
-                      variant="modal"
-                      accept=".pdf,.doc,.docx,image/jpeg,image/png"
-                      onChange={(e) => setArquivoUpload(e.target.files?.[0] ?? null)}
-                      disabled={processando}
-                    />
-                  </FormField>
-                  <PrimaryButton disabled={processando || !arquivoUpload} onClick={() => void enviarDocumento()}>
-                    Anexar arquivo
-                  </PrimaryButton>
-                </div>
-              ) : (
-                <p className="proposta-panel__hint" role="status">
-                  Nenhum documento anexado.
-                </p>
-              )}
-            </div>
-          ) : (
-            <>
-              <AdminFormDivider />
-              <p className="proposta-panel__subtitulo">Documento do contrato</p>
-              {temAnexo ? (
+              </div>
+            ) : (
+              <>
+                <AdminFormDivider />
+                <p className="proposta-panel__subtitulo">Documento do contrato</p>
                 <div className="proj-detalhe-file-rows">
                   {documentos.map((d) => (
                     <FileRow
@@ -280,31 +316,9 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
                     />
                   ))}
                 </div>
-              ) : podeUpload ? (
-                <div className="proposta-panel__upload">
-                  <p className="proposta-panel__hint">Anexe o arquivo do contrato antes de enviar ao cliente.</p>
-                  <FormField label="Arquivo" htmlFor="cont-arquivo-upload">
-                    <FieldControl
-                      id="cont-arquivo-upload"
-                      type="file"
-                      className="clientes-input"
-                      variant="modal"
-                      accept=".pdf,.doc,.docx,image/jpeg,image/png"
-                      onChange={(e) => setArquivoUpload(e.target.files?.[0] ?? null)}
-                      disabled={processando}
-                    />
-                  </FormField>
-                  <PrimaryButton disabled={processando || !arquivoUpload} onClick={() => void enviarDocumento()}>
-                    Anexar arquivo
-                  </PrimaryButton>
-                </div>
-              ) : (
-                <p className="proposta-panel__hint" role="status">
-                  Nenhum documento anexado.
-                </p>
-              )}
-            </>
-          )}
+              </>
+            )
+          ) : null}
 
           {podeEnviarCliente ? (
             embedded ? (

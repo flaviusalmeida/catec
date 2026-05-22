@@ -1,0 +1,68 @@
+.workflow-action-bar {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.workflow-action-bar__title {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+  letter-spacing: 0.01em;
+}
+
+.workflow-action-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.workflow-action-bar--stacked .workflow-action-bar__actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Mesma estrutura visual: altura, padding, radius e baseline */
+.workflow-action-bar__actions .primary-button,
+.workflow-action-bar__actions .secondary-button,
+.workflow-action-bar__actions .ghost-button.workflow-action-bar__danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.workflow-action-bar__actions .ghost-button.workflow-action-bar__danger {
+  border: 1px solid #fecaca;
+  background: #fff;
+  color: #991b1b;
+}
+
+.workflow-action-bar__actions .ghost-button.workflow-action-bar__danger:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+@media (max-width: 480px) {
+  .workflow-action-bar--stack-mobile .workflow-action-bar__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .workflow-action-bar--stack-mobile .workflow-action-bar__actions .primary-button,
+  .workflow-action-bar--stack-mobile .workflow-action-bar__actions .secondary-button,
+  .workflow-action-bar--stack-mobile .workflow-action-bar__actions .ghost-button.workflow-action-bar__danger {
+    width: 100%;
+  }
+}

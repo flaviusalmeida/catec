@@ -116,6 +116,9 @@ public class ContratoService {
         if (!STATUS_UPLOAD_DOCUMENTO.contains(contrato.getStatus())) {
             throw badRequest("Não é possível anexar documentos no estado atual do contrato.");
         }
+        if (contrato.getStatus() == ContratoStatus.RASCUNHO) {
+            return documentoService.uploadContratoSubstituindo(contrato.getId(), tipoArquivo, file, principal);
+        }
         return documentoService.uploadContrato(contrato.getId(), tipoArquivo, file, principal);
     }
 

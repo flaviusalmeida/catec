@@ -1,7 +1,14 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useState, type ReactNode } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { apiFetch } from "../../api/http";
 import { useAuth } from "../../auth/AuthContext";
-import GhostButton from "../buttons/GhostButton";
 import PrimaryButton from "../buttons/PrimaryButton";
 import FieldControl from "../form/FieldControl";
 import FormField from "../form/FormField";
@@ -23,9 +30,17 @@ import {
   STATE_PROPOSTA_SEM_CLIENTE,
 } from "../projeto/detalhe/stateMessages";
 import StateCard from "../ui/StateCard";
+import UploadCard from "../ui/UploadCard";
+import WorkflowActionBar, { type WorkflowAction } from "../ui/WorkflowActionBar";
+import {
+  propostaWorkflowPermissions,
+  resolvePropostaWorkflowUi,
+  type PropostaWorkflowActionKey,
+} from "./propostaWorkflowUi";
 import InlineAlert from "../ui/InlineAlert";
 import { mensagemErroApi } from "../../utils/apiError";
 import { downloadDocumento } from "../../utils/downloadDocumento";
+import { documentoMaisRecente, documentosParaExibicao } from "../../utils/documentoUtils";
 import type {
   DocumentoAnexo,
   Proposta,
@@ -107,7 +122,7 @@ const PropostaPanel = forwardRef<PropostaPanelHandle, Props>(function PropostaPa
   const [erro, setErro] = useState<string | null>(null);
   const [acaoErro, setAcaoErro] = useState<string | null>(null);
   const [processando, setProcessando] = useState(false);
-  const [arquivoUpload, setArquivoUpload] = useState<File | null>(null);
+  const uploadEmAndamentoRef = useRef(false);
   const selecionada = propostas.find((p) => p.id === selecionadaId) ?? null;
   const temAnexo = documentosVersao.length > 0;
   const temPropostaAtiva = propostas.some((p) => STATUS_PROPOSTA_ATIVA.includes(p.status));
@@ -139,7 +154,13 @@ const PropostaPanel = forwardRef<PropostaPanelHandle, Props>(function PropostaPa
         );
 
         const selecionadaDetalhe = detalhes.find((d) => d.proposta.id === propostaSelecionadaId);
-        setDocumentosVersao(selecionadaDetalhe?.docs ?? []);
+        const statusSelecionada = selecionadaDetalhe?.proposta.status;
+        setDocumentosVersao(
+          documentosParaExibicao(
+            selecionadaDetalhe?.docs ?? [],
+            statusSelecionada === "RASCUNHO",
+          ),
+        );
 
         const enviados: DocumentoHistorico[] = detalhes
           .filter((d) => STATUS_PROPOSTA_ENVIADA.includes(d.proposta.status) && d.docs.length > 0)
@@ -323,12 +344,13 @@ const PropostaPanel = forwardRef<PropostaPanelHandle, Props>(function PropostaPa
     }
   }
 
-  async function enviarDocumento() {
-    if (!selecionadaId || !arquivoUpload) return;
+  async function enviarDocumento(arquivo: File) {
+    if (!selecionadaId || uploadEmAndamentoRef.current) return;
+    uploadEmAndamentoRef.current = true;
     setProcessando(true);
     setAcaoErro(null);
     const fd = new FormData();
-    fd.append("file", arquivoUpload);
+    fd.append("file", arquivo);
     fd.append("tipoArquivo", "PROPOSTA_COMERCIAL");
     try {
       const res = await apiFetch(
@@ -339,17 +361,18 @@ const PropostaPanel = forwardRef<PropostaPanelHandle, Props>(function PropostaPa
         setAcaoErro(await mensagemErroApi(res, "Erro no upload"));
         return;
       }
-      setArquivoUpload(null);
       await recarregarTudo(selecionadaId);
     } catch {
       setAcaoErro("Falha de rede no upload.");
     } finally {
+      uploadEmAndamentoRef.current = false;
       setProcessando(false);
     }
   }
 
   const podeUpload = isAdmin && selecionada && STATUS_PROPOSTA_UPLOAD.includes(selecionada.status);
-  const mostrarFormularioUpload = podeUpload && selecionada?.status === "RASCUNHO" && !temAnexo;
+  const uploadRascunho = Boolean(podeUpload && selecionada?.status === "RASCUNHO");
+  const documentoAtual = documentoMaisRecente(documentosVersao);
   const mostrarProposta = !carregando && propostas.length > 0 && selecionada != null;
   const documentosEnviadosHistorico =
     selecionadaId != null
@@ -358,9 +381,44 @@ const PropostaPanel = forwardRef<PropostaPanelHandle, Props>(function PropostaPa
 
   const rascunhoComAnexo = isAdmin && selecionada?.status === "RASCUNHO" && temAnexo;
 
-  const elaboracaoTexto = selecionada ? selecionada.elaboradoPorNome : "";
+  const workflowUi =
+    selecionada != null
+      ? resolvePropostaWorkflowUi(selecionada.status, {
+          hasAttachment: temAnexo,
+          permissions: { isAdmin, isSocio },
+        })
+      : { kind: "none" as const };
 
-  const mostrarDocumentoVersaoAtual = selecionada != null;
+  const workflowPermissionList = propostaWorkflowPermissions({ isAdmin, isSocio });
+
+  function acaoWorkflow(key: PropostaWorkflowActionKey): () => void {
+    switch (key) {
+      case "aprovar-rascunho":
+        return () => void aprovarProposta();
+      case "solicitar-revisao":
+        return () => void enviarParaAvaliacao();
+      case "aprovar-socio":
+        return () => void executarAcao("/aprovar-socio");
+      case "reprovar-socio":
+        return () => void executarAcao("/devolver-rascunho");
+      case "enviar-cliente":
+        return () => void executarAcao("/enviar-cliente");
+    }
+  }
+
+  const workflowActions: WorkflowAction[] =
+    workflowUi.kind === "actions"
+      ? workflowUi.actions.map((def) => ({
+          id: def.key,
+          label: def.label,
+          variant: def.variant,
+          permission: def.permission,
+          disabled: processando,
+          onClick: acaoWorkflow(def.key),
+        }))
+      : [];
+
+  const elaboracaoTexto = selecionada ? selecionada.elaboradoPorNome : "";
 
   function baixarDocumento(doc: DocumentoAnexo) {
     void downloadDocumento(doc.id, doc.nomeOriginal).catch(() => setAcaoErro("Download falhou."));
@@ -419,63 +477,54 @@ const PropostaPanel = forwardRef<PropostaPanelHandle, Props>(function PropostaPa
 
         {mostrarProposta ? (
           <>
-            {(mostrarDocumentoVersaoAtual || mostrarFormularioUpload) && (
+            {uploadRascunho ? (
               <PanelBloco embedded={embedded}>
-                {mostrarDocumentoVersaoAtual ? (
-                  <>
-                    <PanelSubtitulo embedded={embedded}>
-                      {STATUS_PROPOSTA_ENVIADA.includes(selecionada!.status)
-                        ? "Documento da proposta"
-                        : "Documento da proposta em elaboração"}
-                    </PanelSubtitulo>
-
-                    {documentosVersao.length > 0 ? (
-                      <div className="proj-detalhe-file-rows">
-                        {documentosVersao.map((d) => (
-                          <FileRow
-                            key={d.id}
-                            nomeArquivo={d.nomeOriginal}
-                            meta={`Versão ${selecionada!.versao}${d.criadoEm ? ` • ${formatarDataCurta(d.criadoEm)}` : ""}`}
-                            onDownload={() => baixarDocumento(d)}
-                          />
-                        ))}
-                      </div>
-                    ) : mostrarFormularioUpload ? (
-                      <p className="proposta-panel__hint">
-                        Anexe o arquivo da proposta comercial para enviar para avaliação ou aprovar.
-                      </p>
-                    ) : (
-                      <p className="proposta-panel__hint" role="status">
-                        Nenhum documento nesta versão.
-                      </p>
-                    )}
-                  </>
-                ) : null}
-
-                {mostrarFormularioUpload ? (
-                  <div className="proposta-panel__upload">
-                    <FormField label="Arquivo" htmlFor="prop-arquivo-upload">
-                      <FieldControl
-                        id="prop-arquivo-upload"
-                        type="file"
-                        className="clientes-input"
-                        variant="modal"
-                        accept=".pdf,.doc,.docx,image/jpeg,image/png"
-                        onChange={(e) => setArquivoUpload(e.target.files?.[0] ?? null)}
-                        disabled={processando}
-                      />
-                    </FormField>
-                    <PrimaryButton disabled={processando || !arquivoUpload} onClick={() => void enviarDocumento()}>
-                      Anexar arquivo
-                    </PrimaryButton>
-                  </div>
-                ) : null}
+                <UploadCard
+                  title="Enviar proposta"
+                  file={
+                    documentoAtual
+                      ? {
+                          nomeArquivo: documentoAtual.nomeOriginal,
+                          meta: `Versão ${selecionada!.versao}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ""}`,
+                        }
+                      : null
+                  }
+                  documentSectionTitle={
+                    documentoAtual ? "Documento da proposta em elaboração" : undefined
+                  }
+                  uploading={processando}
+                  disabled={processando}
+                  onUpload={(arquivo) => void enviarDocumento(arquivo)}
+                  onDownload={documentoAtual ? () => baixarDocumento(documentoAtual) : undefined}
+                  onError={setAcaoErro}
+                  inputId="prop-arquivo-upload"
+                />
               </PanelBloco>
-            )}
+            ) : null}
+
+            {!uploadRascunho && temAnexo ? (
+              <PanelBloco embedded={embedded}>
+                <PanelSubtitulo embedded={embedded}>
+                  {STATUS_PROPOSTA_ENVIADA.includes(selecionada!.status)
+                    ? "Documento da proposta"
+                    : "Documento da proposta em elaboração"}
+                </PanelSubtitulo>
+                <div className="proj-detalhe-file-rows">
+                  {documentosVersao.map((d) => (
+                    <FileRow
+                      key={d.id}
+                      nomeArquivo={d.nomeOriginal}
+                      meta={`Versão ${selecionada!.versao}${d.criadoEm ? ` • ${formatarDataCurta(d.criadoEm)}` : ""}`}
+                      onDownload={() => baixarDocumento(d)}
+                    />
+                  ))}
+                </div>
+              </PanelBloco>
+            ) : null}
 
             {documentosEnviadosHistorico.length > 0 ? (
               <PanelBloco embedded={embedded}>
-                {!embedded && mostrarDocumentoVersaoAtual ? <AdminFormDivider /> : null}
+                {!embedded && temAnexo ? <AdminFormDivider /> : null}
                 <PanelSubtitulo embedded={embedded}>Versões anteriores</PanelSubtitulo>
                 <div className="proj-detalhe-file-rows">
                   {documentosEnviadosHistorico.map((d) => {
@@ -494,46 +543,25 @@ const PropostaPanel = forwardRef<PropostaPanelHandle, Props>(function PropostaPa
               </PanelBloco>
             ) : null}
 
-            {rascunhoComAnexo ? (
+            {workflowUi.kind === "actions" ? (
               <PanelBloco embedded={embedded}>
                 <PanelDivider embedded={embedded} />
-                <div className="proposta-panel__acoes">
-                  <GhostButton disabled={processando} onClick={() => void enviarParaAvaliacao()}>
-                    Enviar para avaliação
-                  </GhostButton>
-                  <PrimaryButton disabled={processando} onClick={() => void aprovarProposta()}>
-                    Aprovar
-                  </PrimaryButton>
-                </div>
+                <WorkflowActionBar
+                  actions={workflowActions}
+                  permissions={workflowPermissionList}
+                  status={selecionada!.status}
+                />
               </PanelBloco>
             ) : null}
 
-            {selecionada!.status === "PENDENTE_AVALIACAO_SOCIO" && isSocio ? (
+            {workflowUi.kind === "state" ? (
               <PanelBloco embedded={embedded}>
                 <PanelDivider embedded={embedded} />
-                <div className="proposta-panel__acoes">
-                  <PrimaryButton disabled={processando} onClick={() => void executarAcao("/aprovar-socio")}>
-                    Aprovar (sócio)
-                  </PrimaryButton>
-                  <GhostButton disabled={processando} onClick={() => void executarAcao("/devolver-rascunho")}>
-                    Devolver para rascunho
-                  </GhostButton>
-                </div>
-              </PanelBloco>
-            ) : null}
-
-            {selecionada!.status === "APROVADA_INTERNA" && isAdmin ? (
-              <PanelBloco embedded={embedded}>
-                <PanelDivider embedded={embedded} />
-                <PanelSubtitulo embedded={embedded}>Envio ao cliente</PanelSubtitulo>
-                <p className="proposta-panel__hint">
-                  A proposta foi aprovada internamente. Envie ao cliente para dar sequência ao fluxo.
-                </p>
-                <div className="proposta-panel__acoes">
-                  <PrimaryButton disabled={processando} onClick={() => void executarAcao("/enviar-cliente")}>
-                    Enviar ao cliente
-                  </PrimaryButton>
-                </div>
+                <StateCard
+                  type="unavailable"
+                  title={workflowUi.state.title}
+                  description={workflowUi.state.description}
+                />
               </PanelBloco>
             ) : null}
           </>
