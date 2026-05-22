@@ -7,10 +7,15 @@ import PrimaryButton from "../components/buttons/PrimaryButton";
 import DataTableSection from "../components/layout/DataTableSection";
 import InlineAlert from "../components/ui/InlineAlert";
 import ToastAlert from "../components/ui/ToastAlert";
-import FiltersCard from "../components/layout/FiltersCard";
-import PageToolbar from "../components/layout/PageToolbar";
-import RowEditButton from "../components/table/RowEditButton";
-import "../styles/admin-crud-table.css";
+import {
+  DataTable,
+  FilterCard,
+  FilterField,
+  ListPage,
+  PageHeader,
+  TableAction,
+  type DataTableColumn,
+} from "../components/list-page";
 import { formatDocumentoByTipo, onlyDigits } from "../utils/cpfCnpj";
 import { formatTelefoneBrasil } from "../utils/telefoneBrasil";
 import type { Cliente, TipoPessoa } from "./clienteTypes";
@@ -50,6 +55,39 @@ export default function ClientesPage() {
       return true;
     });
   }, [deferredDocumento, deferredNome, filtroTipo, lista]);
+
+  const columns = useMemo<DataTableColumn<Cliente>[]>(
+    () => [
+      {
+        id: "nome",
+        header: "Nome / Razão social",
+        dataLabel: "Nome / Razão social",
+        cellClassName: "data-table__cell-primary",
+        render: (c) => c.razaoSocialOuNome,
+      },
+      {
+        id: "documento",
+        header: "CPF/CNPJ",
+        dataLabel: "CPF/CNPJ",
+        render: (c) => documentoParaExibicao(c),
+      },
+      {
+        id: "telefone",
+        header: "Telefone",
+        dataLabel: "Telefone",
+        cellClassName: "data-table__cell-muted",
+        render: (c) => (c.telefone ? formatTelefoneBrasil(c.telefone) : "—"),
+      },
+      {
+        id: "email",
+        header: "E-mail",
+        dataLabel: "E-mail",
+        cellClassName: "data-table__cell-muted",
+        render: (c) => c.email ?? "-",
+      },
+    ],
+    [],
+  );
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -106,7 +144,7 @@ export default function ClientesPage() {
   }
 
   return (
-    <div className="clientes-page">
+    <ListPage>
       <ToastAlert
         open={Boolean(sucesso)}
         variant="success"
@@ -117,126 +155,86 @@ export default function ClientesPage() {
         {sucesso}
       </ToastAlert>
 
-      <div className="clientes-page-inner clientes-page-stack">
-        <PageToolbar
-          title="Clientes"
-          subtitle="Gestão de clientes."
-          actions={
-            <PrimaryButton variant="toolbar" onClick={() => navigate("/app/clientes/novo")}>
-              Novo cliente
-            </PrimaryButton>
-          }
+      <PageHeader
+        title="Clientes"
+        subtitle="Gestão de clientes."
+        actions={
+          <PrimaryButton variant="toolbar" onClick={() => navigate("/app/clientes/novo")}>
+            Novo cliente
+          </PrimaryButton>
+        }
+      />
+
+      {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
+
+      <FilterCard headingId="clientes-filtros-heading" onClear={limparFiltros}>
+        <FilterField id="flt-cliente-nome" label="Nome / Razão social">
+          <FieldControl
+            id="flt-cliente-nome"
+            value={filtroNome}
+            onChange={(e) => setFiltroNome(e.target.value)}
+            className="clientes-input"
+            variant="compact"
+            placeholder="Buscar por nome"
+            autoComplete="off"
+          />
+        </FilterField>
+        <FilterField id="flt-cliente-documento" label="CPF/CNPJ">
+          <FieldControl
+            id="flt-cliente-documento"
+            value={filtroDocumento}
+            onChange={(e) => setFiltroDocumento(e.target.value)}
+            className="clientes-input"
+            variant="compact"
+            placeholder="Buscar por CPF ou CNPJ"
+            autoComplete="off"
+          />
+        </FilterField>
+        <FilterField id="flt-cliente-tipo" label="Tipo">
+          <FieldControl
+            as="select"
+            id="flt-cliente-tipo"
+            value={filtroTipo}
+            onChange={(e) => setFiltroTipo(e.target.value as "" | TipoPessoa)}
+            className="clientes-select"
+            variant="compact"
+          >
+            <option value="">Todos</option>
+            <option value="PF">Pessoa Física</option>
+            <option value="PJ">Pessoa Jurídica</option>
+          </FieldControl>
+        </FilterField>
+      </FilterCard>
+
+      <DataTableSection
+        loading={carregando}
+        loadingLabel="Carregando lista..."
+        useSkeleton
+        empty={lista.length === 0}
+        emptyTitle="Nenhum cliente"
+        emptyDescription="Ainda não há clientes cadastrados no sistema."
+        emptyAction={
+          <PrimaryButton variant="toolbar" onClick={() => navigate("/app/clientes/novo")}>
+            Novo cliente
+          </PrimaryButton>
+        }
+        filterPending={filtrosDigitacaoPendentes}
+      >
+        <DataTable
+          columns={columns}
+          rows={listaFiltrada}
+          getRowKey={(c) => c.id}
+          onRowClick={(c) => navigate(`/app/clientes/${c.id}/editar`)}
+          filterEmptyMessage="Não há clientes que correspondam aos filtros."
+          tableClassName="data-table--clientes"
+          renderActions={(c) => (
+            <TableAction
+              ariaLabel={`Editar ${c.razaoSocialOuNome}`}
+              onClick={() => navigate(`/app/clientes/${c.id}/editar`)}
+            />
+          )}
         />
-
-        {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
-
-        <FiltersCard headingId="clientes-filtros-heading" onClear={limparFiltros}>
-          <div>
-            <label className="filters-card__label" htmlFor="flt-cliente-nome">
-              Nome / Razão social
-            </label>
-            <FieldControl
-              id="flt-cliente-nome"
-              value={filtroNome}
-              onChange={(e) => setFiltroNome(e.target.value)}
-              className="clientes-input"
-              variant="compact"
-              placeholder="Buscar por nome"
-              autoComplete="off"
-            />
-          </div>
-          <div>
-            <label className="filters-card__label" htmlFor="flt-cliente-documento">
-              CPF/CNPJ
-            </label>
-            <FieldControl
-              id="flt-cliente-documento"
-              value={filtroDocumento}
-              onChange={(e) => setFiltroDocumento(e.target.value)}
-              className="clientes-input"
-              variant="compact"
-              placeholder="Buscar por CPF ou CNPJ"
-              autoComplete="off"
-            />
-          </div>
-          <div>
-            <label className="filters-card__label" htmlFor="flt-cliente-tipo">
-              Tipo
-            </label>
-            <FieldControl
-              as="select"
-              id="flt-cliente-tipo"
-              value={filtroTipo}
-              onChange={(e) => setFiltroTipo(e.target.value as "" | TipoPessoa)}
-              className="clientes-select"
-              variant="compact"
-            >
-              <option value="">Todos</option>
-              <option value="PF">Pessoa Física</option>
-              <option value="PJ">Pessoa Jurídica</option>
-            </FieldControl>
-          </div>
-        </FiltersCard>
-
-        <DataTableSection
-          loading={carregando}
-          loadingLabel="Carregando lista..."
-          empty={lista.length === 0}
-          emptyTitle="Nenhum cliente"
-          emptyDescription="Ainda não há clientes cadastrados no sistema."
-          filterPending={filtrosDigitacaoPendentes}
-        >
-          <table className="admin-crud-table clientes-data-table">
-            <thead>
-              <tr>
-                <th scope="col">Nome / Razão social</th>
-                <th scope="col">CPF/CNPJ</th>
-                <th scope="col">Telefone</th>
-                <th scope="col">E-mail</th>
-                <th scope="col" className="admin-crud-table__th-actions">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {listaFiltrada.length === 0 ? (
-                <tr className="admin-crud-table__empty-row">
-                  <td colSpan={5}>
-                    <p className="admin-crud-table__filter-msg" role="status">
-                      Não há clientes que correspondam aos filtros.
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                listaFiltrada.map((c, idx) => (
-                  <tr
-                    key={c.id}
-                    className={`admin-crud-table__row${idx % 2 === 1 ? " admin-crud-table__row--alt" : ""}`}
-                    onClick={() => navigate(`/app/clientes/${c.id}/editar`)}
-                  >
-                    <td className="admin-crud-table__cell-primary" data-label="Nome / Razão social">
-                      {c.razaoSocialOuNome}
-                    </td>
-                    <td data-label="CPF/CNPJ">{documentoParaExibicao(c)}</td>
-                    <td className="admin-crud-table__cell-muted" data-label="Telefone">
-                      {c.telefone ? formatTelefoneBrasil(c.telefone) : "—"}
-                    </td>
-                    <td className="admin-crud-table__cell-muted" data-label="E-mail">
-                      {c.email ?? "-"}
-                    </td>
-                    <td className="admin-crud-table__td-actions" data-label="Ações">
-                      <RowEditButton
-                        ariaLabel={`Editar ${c.razaoSocialOuNome}`}
-                        onClick={() => navigate(`/app/clientes/${c.id}/editar`)}
-                      />
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </DataTableSection>
-      </div>
-    </div>
+      </DataTableSection>
+    </ListPage>
   );
 }

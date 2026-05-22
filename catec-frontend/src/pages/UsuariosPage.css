@@ -1,64 +1,45 @@
-.usuarios-page {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-.usuarios-page-inner {
-  width: 100%;
-  max-width: 1040px;
-  margin: 0 auto;
-}
-
-.usuarios-page-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
 /* Larguras da tabela de usuários (desktop) */
 @media (min-width: 641px) {
-  .usuarios-data-table th:nth-child(1) {
+  .data-table--usuarios th:nth-child(1) {
     width: 18%;
   }
-  .usuarios-data-table th:nth-child(2) {
+  .data-table--usuarios th:nth-child(2) {
     width: 30%;
   }
-  .usuarios-data-table th:nth-child(3) {
+  .data-table--usuarios th:nth-child(3) {
     width: 16%;
   }
-  .usuarios-data-table th:nth-child(4) {
+  .data-table--usuarios th:nth-child(4) {
     width: 24%;
   }
-  .usuarios-data-table th:nth-child(5) {
+  .data-table--usuarios th:nth-child(5) {
     width: 12%;
   }
 
-  .usuarios-data-table th:nth-child(4),
-  .usuarios-data-table td:nth-child(4) {
+  .data-table--usuarios th:nth-child(4),
+  .data-table--usuarios td:nth-child(4) {
     text-align: center;
   }
 
-  .usuarios-data-table td:nth-child(4) .status-badge-group {
+  .data-table--usuarios td:nth-child(4) .status-badge-group {
     justify-content: center;
   }
 
-  .usuarios-data-table .admin-crud-table__th-actions,
-  .usuarios-data-table .admin-crud-table__td-actions {
+  .data-table--usuarios .data-table__th-actions,
+  .data-table--usuarios .data-table__td-actions {
     text-align: center;
     vertical-align: middle;
   }
 }
 
 @media (max-width: 640px) {
-  .usuarios-data-table .usuarios-perfis {
+  .data-table--usuarios .usuarios-perfis {
     text-align: right;
     word-break: normal;
     overflow-wrap: anywhere;
   }
 
-  .usuarios-data-table .admin-crud-table__row td:nth-child(4) .status-badge-group {
+  .data-table--usuarios .data-table__row td:nth-child(4) .status-badge-group {
     justify-content: flex-end;
   }
 }

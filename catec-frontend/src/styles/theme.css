@@ -19,4 +19,17 @@
   --catec-radius-md: 12px;
   --catec-shadow-card: 0 10px 40px rgba(15, 23, 42, 0.08);
   --catec-font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* List Page Design System */
+  --list-page-max-width: 1040px;
+  --list-page-stack-gap: 1.5rem;
+  --list-page-radius-card: 14px;
+  --list-page-radius-badge: 999px;
+  --list-page-transition: 0.16s ease;
+  --list-page-shadow-card: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 12px 40px -12px rgba(15, 23, 42, 0.12);
+  --list-page-table-header-bg: linear-gradient(180deg, #f1f5f9 0%, #e8eef4 100%);
+  --list-page-table-row-hover: #f0f9ff;
+  --list-page-table-row-alt: #fafbfc;
+  --list-page-badge-padding: 0.2rem 0.55rem;
+  --list-page-badge-font-size: 0.7rem;
 }

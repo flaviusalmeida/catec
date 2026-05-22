@@ -1,35 +1,35 @@
 /* Larguras da tabela de projetos (desktop) */
 @media (min-width: 641px) {
-  .projetos-data-table th:nth-child(1) {
+  .data-table--projetos th:nth-child(1) {
     width: 28%;
   }
-  .projetos-data-table th:nth-child(2) {
+  .data-table--projetos th:nth-child(2) {
     width: 20%;
   }
-  .projetos-data-table th:nth-child(3) {
+  .data-table--projetos th:nth-child(3) {
     width: 16%;
   }
-  .projetos-data-table th:nth-child(4) {
+  .data-table--projetos th:nth-child(4) {
     width: 24%;
   }
-  .projetos-data-table th:nth-child(5) {
+  .data-table--projetos th:nth-child(5) {
     width: 12%;
   }
 
-  .projetos-data-table th:nth-child(4),
-  .projetos-data-table td:nth-child(4) {
+  .data-table--projetos th:nth-child(4),
+  .data-table--projetos td:nth-child(4) {
     text-align: center;
   }
 
-  .projetos-data-table .admin-crud-table__th-actions,
-  .projetos-data-table .admin-crud-table__td-actions {
+  .data-table--projetos .data-table__th-actions,
+  .data-table--projetos .data-table__td-actions {
     text-align: center;
     vertical-align: middle;
   }
 }
 
 @media (max-width: 640px) {
-  .projetos-data-table .admin-crud-table__row td:nth-child(4) {
+  .data-table--projetos .data-table__row td:nth-child(4) {
     align-items: center;
   }
 }
@@ -74,7 +74,7 @@
 }
 
 /* `admin-crud-table__filter-msg` tem padding alto para tabelas; no modal fica desproporcional. */
-.projetos-form-dialog .admin-crud-table__filter-msg {
+.projetos-form-dialog .data-table__filter-msg {
   padding: 0.45rem 0 0;
   margin: 0;
   text-align: left;

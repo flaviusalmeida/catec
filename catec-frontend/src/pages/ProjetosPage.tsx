@@ -9,12 +9,18 @@ import PrimaryButton from "../components/buttons/PrimaryButton";
 import FieldControl from "../components/form/FieldControl";
 import FormField from "../components/form/FormField";
 import DataTableSection from "../components/layout/DataTableSection";
-import FiltersCard from "../components/layout/FiltersCard";
 import FormDialog from "../components/layout/FormDialog";
 import ModalFooter from "../components/layout/ModalFooter";
 import ModalSection from "../components/layout/ModalSection";
-import PageToolbar from "../components/layout/PageToolbar";
-import RowEditButton from "../components/table/RowEditButton";
+import {
+  DataTable,
+  FilterCard,
+  FilterField,
+  ListPage,
+  PageHeader,
+  TableAction,
+  type DataTableColumn,
+} from "../components/list-page";
 import InlineAlert from "../components/ui/InlineAlert";
 import ToastAlert from "../components/ui/ToastAlert";
 import "../styles/admin-crud-table.css";
@@ -110,6 +116,38 @@ export default function ProjetosPage() {
       return true;
     });
   }, [deferredTitulo, filtroStatus, lista]);
+
+  const columns = useMemo<DataTableColumn<Projeto>[]>(
+    () => [
+      {
+        id: "titulo",
+        header: "Título",
+        dataLabel: "Título",
+        cellClassName: "data-table__cell-primary",
+        render: (p) => p.titulo,
+      },
+      {
+        id: "cliente",
+        header: "Cliente",
+        dataLabel: "Cliente",
+        render: (p) => p.clienteNome ?? "—",
+      },
+      {
+        id: "criadoPor",
+        header: "Criado por",
+        dataLabel: "Criado por",
+        cellClassName: "data-table__cell-muted",
+        render: (p) => p.criadoPorNome,
+      },
+      {
+        id: "status",
+        header: "Status",
+        dataLabel: "Status",
+        render: (p) => <ProjetoStatusBadge status={p.status} />,
+      },
+    ],
+    [],
+  );
 
   const carregarProjetos = useCallback(async () => {
     setCarregando(true);
@@ -315,7 +353,7 @@ export default function ProjetosPage() {
     modo === "editar" && !isAdmin && (pendenteCliente ? !podeAssociarCliente : !camposEditaveis);
 
   return (
-    <div className="clientes-page">
+    <ListPage>
       <ToastAlert
         open={Boolean(sucesso)}
         variant="success"
@@ -326,119 +364,84 @@ export default function ProjetosPage() {
         {sucesso}
       </ToastAlert>
 
-      <div className="clientes-page-inner clientes-page-stack">
-        <PageToolbar
-          title="Projetos"
-          subtitle="Demandas iniciais vinculadas a cliente."
-          actions={
-            <PrimaryButton variant="toolbar" onClick={abrirNovo}>
-              Novo projeto
-            </PrimaryButton>
-          }
-        />
+      <PageHeader
+        title="Projetos"
+        subtitle="Demandas iniciais vinculadas a cliente."
+        actions={
+          <PrimaryButton variant="toolbar" onClick={abrirNovo}>
+            Novo projeto
+          </PrimaryButton>
+        }
+      />
 
-        {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
+      {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
 
-        <FiltersCard headingId="projetos-filtros-heading" onClear={limparFiltros}>
-          <div>
-            <label className="filters-card__label" htmlFor="flt-proj-titulo">
-              Título
-            </label>
-            <FieldControl
-              id="flt-proj-titulo"
-              value={filtroTitulo}
-              onChange={(e) => setFiltroTitulo(e.target.value)}
-              className="clientes-input"
-              variant="compact"
-              placeholder="Filtrar por título"
-              autoComplete="off"
+      <FilterCard headingId="projetos-filtros-heading" onClear={limparFiltros}>
+        <FilterField id="flt-proj-titulo" label="Título">
+          <FieldControl
+            id="flt-proj-titulo"
+            value={filtroTitulo}
+            onChange={(e) => setFiltroTitulo(e.target.value)}
+            className="clientes-input"
+            variant="compact"
+            placeholder="Filtrar por título"
+            autoComplete="off"
+          />
+        </FilterField>
+        <FilterField id="flt-proj-status" label="Status">
+          <FieldControl
+            as="select"
+            id="flt-proj-status"
+            value={filtroStatus}
+            onChange={(e) => setFiltroStatus(e.target.value as "" | ProjetoStatus)}
+            className="clientes-select"
+            variant="compact"
+          >
+            <option value="">Todos</option>
+            {ORDEM_STATUS_PROJETO.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_PROJETO_ROTULO[s]}
+              </option>
+            ))}
+          </FieldControl>
+        </FilterField>
+      </FilterCard>
+
+      <DataTableSection
+        loading={carregando}
+        loadingLabel="Carregando projetos…"
+        useSkeleton
+        empty={lista.length === 0}
+        emptyTitle="Nenhum projeto"
+        emptyDescription="Ainda não há demandas registradas."
+        emptyAction={
+          <PrimaryButton variant="toolbar" onClick={abrirNovo}>
+            Novo projeto
+          </PrimaryButton>
+        }
+        filterPending={filtrosDigitacaoPendentes}
+      >
+        <DataTable
+          columns={columns}
+          rows={listaFiltrada}
+          getRowKey={(p) => p.id}
+          onRowClick={(p) => navigate(`/app/projetos/${p.id}`)}
+          onRowDoubleClick={(p, e) => {
+            e.stopPropagation();
+            abrirEditar(p);
+          }}
+          filterEmptyMessage="Não há projetos que correspondam aos filtros."
+          tableClassName="data-table--projetos"
+          renderActions={(p) => (
+            <TableAction
+              variant="view"
+              label="Abrir"
+              ariaLabel={`Abrir ${p.titulo}`}
+              onClick={() => navigate(`/app/projetos/${p.id}`)}
             />
-          </div>
-          <div>
-            <label className="filters-card__label" htmlFor="flt-proj-status">
-              Status
-            </label>
-            <FieldControl
-              as="select"
-              id="flt-proj-status"
-              value={filtroStatus}
-              onChange={(e) => setFiltroStatus(e.target.value as "" | ProjetoStatus)}
-              className="clientes-select"
-              variant="compact"
-            >
-              <option value="">Todos</option>
-              {ORDEM_STATUS_PROJETO.map((s) => (
-                <option key={s} value={s}>
-                  {STATUS_PROJETO_ROTULO[s]}
-                </option>
-              ))}
-            </FieldControl>
-          </div>
-        </FiltersCard>
-
-        <DataTableSection
-          loading={carregando}
-          loadingLabel="Carregando projetos…"
-          empty={lista.length === 0}
-          emptyTitle="Nenhum projeto"
-          emptyDescription="Ainda não há demandas registradas."
-          filterPending={filtrosDigitacaoPendentes}
-        >
-          <table className="admin-crud-table projetos-data-table">
-            <thead>
-              <tr>
-                <th scope="col">Título</th>
-                <th scope="col">Cliente</th>
-                <th scope="col">Criado por</th>
-                <th scope="col">Status</th>
-                <th scope="col" className="admin-crud-table__th-actions">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {listaFiltrada.length === 0 ? (
-                <tr className="admin-crud-table__empty-row">
-                  <td colSpan={5}>
-                    <p className="admin-crud-table__filter-msg" role="status">
-                      Não há projetos que correspondam aos filtros.
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                listaFiltrada.map((p, idx) => (
-                  <tr
-                    key={p.id}
-                    className={`admin-crud-table__row${idx % 2 === 1 ? " admin-crud-table__row--alt" : ""}`}
-                    onClick={() => navigate(`/app/projetos/${p.id}`)}
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      abrirEditar(p);
-                    }}
-                  >
-                    <td className="admin-crud-table__cell-primary" data-label="Título">
-                      {p.titulo}
-                    </td>
-                    <td data-label="Cliente">{p.clienteNome ?? "—"}</td>
-                    <td className="admin-crud-table__cell-muted" data-label="Criado por">
-                      {p.criadoPorNome}
-                    </td>
-                    <td data-label="Status">
-                      <ProjetoStatusBadge status={p.status} />
-                    </td>
-                    <td className="admin-crud-table__td-actions" data-label="Ações">
-                      <RowEditButton
-                        ariaLabel={`Abrir ${p.titulo}`}
-                        onClick={() => navigate(`/app/projetos/${p.id}`)}
-                      />
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </DataTableSection>
-      </div>
+          )}
+        />
+      </DataTableSection>
 
       <FormDialog
         open={modalAberto}
@@ -571,6 +574,6 @@ export default function ProjetosPage() {
           )}
         </ModalFooter>
       </FormDialog>
-    </div>
+    </ListPage>
   );
 }

@@ -1,6 +1,7 @@
 import { useAuth } from "../../../auth/AuthContext";
 import PaginationBar from "../../table/PaginationBar";
-import EmptyState from "../../ui/EmptyState";
+import StateCard from "../../ui/StateCard";
+import { STATE_EMPTY_HISTORICO } from "./stateMessages";
 import InlineAlert from "../../ui/InlineAlert";
 import { useProjetoHistoricoFluxo } from "../../../hooks/useProjetoHistoricoFluxo";
 import {
@@ -29,11 +30,7 @@ export default function ProjetoTabHistorico({ projetoId, refreshKey = 0 }: Props
 
   if (!fluxo.carregando && fluxo.itens.length === 0) {
     return (
-      <EmptyState
-        variant="inline"
-        title="Sem registros"
-        description="Ainda não há auditoria ou interações registradas para este projeto."
-      />
+      <StateCard type="empty" title={STATE_EMPTY_HISTORICO} />
     );
   }
 

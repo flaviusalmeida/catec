@@ -14,6 +14,11 @@ import RegistrarInteracaoCliente, {
 } from "../components/projeto/detalhe/RegistrarInteracaoCliente";
 import { useProjetoFluxoData } from "../hooks/useProjetoFluxoData";
 import InlineAlert from "../components/ui/InlineAlert";
+import StateCard from "../components/ui/StateCard";
+import {
+  STATE_LOCKED_CONTRATO_TITLE,
+  STATE_LOCKED_SUBTITLE,
+} from "../components/projeto/detalhe/stateMessages";
 import "./ClientesPage.css";
 import "../components/projeto/detalhe/ProjetoDetalhe.css";
 
@@ -33,7 +38,7 @@ export default function ProjetoDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const projetoId = Number(id);
   const navigate = useNavigate();
-  const { isAdmin, logout } = useAuth();
+  const { logout } = useAuth();
   const [tab, setTab] = useState<TabId>("geral");
   const [refreshKey, setRefreshKey] = useState(0);
   const propostaRef = useRef<PropostaPanelHandle>(null);
@@ -53,16 +58,6 @@ export default function ProjetoDetalhePage() {
   function editarProjeto() {
     if (!fluxo.projeto) return;
     navigate(LIST_PATH, { state: { editarProjetoId: fluxo.projeto.id } });
-  }
-
-  function novaProposta() {
-    setTab("propostas");
-    propostaRef.current?.criarProposta();
-  }
-
-  function registrarInteracao() {
-    setTab("interacoes");
-    interacaoRef.current?.open();
   }
 
   return (
@@ -97,14 +92,7 @@ export default function ProjetoDetalhePage() {
                   <ProjetoStatusBadge status={fluxo.projeto.status} />
                 </p>
               </div>
-              <ProjetoDetalheHeaderActions
-                isAdmin={isAdmin}
-                podeNovaProposta={fluxo.podeCriarNovaProposta}
-                podeRegistrar={fluxo.podeRegistrarInteracao}
-                onEditar={editarProjeto}
-                onNovaProposta={novaProposta}
-                onRegistrar={registrarInteracao}
-              />
+              <ProjetoDetalheHeaderActions onEditar={editarProjeto} />
             </header>
 
             <div className="proj-detalhe-layout">
@@ -140,7 +128,6 @@ export default function ProjetoDetalhePage() {
                     <PropostaPanel
                       ref={propostaRef}
                       embedded
-                      hideHeaderActions
                       projetoId={fluxo.projeto.id}
                       projetoTemCliente={fluxo.projeto.clienteId != null}
                       onPropostaAtualizada={atualizarFluxo}
@@ -155,16 +142,20 @@ export default function ProjetoDetalhePage() {
                         onContratoAtualizado={atualizarFluxo}
                       />
                     ) : (
-                      <p className="proj-detalhe-hint">
-                        O contrato ficará disponível quando o projeto estiver aguardando contrato ou em execução.
-                      </p>
+                      <StateCard
+                        type="locked"
+                        title={STATE_LOCKED_CONTRATO_TITLE}
+                        description={STATE_LOCKED_SUBTITLE}
+                      />
                     )
                   ) : null}
 
                   {tab === "interacoes" ? (
-                    <>
-                      <ProjetoTabInteracoes interacoes={fluxo.interacoes} />
-                    </>
+                    <ProjetoTabInteracoes
+                      interacoes={fluxo.interacoes}
+                      podeRegistrar={fluxo.podeRegistrarInteracao}
+                      onRegistrar={() => interacaoRef.current?.open()}
+                    />
                   ) : null}
 
                   {tab === "historico" ? (

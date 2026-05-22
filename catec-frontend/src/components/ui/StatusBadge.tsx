@@ -1,8 +1,16 @@
 import type { ReactNode } from "react";
 import "./StatusBadge.css";
 
-/** Variantes de cor da pill (padrão da listagem de usuários). */
-export type StatusBadgeVariant = "ativo" | "inativo" | "pendente";
+/** Variantes de cor da pill — design system global de listagens. */
+export type StatusBadgeVariant =
+  | "success"
+  | "warning"
+  | "error"
+  | "neutral"
+  | "info"
+  | "ativo"
+  | "inativo"
+  | "pendente";
 
 export type StatusBadgeProps = {
   variant: StatusBadgeVariant;

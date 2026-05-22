@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import LoadingSkeleton from "../list-page/LoadingSkeleton";
 import EmptyState from "../ui/EmptyState";
 import LoadingBlock from "../ui/LoadingBlock";
 import "./DataTableSection.css";
@@ -10,8 +11,12 @@ export type DataTableSectionProps = {
   empty: boolean;
   emptyTitle: string;
   emptyDescription: string;
+  emptyAction?: ReactNode;
+  emptySecondaryAction?: ReactNode;
   /** Indica que os filtros ainda acompanham a digitação (ex.: `useDeferredValue`). */
   filterPending?: boolean;
+  /** Usa skeleton do design system em vez do spinner. */
+  useSkeleton?: boolean;
   children: ReactNode;
   className?: string;
 };
@@ -25,7 +30,10 @@ export default function DataTableSection({
   empty,
   emptyTitle,
   emptyDescription,
+  emptyAction,
+  emptySecondaryAction,
   filterPending = false,
+  useSkeleton = false,
   children,
   className,
 }: DataTableSectionProps) {
@@ -34,9 +42,19 @@ export default function DataTableSection({
   return (
     <section className={sectionClass} aria-busy={loading}>
       {loading ? (
-        <LoadingBlock label={loadingLabel} />
+        useSkeleton ? (
+          <LoadingSkeleton />
+        ) : (
+          <LoadingBlock label={loadingLabel} />
+        )
       ) : empty ? (
-        <EmptyState title={emptyTitle} description={emptyDescription} variant="standalone" />
+        <EmptyState
+          title={emptyTitle}
+          description={emptyDescription}
+          variant="standalone"
+          action={emptyAction}
+          secondaryAction={emptySecondaryAction}
+        />
       ) : (
         <div
           className={

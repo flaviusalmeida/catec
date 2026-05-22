@@ -62,3 +62,12 @@
   line-height: 1.55;
   color: #64748b;
 }
+
+.empty-state--with-actions .empty-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}

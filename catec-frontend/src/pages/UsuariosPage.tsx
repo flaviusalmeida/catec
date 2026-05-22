@@ -8,13 +8,19 @@ import FieldControl from "../components/form/FieldControl";
 import FormField from "../components/form/FormField";
 import ConfirmDialog from "../components/layout/ConfirmDialog";
 import DataTableSection from "../components/layout/DataTableSection";
-import FiltersCard from "../components/layout/FiltersCard";
 import FormDialog from "../components/layout/FormDialog";
 import ModalFooter from "../components/layout/ModalFooter";
 import ModalFormGrid from "../components/layout/ModalFormGrid";
 import ModalSection from "../components/layout/ModalSection";
-import PageToolbar from "../components/layout/PageToolbar";
-import RowEditButton from "../components/table/RowEditButton";
+import {
+  DataTable,
+  FilterCard,
+  FilterField,
+  ListPage,
+  PageHeader,
+  TableAction,
+  type DataTableColumn,
+} from "../components/list-page";
 import InlineAlert from "../components/ui/InlineAlert";
 import LabeledSwitch from "../components/ui/LabeledSwitch";
 import UsuarioStatusBadge from "../components/ui/UsuarioStatusBadge";
@@ -157,6 +163,39 @@ export default function UsuariosPage() {
   const listaFiltrada = useMemo(
     () => filtrarUsuarios(lista, deferredNome, deferredEmail, filtroPerfil, filtroStatus),
     [lista, deferredNome, deferredEmail, filtroPerfil, filtroStatus],
+  );
+
+  const columns = useMemo<DataTableColumn<AdminUsuario>[]>(
+    () => [
+      {
+        id: "nome",
+        header: "Nome",
+        dataLabel: "Nome",
+        cellClassName: "data-table__cell-primary",
+        render: (u) => u.nome,
+      },
+      {
+        id: "email",
+        header: "E-mail",
+        dataLabel: "E-mail",
+        cellClassName: "data-table__cell-muted",
+        render: (u) => u.email,
+      },
+      {
+        id: "perfis",
+        header: "Perfis",
+        dataLabel: "Perfis",
+        cellClassName: "usuarios-perfis",
+        render: (u) => u.perfis.join(", "),
+      },
+      {
+        id: "status",
+        header: "Status",
+        dataLabel: "Status",
+        render: (u) => <UsuarioStatusBadge requerTrocaSenha={u.requerTrocaSenha} ativo={u.ativo} />,
+      },
+    ],
+    [],
   );
 
   useEffect(() => {
@@ -316,7 +355,7 @@ export default function UsuariosPage() {
   }
 
   return (
-    <div className="usuarios-page">
+    <ListPage>
       <ToastAlert
         open={Boolean(sucesso)}
         variant="success"
@@ -326,142 +365,98 @@ export default function UsuariosPage() {
       >
         {sucesso}
       </ToastAlert>
-      <div className="usuarios-page-inner usuarios-page-stack">
-        <PageToolbar
-          title="Usuários"
-          subtitle="Gestão de contas internas e perfis de acesso."
-          actions={
-            <PrimaryButton variant="toolbar" onClick={abrirCriar}>
-              Novo usuário
-            </PrimaryButton>
-          }
+
+      <PageHeader
+        title="Usuários"
+        subtitle="Gestão de contas internas e perfis de acesso."
+        actions={
+          <PrimaryButton variant="toolbar" onClick={abrirCriar}>
+            Novo usuário
+          </PrimaryButton>
+        }
+      />
+
+      {erro && !modalAberto ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
+
+      <FilterCard headingId="usuarios-filtros-heading" onClear={limparFiltros}>
+        <FilterField id="flt-nome" label="Nome">
+          <FieldControl
+            id="flt-nome"
+            value={filtroNome}
+            onChange={(e) => setFiltroNome(e.target.value)}
+            variant="compact"
+            placeholder="Buscar por nome"
+            autoComplete="off"
+          />
+        </FilterField>
+        <FilterField id="flt-email" label="E-mail">
+          <FieldControl
+            id="flt-email"
+            type="text"
+            value={filtroEmail}
+            onChange={(e) => setFiltroEmail(e.target.value)}
+            variant="compact"
+            placeholder="Buscar por e-mail"
+            autoComplete="off"
+          />
+        </FilterField>
+        <FilterField id="flt-perfil" label="Perfil">
+          <FieldControl
+            as="select"
+            id="flt-perfil"
+            value={filtroPerfil}
+            onChange={(e) => setFiltroPerfil(e.target.value)}
+            variant="compact"
+          >
+            <option value="">Todos</option>
+            {PERFIS_OPCOES.map((p) => (
+              <option key={p.valor} value={p.valor}>
+                {p.rotulo}
+              </option>
+            ))}
+          </FieldControl>
+        </FilterField>
+        <FilterField id="flt-status" label="Status">
+          <FieldControl
+            as="select"
+            id="flt-status"
+            value={filtroStatus}
+            onChange={(e) => setFiltroStatus(e.target.value as "" | "ativo" | "inativo")}
+            variant="compact"
+          >
+            <option value="">Todos</option>
+            <option value="ativo">Ativo</option>
+            <option value="inativo">Inativo</option>
+          </FieldControl>
+        </FilterField>
+      </FilterCard>
+
+      <DataTableSection
+        loading={carregando}
+        loadingLabel="Carregando lista…"
+        useSkeleton
+        empty={lista.length === 0}
+        emptyTitle="Nenhum usuário"
+        emptyDescription="Ainda não há contas cadastradas no sistema."
+        emptyAction={
+          <PrimaryButton variant="toolbar" onClick={abrirCriar}>
+            Novo usuário
+          </PrimaryButton>
+        }
+        filterPending={filtrosDigitacaoPendentes}
+      >
+        <DataTable
+          columns={columns}
+          rows={listaFiltrada}
+          getRowKey={(u) => u.id}
+          onRowClick={abrirEditar}
+          filterEmptyMessage="Não há usuários que correspondam aos filtros."
+          tableClassName="data-table--usuarios"
+          renderActions={(u) => (
+            <TableAction ariaLabel={`Editar ${u.nome}`} onClick={() => abrirEditar(u)} />
+          )}
         />
-
-        {erro && !modalAberto ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
-
-        <FiltersCard headingId="usuarios-filtros-heading" onClear={limparFiltros}>
-          <div>
-            <label className="filters-card__label" htmlFor="flt-nome">
-              Nome
-            </label>
-            <FieldControl
-              id="flt-nome"
-              value={filtroNome}
-              onChange={(e) => setFiltroNome(e.target.value)}
-              variant="compact"
-              placeholder="Buscar por nome"
-              autoComplete="off"
-            />
-          </div>
-          <div>
-            <label className="filters-card__label" htmlFor="flt-email">
-              E-mail
-            </label>
-            <FieldControl
-              id="flt-email"
-              type="text"
-              value={filtroEmail}
-              onChange={(e) => setFiltroEmail(e.target.value)}
-              variant="compact"
-              placeholder="Buscar por e-mail"
-              autoComplete="off"
-            />
-          </div>
-          <div>
-            <label className="filters-card__label" htmlFor="flt-perfil">
-              Perfil
-            </label>
-            <FieldControl
-              as="select"
-              id="flt-perfil"
-              value={filtroPerfil}
-              onChange={(e) => setFiltroPerfil(e.target.value)}
-              variant="compact"
-            >
-              <option value="">Todos</option>
-              {PERFIS_OPCOES.map((p) => (
-                <option key={p.valor} value={p.valor}>
-                  {p.rotulo}
-                </option>
-              ))}
-            </FieldControl>
-          </div>
-          <div>
-            <label className="filters-card__label" htmlFor="flt-status">
-              Status
-            </label>
-            <FieldControl
-              as="select"
-              id="flt-status"
-              value={filtroStatus}
-              onChange={(e) => setFiltroStatus(e.target.value as "" | "ativo" | "inativo")}
-              variant="compact"
-            >
-              <option value="">Todos</option>
-              <option value="ativo">Ativo</option>
-              <option value="inativo">Inativo</option>
-            </FieldControl>
-          </div>
-        </FiltersCard>
-
-        <DataTableSection
-          loading={carregando}
-          loadingLabel="Carregando lista…"
-          empty={lista.length === 0}
-          emptyTitle="Nenhum usuário"
-          emptyDescription="Ainda não há contas cadastradas no sistema."
-          filterPending={filtrosDigitacaoPendentes}
-        >
-          <table className="admin-crud-table usuarios-data-table">
-            <thead>
-              <tr>
-                <th scope="col">Nome</th>
-                <th scope="col">E-mail</th>
-                <th scope="col">Perfis</th>
-                <th scope="col">Status</th>
-                <th scope="col" className="admin-crud-table__th-actions">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {listaFiltrada.length === 0 ? (
-                <tr className="admin-crud-table__empty-row">
-                  <td colSpan={5}>
-                    <p className="admin-crud-table__filter-msg" role="status">
-                      Não há usuários que correspondam aos filtros.
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                listaFiltrada.map((u, idx) => (
-                  <tr
-                    key={u.id}
-                    className={`admin-crud-table__row${idx % 2 === 1 ? " admin-crud-table__row--alt" : ""}`}
-                    onClick={() => abrirEditar(u)}
-                  >
-                    <td className="admin-crud-table__cell-primary" data-label="Nome">
-                      {u.nome}
-                    </td>
-                    <td className="admin-crud-table__cell-muted" data-label="E-mail">
-                      {u.email}
-                    </td>
-                    <td className="usuarios-perfis" data-label="Perfis">
-                      {u.perfis.join(", ")}
-                    </td>
-                    <td data-label="Status">
-                      <UsuarioStatusBadge requerTrocaSenha={u.requerTrocaSenha} ativo={u.ativo} />
-                    </td>
-                    <td className="admin-crud-table__td-actions" data-label="Ações">
-                      <RowEditButton ariaLabel={`Editar ${u.nome}`} onClick={() => abrirEditar(u)} />
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </DataTableSection>
-      </div>
+      </DataTableSection>
 
       <FormDialog
         open={modalAberto}
@@ -610,6 +605,6 @@ export default function UsuariosPage() {
           </>
         }
       />
-    </div>
+    </ListPage>
   );
 }

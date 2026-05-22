@@ -12,13 +12,17 @@ import {
 } from "../layout/entityFormKit";
 import FileRow from "../projeto/detalhe/FileRow";
 import {
-  DashboardCard,
   formatarDataCurta,
   InfoGrid,
   InfoItem,
   SectionLabel,
 } from "../projeto/detalhe/detalheUi";
-import EmptyState from "../ui/EmptyState";
+import TabSectionHeader from "../projeto/detalhe/TabSectionHeader";
+import {
+  STATE_EMPTY_PROPOSTA,
+  STATE_PROPOSTA_SEM_CLIENTE,
+} from "../projeto/detalhe/stateMessages";
+import StateCard from "../ui/StateCard";
 import InlineAlert from "../ui/InlineAlert";
 import { mensagemErroApi } from "../../utils/apiError";
 import { downloadDocumento } from "../../utils/downloadDocumento";
@@ -45,7 +49,6 @@ type Props = {
   projetoTemCliente: boolean;
   onPropostaAtualizada?: () => void;
   embedded?: boolean;
-  hideHeaderActions?: boolean;
 };
 
 type DocumentoHistorico = DocumentoAnexo & {
@@ -92,7 +95,7 @@ function idPropostaAtual(lista: Proposta[], preferirId?: number | null): number 
 }
 
 const PropostaPanel = forwardRef<PropostaPanelHandle, Props>(function PropostaPanel(
-  { projetoId, projetoTemCliente, onPropostaAtualizada, embedded = false, hideHeaderActions = false },
+  { projetoId, projetoTemCliente, onPropostaAtualizada, embedded = false },
   ref,
 ) {
   const { isAdmin, isSocio, logout } = useAuth();
@@ -368,13 +371,6 @@ const PropostaPanel = forwardRef<PropostaPanelHandle, Props>(function PropostaPa
     podeCriarNova,
   }));
 
-  const acoesComercial =
-    !hideHeaderActions && podeCriarNova ? (
-      <PrimaryButton variant="toolbar" onClick={() => void criarProposta()} disabled={processando}>
-        Nova
-      </PrimaryButton>
-    ) : undefined;
-
   const conteudo = (
     <>
         {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
@@ -385,17 +381,11 @@ const PropostaPanel = forwardRef<PropostaPanelHandle, Props>(function PropostaPa
             Carregando propostas…
           </p>
         ) : propostas.length === 0 ? (
-          <div className="proposta-panel__vazio">
-            <EmptyState
-              variant="inline"
-              title="Nenhuma proposta"
-              description={
-                projetoTemCliente
-                  ? "Inicie uma proposta comercial para anexar o documento e seguir com a aprovação."
-                  : "Associe um cliente ao projeto antes de criar a proposta comercial."
-              }
-            />
-          </div>
+          <StateCard
+            type="empty"
+            title={STATE_EMPTY_PROPOSTA}
+            description={!projetoTemCliente ? STATE_PROPOSTA_SEM_CLIENTE : undefined}
+          />
         ) : mostrarProposta ? (
           embedded ? (
             <InfoGrid>
@@ -553,11 +543,26 @@ const PropostaPanel = forwardRef<PropostaPanelHandle, Props>(function PropostaPa
 
   if (embedded) {
     return (
-      <DashboardCard title="Proposta comercial" titleId="prop-sec-comercial" actions={acoesComercial}>
-        {conteudo}
-      </DashboardCard>
+      <section className="proj-detalhe-tab-section" aria-labelledby="prop-sec-comercial">
+        <TabSectionHeader
+          titleId="prop-sec-comercial"
+          title="Proposta comercial"
+          actionAriaLabel="Adicionar proposta comercial"
+          onAction={() => void criarProposta()}
+          hideAction={!podeCriarNova}
+          actionDisabled={processando}
+          actionTitle={!podeCriarNova ? "Não é possível adicionar proposta no momento" : undefined}
+        />
+        <div className="proj-detalhe-tab-section__body">{conteudo}</div>
+      </section>
     );
   }
+
+  const acoesComercial = podeCriarNova ? (
+    <PrimaryButton variant="toolbar" onClick={() => void criarProposta()} disabled={processando}>
+      Nova proposta
+    </PrimaryButton>
+  ) : undefined;
 
   return (
     <AdminFormSection title="Proposta comercial" titleId="prop-sec-comercial" actions={acoesComercial}>

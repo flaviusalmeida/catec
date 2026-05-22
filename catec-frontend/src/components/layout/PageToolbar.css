@@ -16,14 +16,14 @@
   font-size: clamp(1.65rem, 2.5vw, 2rem);
   font-weight: 800;
   letter-spacing: -0.035em;
-  color: #001a2e;
+  color: var(--catec-color-brand);
   line-height: 1.15;
 }
 
 .page-toolbar__subtitle {
   margin: 0.45rem 0 0;
   font-size: 0.9rem;
-  color: #475569;
+  color: var(--catec-color-text-muted);
   max-width: 36rem;
   line-height: 1.45;
 }

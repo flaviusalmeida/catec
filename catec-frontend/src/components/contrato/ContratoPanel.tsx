@@ -11,7 +11,8 @@ import {
 } from "../layout/entityFormKit";
 import FileRow from "../projeto/detalhe/FileRow";
 import { DashboardCard, formatarDataCurta, InfoGrid, InfoItem, SectionLabel } from "../projeto/detalhe/detalheUi";
-import EmptyState from "../ui/EmptyState";
+import { STATE_EMPTY_CONTRATO } from "../projeto/detalhe/stateMessages";
+import StateCard from "../ui/StateCard";
 import InlineAlert from "../ui/InlineAlert";
 import { mensagemErroApi } from "../../utils/apiError";
 import { downloadDocumento } from "../../utils/downloadDocumento";
@@ -194,13 +195,7 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
           Carregando contrato…
         </p>
       ) : !contrato ? (
-        <div className="proposta-panel__vazio">
-          <EmptyState
-            variant="inline"
-            title="Nenhum contrato"
-            description="Inicie o contrato para anexar o documento e encaminhar ao cliente."
-          />
-        </div>
+        <StateCard type="empty" title={STATE_EMPTY_CONTRATO} />
       ) : (
         <>
           {embedded ? (

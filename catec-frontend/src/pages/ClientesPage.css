@@ -1,22 +1,3 @@
-.clientes-page {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-.clientes-page-inner {
-  width: 100%;
-  max-width: 1040px;
-  margin: 0 auto;
-}
-
-.clientes-page-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
 .clientes-input,
 .clientes-select {
   width: 100%;
@@ -24,24 +5,24 @@
 
 /* Larguras de colunas (desktop): Nome | CPF/CNPJ | Telefone | E-mail | Ações */
 @media (min-width: 641px) {
-  .clientes-data-table th:nth-child(1) {
+  .data-table--clientes th:nth-child(1) {
     width: 28%;
   }
-  .clientes-data-table th:nth-child(2) {
+  .data-table--clientes th:nth-child(2) {
     width: 18%;
   }
-  .clientes-data-table th:nth-child(3) {
+  .data-table--clientes th:nth-child(3) {
     width: 14%;
   }
-  .clientes-data-table th:nth-child(4) {
+  .data-table--clientes th:nth-child(4) {
     width: 28%;
   }
-  .clientes-data-table th:nth-child(5) {
+  .data-table--clientes th:nth-child(5) {
     width: 12%;
   }
 
-  .clientes-data-table .admin-crud-table__th-actions,
-  .clientes-data-table .admin-crud-table__td-actions {
+  .data-table--clientes .data-table__th-actions,
+  .data-table--clientes .data-table__td-actions {
     text-align: center;
     vertical-align: middle;
   }

@@ -92,6 +92,15 @@
   opacity: 0.72;
 }
 
+/* Seções de aba — ações contextuais (TabSectionHeader) */
+.proj-detalhe-tab-section {
+  width: 100%;
+}
+
+.proj-detalhe-tab-section__body {
+  width: 100%;
+}
+
 .proj-detalhe-header__actions--mobile {
   display: none;
   position: relative;
