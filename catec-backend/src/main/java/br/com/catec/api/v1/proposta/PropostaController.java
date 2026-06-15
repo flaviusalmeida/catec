@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,12 +40,14 @@ public class PropostaController {
         this.interacaoFluxoService = interacaoFluxoService;
     }
 
+    @Operation(summary = "Listar propostas do projeto")
     @GetMapping
     public List<PropostaResponse> listar(
             @PathVariable Long projetoId, @AuthenticationPrincipal UsuarioAutenticado principal) {
         return propostaService.listarPorProjeto(projetoId, principal);
     }
 
+    @Operation(summary = "Detalhe da proposta")
     @GetMapping("/{propostaId}")
     public PropostaResponse obter(
             @PathVariable Long projetoId,
@@ -53,6 +56,7 @@ public class PropostaController {
         return propostaService.obter(projetoId, propostaId, principal);
     }
 
+    @Operation(summary = "Criar proposta", description = "Só ADMINISTRATIVO. Body: requerAvaliacaoSocio (boolean).")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PropostaResponse criar(
@@ -62,6 +66,7 @@ public class PropostaController {
         return propostaService.criar(projetoId, body.requerAvaliacaoSocio(), principal);
     }
 
+    @Operation(summary = "Atualizar configuração em rascunho", description = "Altera requerAvaliacaoSocio enquanto status RASCUNHO.")
     @PatchMapping("/{propostaId}/configuracao-rascunho")
     public PropostaResponse atualizarConfiguracaoRascunho(
             @PathVariable Long projetoId,
@@ -72,6 +77,7 @@ public class PropostaController {
                 projetoId, propostaId, body.requerAvaliacaoSocio(), principal);
     }
 
+    @Operation(summary = "Submeter para avaliação do sócio", description = "RASCUNHO → PENDENTE_AVALIACAO_SOCIO quando requerAvaliacaoSocio=true.")
     @PostMapping("/{propostaId}/submeter-avaliacao-socio")
     public PropostaResponse submeterParaAvaliacaoSocio(
             @PathVariable Long projetoId,
@@ -80,6 +86,7 @@ public class PropostaController {
         return propostaService.submeterParaAvaliacaoSocio(projetoId, propostaId, principal);
     }
 
+    @Operation(summary = "Aprovação interna direta", description = "ADM quando requerAvaliacaoSocio=false. RASCUNHO → APROVADA_INTERNA.")
     @PostMapping("/{propostaId}/aprovar-interna")
     public PropostaResponse aprovarInternamenteSemSocio(
             @PathVariable Long projetoId,
@@ -88,6 +95,7 @@ public class PropostaController {
         return propostaService.aprovarInternamenteSemSocio(projetoId, propostaId, principal);
     }
 
+    @Operation(summary = "Aprovar pelo sócio (via projeto)", description = "Preferir fila em /api/v1/socio/propostas quando aplicável.")
     @PostMapping("/{propostaId}/aprovar-socio")
     public PropostaResponse aprovarPeloSocio(
             @PathVariable Long projetoId,
@@ -96,6 +104,7 @@ public class PropostaController {
         return propostaService.aprovarPeloSocio(projetoId, propostaId, principal);
     }
 
+    @Operation(summary = "Devolver ao rascunho (via projeto)")
     @PostMapping("/{propostaId}/devolver-rascunho")
     public PropostaResponse devolverParaRascunho(
             @PathVariable Long projetoId,
@@ -104,6 +113,7 @@ public class PropostaController {
         return propostaService.devolverParaRascunho(projetoId, propostaId, principal);
     }
 
+    @Operation(summary = "Enviar proposta ao cliente", description = "ADM. Exige APROVADA_INTERNA.")
     @PostMapping("/{propostaId}/enviar-cliente")
     public PropostaResponse enviarAoCliente(
             @PathVariable Long projetoId,
@@ -112,6 +122,7 @@ public class PropostaController {
         return propostaService.enviarAoCliente(projetoId, propostaId, principal);
     }
 
+    @Operation(summary = "Listar anexos da proposta")
     @GetMapping("/{propostaId}/documentos")
     public List<DocumentoResponse> listarDocumentos(
             @PathVariable Long projetoId,
@@ -120,6 +131,9 @@ public class PropostaController {
         return propostaService.listarDocumentos(projetoId, propostaId, principal);
     }
 
+    @Operation(
+            summary = "Anexar documento à proposta",
+            description = "Multipart `file`. Só ADM; estados RASCUNHO, PENDENTE_AVALIACAO_SOCIO ou APROVADA_INTERNA.")
     @PostMapping(value = "/{propostaId}/documentos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public DocumentoResponse uploadDocumento(
@@ -131,6 +145,7 @@ public class PropostaController {
         return propostaService.uploadDocumento(projetoId, propostaId, tipoArquivo, file, principal);
     }
 
+    @Operation(summary = "Listar interações / respostas do cliente")
     @GetMapping("/{propostaId}/interacoes")
     public List<InteracaoFluxoResponse> listarInteracoes(
             @PathVariable Long projetoId,
@@ -139,6 +154,9 @@ public class PropostaController {
         return interacaoFluxoService.listarPorProposta(projetoId, propostaId, principal);
     }
 
+    @Operation(
+            summary = "Registrar resposta do cliente",
+            description = "ADM. Tipos: CONSIDERACOES_CLIENTE, ACEITE_CLIENTE, RECUSA_CLIENTE.")
     @PostMapping("/{propostaId}/interacoes")
     @ResponseStatus(HttpStatus.CREATED)
     public RegistroRespostaClienteResponse registrarRespostaCliente(

@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,6 +34,9 @@ public class DocumentoController {
         this.documentoService = documentoService;
     }
 
+    @Operation(
+            summary = "Upload de documento",
+            description = "Multipart: `tipoVinculo` (ex. PROJETO), `vinculoId`, `file`. Anexos de proposta usam endpoint em Propostas.")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public DocumentoResponse upload(
@@ -44,11 +48,13 @@ public class DocumentoController {
         return documentoService.upload(tipoVinculo, vinculoId, tipoArquivo, file, principal);
     }
 
+    @Operation(summary = "Metadados do documento")
     @GetMapping("/{id}")
     public DocumentoResponse obter(@PathVariable Long id, @AuthenticationPrincipal UsuarioAutenticado principal) {
         return documentoService.obter(id, principal);
     }
 
+    @Operation(summary = "Download do arquivo", description = "Retorna bytes com Content-Disposition attachment.")
     @GetMapping("/{id}/conteudo")
     public ResponseEntity<Resource> download(
             @PathVariable Long id, @AuthenticationPrincipal UsuarioAutenticado principal) {

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,11 +26,13 @@ public class SocioPropostaController {
         this.propostaService = propostaService;
     }
 
+    @Operation(summary = "Fila de propostas pendentes", description = "Propostas em PENDENTE_AVALIACAO_SOCIO visíveis ao perfil SOCIO.")
     @GetMapping("/pendentes")
     public List<PropostaPendenteSocioResponse> listarPendentes(@AuthenticationPrincipal UsuarioAutenticado principal) {
         return propostaService.listarPendentesSocio(principal);
     }
 
+    @Operation(summary = "Aprovar proposta (sócio)", description = "Transição para APROVADA_INTERNA. Corpo: projetoId, observacao opcional.")
     @PostMapping("/{propostaId}/aprovar")
     public PropostaResponse aprovar(
             @PathVariable Long propostaId,
@@ -38,6 +41,7 @@ public class SocioPropostaController {
         return propostaService.aprovarPeloSocio(body.projetoId(), propostaId, body.observacao(), principal);
     }
 
+    @Operation(summary = "Devolver proposta ao rascunho", description = "Parecer (observacao) obrigatório. Corpo: projetoId, observacao.")
     @PostMapping("/{propostaId}/devolver")
     public PropostaResponse devolver(
             @PathVariable Long propostaId,

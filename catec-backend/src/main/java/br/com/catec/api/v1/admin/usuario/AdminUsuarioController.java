@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,22 +29,26 @@ public class AdminUsuarioController {
         this.adminUsuarioService = adminUsuarioService;
     }
 
+    @Operation(summary = "Listar usuários")
     @GetMapping
     public List<AdminUsuarioResponse> listar() {
         return adminUsuarioService.listar();
     }
 
+    @Operation(summary = "Detalhe do usuário")
     @GetMapping("/{id}")
     public AdminUsuarioResponse obter(@PathVariable Long id) {
         return adminUsuarioService.obter(id);
     }
 
+    @Operation(summary = "Criar usuário", description = "Corpo: nome, email, senha, telefone opcional, ativo, perfis (enum).")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public AdminUsuarioResponse criar(@Valid @RequestBody UsuarioCreateRequest body) {
         return adminUsuarioService.criar(body);
     }
 
+    @Operation(summary = "Atualizar usuário", description = "Senha vazia mantém a atual; não desativar a própria conta nem remover próprio perfil ADM.")
     @PutMapping("/{id}")
     public AdminUsuarioResponse atualizar(
             @PathVariable Long id,
@@ -52,6 +57,7 @@ public class AdminUsuarioController {
         return adminUsuarioService.atualizar(id, body, principal.id());
     }
 
+    @Operation(summary = "Resetar senha provisória")
     @PostMapping("/{id}/resetar-senha")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void resetarSenha(@PathVariable Long id) {

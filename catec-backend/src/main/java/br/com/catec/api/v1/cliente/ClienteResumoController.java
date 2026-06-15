@@ -2,10 +2,11 @@ package br.com.catec.api.v1.cliente;
 
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Clientes", description = "Listagem resumida para vínculo em projetos")
@@ -20,10 +21,10 @@ public class ClienteResumoController {
         this.clienteResumoService = clienteResumoService;
     }
 
-    /**
-     * Lista clientes para autocomplete. {@code q} vazio: primeiros registros por nome; caso contrário filtra por nome
-     * (contém, sem distinção de maiúsculas) ou por documento quando o texto parecer só dígitos (mín. 3).
-     */
+    @Operation(
+            summary = "Autocomplete de clientes",
+            description =
+                    "Lista clientes para vínculo em projetos. Sem `q`: primeiros por nome; com `q`: filtra por nome (contém) ou documento (só dígitos, mín. 3).")
     @GetMapping
     public List<ClienteResumoResponse> listar(@RequestParam(name = "q", required = false) String q) {
         return clienteResumoService.listar(q);

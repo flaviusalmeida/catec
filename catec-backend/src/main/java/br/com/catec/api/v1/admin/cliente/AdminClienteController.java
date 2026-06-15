@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,27 +28,32 @@ public class AdminClienteController {
         this.adminClienteService = adminClienteService;
     }
 
+    @Operation(summary = "Listar clientes")
     @GetMapping
     public List<ClienteResponse> listar() {
         return adminClienteService.listar();
     }
 
+    @Operation(summary = "Detalhe do cliente")
     @GetMapping("/{id}")
     public ClienteResponse obter(@PathVariable Long id) {
         return adminClienteService.obter(id);
     }
 
+    @Operation(summary = "Criar cliente")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ClienteResponse criar(@Valid @RequestBody ClienteRequest body) {
         return adminClienteService.criar(body);
     }
 
+    @Operation(summary = "Atualizar cliente")
     @PutMapping("/{id}")
     public ClienteResponse atualizar(@PathVariable Long id, @Valid @RequestBody ClienteRequest body) {
         return adminClienteService.atualizar(id, body);
     }
 
+    @Operation(summary = "Remover cliente")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void remover(@PathVariable Long id) {
