@@ -1,6 +1,7 @@
 import type { GrupoFormState, PermissaoCatalogo } from "../../pages/grupoTypes";
 import { agruparPermissoesPorModulo, modulosOrdenados, rotuloModulo } from "../../pages/grupoTypes";
 import { DashboardCard } from "../projeto/detalhe/detalheUi";
+import "../table/RowEditButton.css";
 
 type Props = {
   catalogo: PermissaoCatalogo[];
@@ -54,17 +55,37 @@ export default function GrupoPermissoesPanel({
             actions={
               <button
                 type="button"
-                className="grupo-permissoes-modulo-toggle"
+                className="row-edit-button grupo-permissoes-modulo-action"
                 disabled={disabled}
                 onClick={() => onToggleModulo(codigos, !todasMarcadas)}
+                title={todasMarcadas ? "Limpar seleção do módulo" : "Marcar todas do módulo"}
+                aria-label={todasMarcadas ? "Limpar seleção do módulo" : "Marcar todas do módulo"}
               >
-                {todasMarcadas ? "Limpar" : "Marcar todas"}
+                {todasMarcadas ? (
+                  <svg className="row-edit-button__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path
+                      d="M18 6L6 18M6 6l12 12"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                ) : (
+                  <svg className="row-edit-button__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path
+                      d="M20 6L9 17l-5-5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+                <span>{todasMarcadas ? "Limpar" : "Marcar todas"}</span>
               </button>
             }
           >
-            <p className="grupo-permissoes-modulo-meta">
-              {marcadas} de {codigos.length} selecionadas
-            </p>
             <ul className="grupo-permissoes-list">
               {permissoes.map((p) => (
                 <li key={p.codigo} className="grupo-permissao-item">

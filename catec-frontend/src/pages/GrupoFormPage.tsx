@@ -13,8 +13,10 @@ import ConfirmDialog from "../components/layout/ConfirmDialog";
 import { DashboardCard } from "../components/projeto/detalhe/detalheUi";
 import InlineAlert from "../components/ui/InlineAlert";
 import LabeledSwitch from "../components/ui/LabeledSwitch";
+import StatusBadge, { StatusBadgeGroup } from "../components/ui/StatusBadge";
 import ToastAlert from "../components/ui/ToastAlert";
 import "../components/projeto/detalhe/ProjetoDetalhe.css";
+import "./GruposPage.css";
 import {
   emptyGrupoForm,
   grupoToForm,
@@ -272,19 +274,14 @@ export default function GrupoFormPage() {
                       <span className="proj-detalhe-header__sep" aria-hidden>
                         •
                       </span>
-                      <span
-                        className={`grupo-form-badge ${grupo.sistema ? "grupo-form-badge--sistema" : "grupo-form-badge--custom"}`}
-                      >
-                        {grupo.sistema ? "Sistema" : "Customizado"}
-                      </span>
-                      <span className="proj-detalhe-header__sep" aria-hidden>
-                        •
-                      </span>
-                      <span
-                        className={`grupo-form-badge ${form.ativo ? "grupo-form-badge--ativo" : "grupo-form-badge--inativo"}`}
-                      >
-                        {form.ativo ? "Ativo" : "Inativo"}
-                      </span>
+                      <StatusBadgeGroup>
+                        <span className={grupo.sistema ? "grupos-badge-sistema" : "grupos-badge-custom"}>
+                          {grupo.sistema ? "Sistema" : "Customizado"}
+                        </span>
+                        <StatusBadge variant={form.ativo ? "ativo" : "inativo"}>
+                          {form.ativo ? "Ativo" : "Inativo"}
+                        </StatusBadge>
+                      </StatusBadgeGroup>
                     </>
                   ) : (
                     <span>Cadastro de grupo de acesso</span>
@@ -320,7 +317,6 @@ export default function GrupoFormPage() {
                         onClick={() => setTab(t.id)}
                       >
                         {t.label}
-                        {t.id === "permissoes" ? ` (${form.permissoes.size})` : null}
                       </button>
                     ))}
                   </nav>
@@ -373,6 +369,18 @@ export default function GrupoFormPage() {
                               Grupo padrão do sistema — não pode ser excluído.
                             </p>
                           ) : null}
+                          {!isCreate && grupo && !grupo.sistema ? (
+                            <CanPermission code={PermissaoCodigo.ACAO_GRUPO_GERIR}>
+                              <button
+                                type="button"
+                                className="grupo-form-btn-excluir"
+                                onClick={() => setConfirmarExcluirAberto(true)}
+                                disabled={salvando || excluindo}
+                              >
+                                Excluir grupo
+                              </button>
+                            </CanPermission>
+                          ) : null}
                         </div>
                       </DashboardCard>
                     ) : null}
@@ -391,7 +399,7 @@ export default function GrupoFormPage() {
                             />
                           </div>
                           <span className="grupo-form-toolbar__count">
-                            {form.permissoes.size} de {totalCatalogo} selecionadas
+                            {form.permissoes.size} de {totalCatalogo} permissões selecionadas
                           </span>
                         </div>
                         <GrupoPermissoesPanel
@@ -427,32 +435,14 @@ export default function GrupoFormPage() {
                           <li>
                             <span className="proj-detalhe-resumo-list__label">Tipo</span>
                             <span className="proj-detalhe-resumo-list__value">
-                              {grupo.sistema ? "Sistema" : "Customizado"}
+                              <span className={grupo.sistema ? "grupos-badge-sistema" : "grupos-badge-custom"}>
+                                {grupo.sistema ? "Sistema" : "Customizado"}
+                              </span>
                             </span>
                           </li>
                         </>
                       ) : null}
                     </ul>
-                    <div className="grupo-form-sidebar-actions">
-                      <CanPermission code={PermissaoCodigo.ACAO_GRUPO_GERIR}>
-                        <PrimaryButton onClick={() => void salvar()} disabled={salvando || excluindo}>
-                          {salvando ? "Salvando…" : "Salvar alterações"}
-                        </PrimaryButton>
-                        <GhostButton onClick={() => navigate(LIST_PATH)} disabled={salvando || excluindo}>
-                          Voltar à lista
-                        </GhostButton>
-                        {!isCreate && grupo && !grupo.sistema ? (
-                          <button
-                            type="button"
-                            className="grupo-form-btn-excluir"
-                            onClick={() => setConfirmarExcluirAberto(true)}
-                            disabled={salvando || excluindo}
-                          >
-                            Excluir grupo
-                          </button>
-                        ) : null}
-                      </CanPermission>
-                    </div>
                   </DashboardCard>
                 </div>
               </aside>
