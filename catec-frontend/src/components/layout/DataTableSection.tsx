@@ -9,10 +9,7 @@ export type DataTableSectionProps = {
   loadingLabel?: string;
   /** Sem registros no cadastro (antes de qualquer linha na tabela). */
   empty: boolean;
-  emptyTitle: string;
-  emptyDescription: string;
-  emptyAction?: ReactNode;
-  emptySecondaryAction?: ReactNode;
+  emptyMessage: string;
   /** Indica que os filtros ainda acompanham a digitação (ex.: `useDeferredValue`). */
   filterPending?: boolean;
   /** Usa skeleton do design system em vez do spinner. */
@@ -28,10 +25,7 @@ export default function DataTableSection({
   loading,
   loadingLabel = "Carregando lista...",
   empty,
-  emptyTitle,
-  emptyDescription,
-  emptyAction,
-  emptySecondaryAction,
+  emptyMessage,
   filterPending = false,
   useSkeleton = false,
   children,
@@ -48,13 +42,7 @@ export default function DataTableSection({
           <LoadingBlock label={loadingLabel} />
         )
       ) : empty ? (
-        <EmptyState
-          title={emptyTitle}
-          description={emptyDescription}
-          variant="standalone"
-          action={emptyAction}
-          secondaryAction={emptySecondaryAction}
-        />
+        <EmptyState message={emptyMessage} />
       ) : (
         <div
           className={

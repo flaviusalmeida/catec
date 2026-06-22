@@ -38,8 +38,7 @@ export default function PainelResumoTable({
         loading={carregando}
         loadingLabel="Carregando projetos…"
         empty={!carregando && itens.length === 0}
-        emptyTitle="Nenhum projeto encontrado"
-        emptyDescription="Ajuste os filtros ou cadastre uma nova demanda em Projetos."
+        emptyMessage="Nenhum projeto cadastrado."
       >
         <table className="admin-crud-table painel-resumo-table__grid">
           <thead>

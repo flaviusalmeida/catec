@@ -211,13 +211,7 @@ export default function ClientesPage() {
         loadingLabel="Carregando lista..."
         useSkeleton
         empty={lista.length === 0}
-        emptyTitle="Nenhum cliente"
-        emptyDescription="Ainda não há clientes cadastrados no sistema."
-        emptyAction={
-          <PrimaryButton variant="toolbar" onClick={() => navigate("/app/clientes/novo")}>
-            Novo cliente
-          </PrimaryButton>
-        }
+        emptyMessage="Nenhum cliente cadastrado."
         filterPending={filtrosDigitacaoPendentes}
       >
         <DataTable

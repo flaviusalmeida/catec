@@ -134,8 +134,7 @@ export default function SocioPropostasPage() {
           loading={carregando}
           loadingLabel="Carregando fila…"
           empty={lista.length === 0}
-          emptyTitle="Nenhuma proposta pendente"
-          emptyDescription="Não há propostas aguardando seu parecer."
+          emptyMessage="Nenhuma proposta pendente encontrada."
         >
           <table className="admin-crud-table socio-fila-table">
             <thead>

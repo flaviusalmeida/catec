@@ -436,13 +436,7 @@ export default function UsuariosPage() {
         loadingLabel="Carregando lista…"
         useSkeleton
         empty={lista.length === 0}
-        emptyTitle="Nenhum usuário"
-        emptyDescription="Ainda não há contas cadastradas no sistema."
-        emptyAction={
-          <PrimaryButton variant="toolbar" onClick={abrirCriar}>
-            Novo usuário
-          </PrimaryButton>
-        }
+        emptyMessage="Nenhum usuário cadastrado."
         filterPending={filtrosDigitacaoPendentes}
       >
         <DataTable

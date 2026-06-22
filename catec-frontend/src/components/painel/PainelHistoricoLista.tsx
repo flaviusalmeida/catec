@@ -33,11 +33,7 @@ export default function PainelHistoricoLista({
         Histórico
       </h2>
       {!projeto ? (
-        <EmptyState
-          title="Selecione um projeto"
-          description="Clique em uma linha da tabela para ver auditoria e interações do fluxo."
-          variant="standalone"
-        />
+        <EmptyState message="Selecione um projeto." />
       ) : (
         <>
           <p className="painel-historico__projeto-nome">{projeto.titulo}</p>
@@ -45,8 +41,7 @@ export default function PainelHistoricoLista({
             loading={carregando}
             loadingLabel="Carregando histórico…"
             empty={!carregando && itens.length === 0}
-            emptyTitle="Sem registros"
-            emptyDescription="Ainda não há auditoria ou interações para este projeto."
+            emptyMessage="Nenhum registro encontrado."
           >
             <ul className="painel-historico__lista">
               {itens.map((item) => (

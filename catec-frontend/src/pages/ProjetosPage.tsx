@@ -412,13 +412,7 @@ export default function ProjetosPage() {
         loadingLabel="Carregando projetos…"
         useSkeleton
         empty={lista.length === 0}
-        emptyTitle="Nenhum projeto"
-        emptyDescription="Ainda não há demandas registradas."
-        emptyAction={
-          <PrimaryButton variant="toolbar" onClick={abrirNovo}>
-            Novo projeto
-          </PrimaryButton>
-        }
+        emptyMessage="Nenhum projeto cadastrado."
         filterPending={filtrosDigitacaoPendentes}
       >
         <DataTable
