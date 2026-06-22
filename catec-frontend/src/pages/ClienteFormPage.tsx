@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { apiFetch } from "../api/http";
+import { PermissaoCodigo } from "../auth/permissao";
 import { useAuth } from "../auth/AuthContext";
 import FieldControl from "../components/form/FieldControl";
 import FormField from "../components/form/FormField";
@@ -37,7 +38,7 @@ export default function ClienteFormPage() {
   const editandoId = !isCreate && idParam != null ? Number.parseInt(idParam, 10) : null;
   const idInvalido = !isCreate && (editandoId == null || Number.isNaN(editandoId));
 
-  const { logout } = useAuth();
+  const { logout, hasPermission } = useAuth();
   const navigate = useNavigate();
   const [carregando, setCarregando] = useState(!isCreate);
   const [erro, setErro] = useState<string | null>(null);
@@ -265,6 +266,11 @@ export default function ClienteFormPage() {
         `Cliente #${editandoId}`
       : null;
 
+  const podeSalvar = isCreate
+    ? hasPermission(PermissaoCodigo.ACAO_CLIENTE_CRIAR)
+    : hasPermission(PermissaoCodigo.ACAO_CLIENTE_EDITAR);
+  const podeExcluir = !isCreate && hasPermission(PermissaoCodigo.ACAO_CLIENTE_EXCLUIR);
+
   return (
     <>
       <ToastAlert
@@ -284,7 +290,7 @@ export default function ClienteFormPage() {
         footer={
           <AdminEntityFormActions
             danger={
-              !isCreate && editandoId != null ? (
+              podeExcluir && editandoId != null ? (
                 <GhostButton variant="danger" onClick={() => setConfirmarRemocaoId(editandoId)} disabled={desabilitadoForm}>
                   Remover
                 </GhostButton>
@@ -294,9 +300,11 @@ export default function ClienteFormPage() {
             <GhostButton onClick={() => navigate(LIST_PATH)} disabled={desabilitadoForm}>
               Cancelar
             </GhostButton>
-            <PrimaryButton onClick={() => void salvar()} disabled={desabilitadoForm || idInvalido}>
-              {salvando ? "Salvando..." : "Salvar"}
-            </PrimaryButton>
+            {podeSalvar ? (
+              <PrimaryButton onClick={() => void salvar()} disabled={desabilitadoForm || idInvalido}>
+                {salvando ? "Salvando..." : "Salvar"}
+              </PrimaryButton>
+            ) : null}
           </AdminEntityFormActions>
         }
       >

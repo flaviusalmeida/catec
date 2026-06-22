@@ -42,7 +42,7 @@ function filtrarGrupos(
 }
 
 export default function GruposPage() {
-  const { logout } = useAuth();
+  const { logout, hasPermission } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [lista, setLista] = useState<Grupo[]>([]);
@@ -236,7 +236,7 @@ export default function GruposPage() {
           columns={columns}
           rows={listaFiltrada}
           getRowKey={(g) => g.id}
-          onRowClick={abrirGrupo}
+          onRowClick={hasPermission(PermissaoCodigo.ACAO_GRUPO_GERIR) ? abrirGrupo : undefined}
           filterEmptyMessage="Não há grupos que correspondam aos filtros."
           tableClassName="data-table--grupos"
           renderActions={(g) => (

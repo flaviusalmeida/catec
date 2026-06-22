@@ -1,6 +1,8 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { apiFetch } from "../api/http";
+import CanPermission from "../auth/CanPermission";
+import { PermissaoCodigo } from "../auth/permissao";
 import { useAuth } from "../auth/AuthContext";
 import FieldControl from "../components/form/FieldControl";
 import PrimaryButton from "../components/buttons/PrimaryButton";
@@ -27,7 +29,7 @@ function documentoParaExibicao(c: Cliente): string {
 }
 
 export default function ClientesPage() {
-  const { logout } = useAuth();
+  const { logout, hasPermission } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [lista, setLista] = useState<Cliente[]>([]);
@@ -159,9 +161,11 @@ export default function ClientesPage() {
         title="Clientes"
         subtitle="Gestão de clientes."
         actions={
-          <PrimaryButton variant="toolbar" onClick={() => navigate("/app/clientes/novo")}>
-            Novo cliente
-          </PrimaryButton>
+          <CanPermission code={PermissaoCodigo.ACAO_CLIENTE_CRIAR}>
+            <PrimaryButton variant="toolbar" onClick={() => navigate("/app/clientes/novo")}>
+              Novo cliente
+            </PrimaryButton>
+          </CanPermission>
         }
       />
 
@@ -218,15 +222,23 @@ export default function ClientesPage() {
           columns={columns}
           rows={listaFiltrada}
           getRowKey={(c) => c.id}
-          onRowClick={(c) => navigate(`/app/clientes/${c.id}/editar`)}
+          onRowClick={
+            hasPermission(PermissaoCodigo.ACAO_CLIENTE_EDITAR)
+              ? (c) => navigate(`/app/clientes/${c.id}/editar`)
+              : undefined
+          }
           filterEmptyMessage="Não há clientes que correspondam aos filtros."
           tableClassName="data-table--clientes"
-          renderActions={(c) => (
-            <TableAction
-              ariaLabel={`Editar ${c.razaoSocialOuNome}`}
-              onClick={() => navigate(`/app/clientes/${c.id}/editar`)}
-            />
-          )}
+          renderActions={
+            hasPermission(PermissaoCodigo.ACAO_CLIENTE_EDITAR)
+              ? (c) => (
+                  <TableAction
+                    ariaLabel={`Editar ${c.razaoSocialOuNome}`}
+                    onClick={() => navigate(`/app/clientes/${c.id}/editar`)}
+                  />
+                )
+              : undefined
+          }
         />
       </DataTableSection>
     </ListPage>

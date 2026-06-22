@@ -1,6 +1,12 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { apiFetch } from "../api/http";
+import CanPermission from "../auth/CanPermission";
+import { PermissaoCodigo } from "../auth/permissao";
+import {
+  isAdministrativo,
+  podeEditarCamposProjeto,
+} from "../auth/projetoAcesso";
 import { useAuth } from "../auth/AuthContext";
 import ClienteAutocomplete from "../components/projeto/ClienteAutocomplete";
 import ProjetoStatusBadge from "../components/projeto/ProjetoStatusBadge";
@@ -57,11 +63,12 @@ function formFromProjeto(p: Projeto): FormState {
   };
 }
 
-function podeEditarCampos(p: Projeto | null, userId: number | undefined, isAdmin: boolean): boolean {
-  if (!p || userId == null) return false;
-  if (p.status === "PENDENTE_CLIENTE") return false;
-  if (isAdmin) return true;
-  return p.criadoPorId === userId && p.status === "AGUARDANDO_PROPOSTA_COMERCIAL";
+function podeEditarCampos(
+  p: Projeto | null,
+  userId: number | undefined,
+  hasPermission: (codigo: string) => boolean,
+): boolean {
+  return podeEditarCamposProjeto(p, userId, hasPermission);
 }
 
 function previewContatoCliente(
@@ -82,7 +89,7 @@ function previewContatoCliente(
 }
 
 export default function ProjetosPage() {
-  const { user, isAdmin, logout } = useAuth();
+  const { user, hasPermission, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [lista, setLista] = useState<Projeto[]>([]);
@@ -303,14 +310,14 @@ export default function ProjetosPage() {
         return;
       }
 
-      const podeCampos = podeEditarCampos(editando, user?.id, isAdmin);
+      const podeCampos = podeEditarCampos(editando, user?.id, hasPermission);
       const body: Record<string, unknown> = {};
 
       if (podeCampos) {
         body.titulo = titulo;
         body.escopo = escopo;
       }
-      if (isAdmin) {
+      if (administrativo) {
         body.clienteId = Number.isNaN(cid) ? editando.clienteId : cid;
         body.status = null;
       } else {
@@ -342,15 +349,24 @@ export default function ProjetosPage() {
     }
   }
 
+  const administrativo = isAdministrativo(hasPermission);
+
   const pendenteCliente = modo === "editar" && editando?.status === "PENDENTE_CLIENTE";
   const podeAssociarCliente =
     pendenteCliente &&
     editando != null &&
-    (isAdmin || (user?.id != null && editando.criadoPorId === user.id));
+    hasPermission(PermissaoCodigo.ACAO_PROJETO_ASSOCIAR_CLIENTE) &&
+    (administrativo || (user?.id != null && editando.criadoPorId === user.id));
 
-  const camposEditaveis = editando == null ? true : podeEditarCampos(editando, user?.id, isAdmin);
+  const camposEditaveis = editando == null ? true : podeEditarCampos(editando, user?.id, hasPermission);
   const somenteLeitura =
-    modo === "editar" && !isAdmin && (pendenteCliente ? !podeAssociarCliente : !camposEditaveis);
+    modo === "editar" && !administrativo && (pendenteCliente ? !podeAssociarCliente : !camposEditaveis);
+  const podeSalvarModal =
+    modo === "criar"
+      ? hasPermission(PermissaoCodigo.ACAO_PROJETO_CRIAR)
+      : pendenteCliente
+        ? hasPermission(PermissaoCodigo.ACAO_PROJETO_ASSOCIAR_CLIENTE)
+        : hasPermission(PermissaoCodigo.ACAO_PROJETO_EDITAR);
 
   return (
     <ListPage>
@@ -368,9 +384,11 @@ export default function ProjetosPage() {
         title="Projetos"
         subtitle="Demandas iniciais vinculadas a cliente."
         actions={
-          <PrimaryButton variant="toolbar" onClick={abrirNovo}>
-            Novo projeto
-          </PrimaryButton>
+          <CanPermission code={PermissaoCodigo.ACAO_PROJETO_CRIAR}>
+            <PrimaryButton variant="toolbar" onClick={abrirNovo}>
+              Novo projeto
+            </PrimaryButton>
+          </CanPermission>
         }
       />
 
@@ -420,10 +438,14 @@ export default function ProjetosPage() {
           rows={listaFiltrada}
           getRowKey={(p) => p.id}
           onRowClick={(p) => navigate(`/app/projetos/${p.id}`)}
-          onRowDoubleClick={(p, e) => {
-            e.stopPropagation();
-            abrirEditar(p);
-          }}
+          onRowDoubleClick={
+            hasPermission(PermissaoCodigo.ACAO_PROJETO_EDITAR)
+              ? (p, e) => {
+                  e.stopPropagation();
+                  abrirEditar(p);
+                }
+              : undefined
+          }
           filterEmptyMessage="Não há projetos que correspondam aos filtros."
           tableClassName="data-table--projetos"
           renderActions={(p) => (
@@ -477,7 +499,7 @@ export default function ProjetosPage() {
               disabled={
                 salvando ||
                 somenteLeitura ||
-                (modo === "editar" && !pendenteCliente && !isAdmin)
+                (modo === "editar" && !pendenteCliente && !administrativo)
               }
               valueId={form.clienteId}
               inputValue={form.clienteBusca}
@@ -555,7 +577,7 @@ export default function ProjetosPage() {
           <GhostButton onClick={() => setModalAberto(false)} disabled={salvando}>
             {somenteLeitura ? "Fechar" : "Cancelar"}
           </GhostButton>
-          {somenteLeitura ? null : (
+          {somenteLeitura || !podeSalvarModal ? null : (
             <PrimaryButton onClick={() => void salvar()} disabled={salvando}>
               {pendenteCliente && podeAssociarCliente
                 ? salvando

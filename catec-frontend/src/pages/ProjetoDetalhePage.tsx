@@ -1,6 +1,8 @@
 import { useCallback, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { PermissaoCodigo } from "../auth/permissao";
+import { podeExibirEditarProjeto } from "../auth/projetoAcesso";
 import ContratoPanel from "../components/contrato/ContratoPanel";
 import ProjetoDetalheHeaderActions from "../components/projeto/detalhe/ProjetoDetalheHeaderActions";
 import PropostaPanel, { type PropostaPanelHandle } from "../components/proposta/PropostaPanel";
@@ -38,7 +40,7 @@ export default function ProjetoDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const projetoId = Number(id);
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user, hasPermission } = useAuth();
   const [tab, setTab] = useState<TabId>("geral");
   const [refreshKey, setRefreshKey] = useState(0);
   const propostaRef = useRef<PropostaPanelHandle>(null);
@@ -51,7 +53,10 @@ export default function ProjetoDetalhePage() {
     setRefreshKey((k) => k + 1);
   }, [fluxo.recarregar]);
 
-  const tituloProjeto = fluxo.carregando ? "…" : (fluxo.projeto?.titulo ?? "Projeto");
+  const podeRegistrarInteracao =
+    fluxo.podeRegistrarInteracao && hasPermission(PermissaoCodigo.ACAO_INTERACAO_REGISTRAR);
+  const mostrarEditarProjeto =
+    fluxo.projeto != null && podeExibirEditarProjeto(fluxo.projeto, user?.id, hasPermission);
   const mostrarContrato =
     fluxo.projeto?.status === "AGUARDANDO_CONTRATO" || fluxo.projeto?.status === "EM_EXECUCAO";
 
@@ -59,6 +64,8 @@ export default function ProjetoDetalhePage() {
     if (!fluxo.projeto) return;
     navigate(LIST_PATH, { state: { editarProjetoId: fluxo.projeto.id } });
   }
+
+  const tituloProjeto = fluxo.carregando ? "…" : (fluxo.projeto?.titulo ?? "Projeto");
 
   return (
     <div className="proj-detalhe-page">
@@ -92,7 +99,7 @@ export default function ProjetoDetalhePage() {
                   <ProjetoStatusBadge status={fluxo.projeto.status} />
                 </p>
               </div>
-              <ProjetoDetalheHeaderActions onEditar={editarProjeto} />
+              {mostrarEditarProjeto ? <ProjetoDetalheHeaderActions onEditar={editarProjeto} /> : null}
             </header>
 
             <div className="proj-detalhe-layout">
@@ -153,7 +160,7 @@ export default function ProjetoDetalhePage() {
                   {tab === "interacoes" ? (
                     <ProjetoTabInteracoes
                       interacoes={fluxo.interacoes}
-                      podeRegistrar={fluxo.podeRegistrarInteracao}
+                      podeRegistrar={podeRegistrarInteracao}
                       onRegistrar={() => interacaoRef.current?.open()}
                     />
                   ) : null}

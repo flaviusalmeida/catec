@@ -9,6 +9,7 @@ import {
 } from "react";
 import { apiFetch } from "../../api/http";
 import { useAuth } from "../../auth/AuthContext";
+import { PermissaoCodigo } from "../../auth/permissao";
 import PrimaryButton from "../buttons/PrimaryButton";
 import FieldControl from "../form/FieldControl";
 import FormField from "../form/FormField";
@@ -113,7 +114,7 @@ const PropostaPanel = forwardRef<PropostaPanelHandle, Props>(function PropostaPa
   { projetoId, projetoTemCliente, onPropostaAtualizada, embedded = false },
   ref,
 ) {
-  const { isAdmin, isSocio, logout } = useAuth();
+  const { hasPermission, logout } = useAuth();
   const [propostas, setPropostas] = useState<Proposta[]>([]);
   const [selecionadaId, setSelecionadaId] = useState<number | null>(null);
   const [documentosVersao, setDocumentosVersao] = useState<DocumentoAnexo[]>([]);
@@ -130,7 +131,7 @@ const PropostaPanel = forwardRef<PropostaPanelHandle, Props>(function PropostaPa
     (p) => p.status === "AGUARDANDO_AJUSTE_ADM" || p.consideracoesPendentes,
   );
   const podeCriarNova =
-    isAdmin &&
+    hasPermission(PermissaoCodigo.ACAO_PROPOSTA_CRIAR) &&
     projetoTemCliente &&
     !temPropostaAtiva &&
     !processando &&
@@ -370,26 +371,37 @@ const PropostaPanel = forwardRef<PropostaPanelHandle, Props>(function PropostaPa
     }
   }
 
-  const podeUpload = isAdmin && selecionada && STATUS_PROPOSTA_UPLOAD.includes(selecionada.status);
+  const podeUpload =
+    hasPermission(PermissaoCodigo.ACAO_DOCUMENTO_UPLOAD) &&
+    selecionada &&
+    STATUS_PROPOSTA_UPLOAD.includes(selecionada.status);
   const uploadRascunho = Boolean(podeUpload && selecionada?.status === "RASCUNHO");
   const documentoAtual = documentoMaisRecente(documentosVersao);
+  const rascunhoComAnexo =
+    hasPermission(PermissaoCodigo.ACAO_PROPOSTA_APROVAR_INTERNO) &&
+    selecionada?.status === "RASCUNHO" &&
+    temAnexo;
   const mostrarProposta = !carregando && propostas.length > 0 && selecionada != null;
   const documentosEnviadosHistorico =
     selecionadaId != null
       ? documentosEnviados.filter((d) => d.propostaId !== selecionadaId)
       : documentosEnviados;
 
-  const rascunhoComAnexo = isAdmin && selecionada?.status === "RASCUNHO" && temAnexo;
+  const workflowPermissions = {
+    podeAprovarInterno: hasPermission(PermissaoCodigo.ACAO_PROPOSTA_APROVAR_INTERNO),
+    podeEnviarCliente: hasPermission(PermissaoCodigo.ACAO_PROPOSTA_ENVIAR_CLIENTE),
+    podeSocio: hasPermission(PermissaoCodigo.ACAO_SOCIO_PROPOSTA_APROVAR),
+  };
 
   const workflowUi =
     selecionada != null
       ? resolvePropostaWorkflowUi(selecionada.status, {
           hasAttachment: temAnexo,
-          permissions: { isAdmin, isSocio },
+          permissions: workflowPermissions,
         })
       : { kind: "none" as const };
 
-  const workflowPermissionList = propostaWorkflowPermissions({ isAdmin, isSocio });
+  const workflowPermissionList = propostaWorkflowPermissions(workflowPermissions);
 
   function acaoWorkflow(key: PropostaWorkflowActionKey): () => void {
     switch (key) {

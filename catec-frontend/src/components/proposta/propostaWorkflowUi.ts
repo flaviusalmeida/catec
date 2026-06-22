@@ -2,8 +2,9 @@ import type { PropostaStatus } from "../../pages/propostaTypes";
 import { STATE_PROPOSTA_APROVADA_TITLE, STATE_PROPOSTA_REPROVADA_TITLE } from "../projeto/detalhe/stateMessages";
 
 export type PropostaWorkflowPermissions = {
-  isAdmin: boolean;
-  isSocio: boolean;
+  podeAprovarInterno: boolean;
+  podeEnviarCliente: boolean;
+  podeSocio: boolean;
 };
 
 export type PropostaWorkflowActionKey =
@@ -32,8 +33,8 @@ export type PropostaWorkflowUi =
 
 export function propostaWorkflowPermissions(perms: PropostaWorkflowPermissions): string[] {
   const list: string[] = [];
-  if (perms.isAdmin) list.push("admin");
-  if (perms.isSocio) list.push("socio");
+  if (perms.podeAprovarInterno || perms.podeEnviarCliente) list.push("admin");
+  if (perms.podeSocio) list.push("socio");
   return list;
 }
 
@@ -46,7 +47,7 @@ export function resolvePropostaWorkflowUi(
 ): PropostaWorkflowUi {
   const { hasAttachment, permissions } = opts;
 
-  if (status === "RASCUNHO" && hasAttachment && permissions.isAdmin) {
+  if (status === "RASCUNHO" && hasAttachment && permissions.podeAprovarInterno) {
     return {
       kind: "actions",
       actions: [
@@ -61,18 +62,17 @@ export function resolvePropostaWorkflowUi(
     };
   }
 
-  /** Pendente parecer: exibe ações na UI; controle fino de quem pode executar fica para depois. */
-  if (status === "PENDENTE_AVALIACAO_SOCIO") {
+  if (status === "PENDENTE_AVALIACAO_SOCIO" && permissions.podeSocio) {
     return {
       kind: "actions",
       actions: [
-        { key: "aprovar-socio", label: "Aprovar", variant: "primary" },
-        { key: "reprovar-socio", label: "Reprovar", variant: "danger" },
+        { key: "aprovar-socio", label: "Aprovar", variant: "primary", permission: "socio" },
+        { key: "reprovar-socio", label: "Reprovar", variant: "danger", permission: "socio" },
       ],
     };
   }
 
-  if (status === "APROVADA_INTERNA" && permissions.isAdmin) {
+  if (status === "APROVADA_INTERNA" && permissions.podeEnviarCliente) {
     return {
       kind: "actions",
       actions: [

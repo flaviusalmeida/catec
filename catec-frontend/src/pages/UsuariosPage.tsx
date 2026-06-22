@@ -139,7 +139,7 @@ function IconPerfilAjuda() {
 }
 
 export default function UsuariosPage() {
-  const { logout } = useAuth();
+  const { logout, hasPermission } = useAuth();
   const navigate = useNavigate();
   const [lista, setLista] = useState<AdminUsuario[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -447,7 +447,7 @@ export default function UsuariosPage() {
           columns={columns}
           rows={listaFiltrada}
           getRowKey={(u) => u.id}
-          onRowClick={abrirEditar}
+          onRowClick={hasPermission(PermissaoCodigo.ACAO_USUARIO_GERIR) ? abrirEditar : undefined}
           filterEmptyMessage="Não há usuários que correspondam aos filtros."
           tableClassName="data-table--usuarios"
           renderActions={(u) => (

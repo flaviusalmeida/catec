@@ -1,6 +1,7 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { apiFetch } from "../../api/http";
 import { useAuth } from "../../auth/AuthContext";
+import { PermissaoCodigo } from "../../auth/permissao";
 import PrimaryButton from "../buttons/PrimaryButton";
 import FieldControl from "../form/FieldControl";
 import FormField from "../form/FormField";
@@ -40,7 +41,7 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
   { projetoId, onContratoAtualizado, embedded = false, hideHeaderActions = false },
   ref,
 ) {
-  const { isAdmin, logout } = useAuth();
+  const { hasPermission, logout } = useAuth();
   const [contrato, setContrato] = useState<Contrato | null>(null);
   const [documentos, setDocumentos] = useState<DocumentoAnexo[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -50,15 +51,19 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
   const uploadEmAndamentoRef = useRef(false);
 
   const temAnexo = documentos.length > 0;
-  const podeCriar = isAdmin && !contrato && !processando;
+  const podeCriar = hasPermission(PermissaoCodigo.ACAO_CONTRATO_CRIAR) && !contrato && !processando;
   const podeUpload =
-    isAdmin &&
+    hasPermission(PermissaoCodigo.ACAO_DOCUMENTO_UPLOAD) &&
     contrato != null &&
     STATUS_CONTRATO_UPLOAD.includes(contrato.status) &&
     (contrato.status === "RASCUNHO" ||
       contrato.status === "AGUARDANDO_AJUSTE_ADM" ||
       !temAnexo);
-  const podeEnviarCliente = isAdmin && contrato?.status === "RASCUNHO" && temAnexo && !processando;
+  const podeEnviarCliente =
+    hasPermission(PermissaoCodigo.ACAO_CONTRATO_ENVIAR) &&
+    contrato?.status === "RASCUNHO" &&
+    temAnexo &&
+    !processando;
 
   const carregarDocumentos = useCallback(
     async (contratoId: number, status: Contrato["status"] | undefined) => {

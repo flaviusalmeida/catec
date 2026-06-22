@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "../../api/http";
 import { useAuth } from "../../auth/AuthContext";
+import { PermissaoCodigo } from "../../auth/permissao";
 import GhostButton from "../buttons/GhostButton";
 import PrimaryButton from "../buttons/PrimaryButton";
 import FieldControl from "../form/FieldControl";
@@ -65,7 +66,7 @@ function formatarDataHora(iso: string): string {
 }
 
 export default function InteracoesClientePanel({ projetoId, refreshKey = 0, onAtualizado }: Props) {
-  const { isAdmin, logout } = useAuth();
+  const { hasPermission, logout } = useAuth();
   const [interacoes, setInteracoes] = useState<InteracaoItem[]>([]);
   const [alvoRegistro, setAlvoRegistro] = useState<AlvoRegistro | null>(null);
   const [temFluxoCliente, setTemFluxoCliente] = useState(false);
@@ -175,7 +176,8 @@ export default function InteracoesClientePanel({ projetoId, refreshKey = 0, onAt
     void carregar();
   }, [carregar, refreshKey]);
 
-  const podeRegistrar = isAdmin && alvoRegistro != null;
+  const podeRegistrar =
+    hasPermission(PermissaoCodigo.ACAO_INTERACAO_REGISTRAR) && alvoRegistro != null;
   const deveExibir = carregando || temFluxoCliente;
 
   async function registrarInteracao() {

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiFetch } from "../api/http";
+import CanPermission from "../auth/CanPermission";
+import { PermissaoCodigo } from "../auth/permissao";
 import { useAuth } from "../auth/AuthContext";
 import GhostButton from "../components/buttons/GhostButton";
 import PrimaryButton from "../components/buttons/PrimaryButton";
@@ -159,23 +161,27 @@ export default function SocioPropostasPage() {
                   <td data-label="Versão">v{p.versao}</td>
                   <td data-label="Elaborada por">{p.elaboradoPorNome}</td>
                   <td className="admin-crud-table__td-actions socio-fila-acoes" data-label="Ações">
-                    <PrimaryButton
-                      variant="toolbar"
-                      disabled={processando}
-                      onClick={() => void aprovar(p)}
-                    >
-                      Aprovar
-                    </PrimaryButton>
-                    <GhostButton
-                      disabled={processando}
-                      onClick={() => {
-                        setItemAcao(p);
-                        setParecer("");
-                        setAcaoModal("devolver");
-                      }}
-                    >
-                      Devolver
-                    </GhostButton>
+                    <CanPermission code={PermissaoCodigo.ACAO_SOCIO_PROPOSTA_APROVAR}>
+                      <PrimaryButton
+                        variant="toolbar"
+                        disabled={processando}
+                        onClick={() => void aprovar(p)}
+                      >
+                        Aprovar
+                      </PrimaryButton>
+                    </CanPermission>
+                    <CanPermission code={PermissaoCodigo.ACAO_SOCIO_PROPOSTA_DEVOLVER}>
+                      <GhostButton
+                        disabled={processando}
+                        onClick={() => {
+                          setItemAcao(p);
+                          setParecer("");
+                          setAcaoModal("devolver");
+                        }}
+                      >
+                        Devolver
+                      </GhostButton>
+                    </CanPermission>
                     <Link to={`/app/projetos/${p.projetoId}`} className="socio-fila-link-detalhe">
                       Detalhe
                     </Link>
