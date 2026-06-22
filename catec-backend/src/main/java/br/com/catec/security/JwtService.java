@@ -37,6 +37,7 @@ public class JwtService {
         Instant exp = now.plusSeconds(getExpirationSeconds());
         List<String> roles = usuario.getGrupos().stream()
                 .map(v -> v.getGrupo().getCodigo())
+                .distinct()
                 .collect(Collectors.toList());
         return Jwts.builder()
                 .subject(usuario.getEmail().toLowerCase())

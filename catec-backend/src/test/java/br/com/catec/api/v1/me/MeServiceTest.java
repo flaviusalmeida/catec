@@ -34,7 +34,7 @@ class MeServiceTest {
     @Test
     void obterPerfil_quandoUsuarioExiste_deveRetornarGruposEPermissoes() {
         var usuario = usuario(7L, "Usuário Teste", "user@catec.local", "SOCIO", "ADMINISTRATIVO");
-        when(usuarioRepository.findById(7L)).thenReturn(java.util.Optional.of(usuario));
+        when(usuarioRepository.findByIdComPermissoes(7L)).thenReturn(java.util.Optional.of(usuario));
         when(permissaoResolver.resolve(usuario.getGrupos()))
                 .thenReturn(new PermissaoResolver.ResolvedAccess(
                         List.of("ADMINISTRATIVO", "SOCIO"), List.of("tela.painel", "acao.grupo.gerir")));
@@ -50,7 +50,7 @@ class MeServiceTest {
 
     @Test
     void obterPerfil_quandoNaoExiste_deveLancarNotFound() {
-        when(usuarioRepository.findById(99L)).thenReturn(java.util.Optional.empty());
+        when(usuarioRepository.findByIdComPermissoes(99L)).thenReturn(java.util.Optional.empty());
         var ex = assertThrows(ResponseStatusException.class, () -> service.obterPerfil(99L));
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
     }

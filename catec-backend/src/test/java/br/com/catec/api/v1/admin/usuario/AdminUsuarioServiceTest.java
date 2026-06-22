@@ -84,6 +84,24 @@ class AdminUsuarioServiceTest {
     }
 
     @Test
+    void listar_comJoinDePermissoes_naoDuplicaGruposNaResposta() {
+        var adminComJoinInflado = usuario(1L, "Administrador", "admin@catec.local", true, false, "ADMINISTRATIVO");
+        // Simula efeito do fetch join com grupo_permissao (mesmo vínculo repetido N vezes).
+        var inflado = new ArrayList<>(adminComJoinInflado.getGrupos());
+        for (int i = 0; i < 5; i++) {
+            inflado.add(UsuarioGrupo.associar(adminComJoinInflado, grupo("ADMINISTRATIVO")));
+        }
+        adminComJoinInflado.setGrupos(inflado);
+
+        when(usuarioRepository.findAll(any(org.springframework.data.domain.Sort.class)))
+                .thenReturn(List.of(adminComJoinInflado));
+
+        var result = service.listar();
+
+        assertEquals(List.of("ADMINISTRATIVO"), result.get(0).grupos());
+    }
+
+    @Test
     void obter_quandoUsuarioNaoExiste_deveLancarNotFound() {
         when(usuarioRepository.findById(99L)).thenReturn(java.util.Optional.empty());
 

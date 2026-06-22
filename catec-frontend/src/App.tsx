@@ -10,6 +10,7 @@ import LoginPage from "./pages/LoginPage";
 import ClienteFormPage from "./pages/ClienteFormPage";
 import ClientesPage from "./pages/ClientesPage";
 import GruposPage from "./pages/GruposPage";
+import GrupoFormPage from "./pages/GrupoFormPage";
 import ProjetosPage from "./pages/ProjetosPage";
 import ProjetoDetalhePage from "./pages/ProjetoDetalhePage";
 import SocioPropostasPage from "./pages/SocioPropostasPage";
@@ -121,6 +122,22 @@ export default function App() {
             element={
               <RequirePermission code={PermissaoCodigo.TELA_USUARIOS}>
                 <UsuariosPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="grupos/novo"
+            element={
+              <RequirePermission code={PermissaoCodigo.TELA_GRUPOS}>
+                <GrupoFormPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="grupos/:id"
+            element={
+              <RequirePermission code={PermissaoCodigo.TELA_GRUPOS}>
+                <GrupoFormPage />
               </RequirePermission>
             }
           />

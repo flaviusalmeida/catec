@@ -188,7 +188,7 @@ export default function UsuariosPage() {
         header: "Grupos",
         dataLabel: "Grupos",
         cellClassName: "usuarios-perfis",
-        render: (u) => u.grupos.join(", "),
+        render: (u) => [...new Set(u.grupos)].join(", "),
       },
       {
         id: "status",

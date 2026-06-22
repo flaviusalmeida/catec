@@ -154,6 +154,7 @@ public class AdminUsuarioService {
     private AdminUsuarioResponse toResponse(Usuario u) {
         var grupos = u.getGrupos().stream()
                 .map(v -> v.getGrupo().getCodigo())
+                .distinct()
                 .sorted()
                 .collect(Collectors.toList());
         return new AdminUsuarioResponse(

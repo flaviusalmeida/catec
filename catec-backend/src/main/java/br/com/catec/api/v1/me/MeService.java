@@ -21,7 +21,7 @@ public class MeService {
     @Transactional(readOnly = true)
     public MeResponse obterPerfil(Long usuarioId) {
         var usuario = usuarioRepository
-                .findById(usuarioId)
+                .findByIdComPermissoes(usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
         var access = permissaoResolver.resolve(usuario.getGrupos());
         return new MeResponse(
