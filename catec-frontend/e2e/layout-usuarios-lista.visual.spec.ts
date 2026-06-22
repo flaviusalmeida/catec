@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { meAdministrativo } from "./fixtures/me";
 
 test("layout da tela de usuários sem modal permanece consistente", async ({ page }) => {
   const agora = "2026-04-20T00:00:00Z";
@@ -11,15 +12,7 @@ test("layout da tela de usuários sem modal permanece consistente", async ({ pag
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({
-        id: 1,
-        nome: "Administrador",
-        email: "admin@catec.local",
-        perfis: ["ADMINISTRATIVO"],
-        ativo: true,
-        telefone: null,
-        requerTrocaSenha: false,
-      }),
+      body: JSON.stringify(meAdministrativo()),
     });
   });
 
@@ -35,7 +28,7 @@ test("layout da tela de usuários sem modal permanece consistente", async ({ pag
           telefone: null,
           ativo: true,
           requerTrocaSenha: false,
-          perfis: ["ADMINISTRATIVO"],
+          grupos: ["ADMINISTRATIVO"],
           criadoEm: agora,
           atualizadoEm: agora,
         },
@@ -46,7 +39,7 @@ test("layout da tela de usuários sem modal permanece consistente", async ({ pag
           telefone: "11999990000",
           ativo: true,
           requerTrocaSenha: false,
-          perfis: ["COLABORADOR"],
+          grupos: ["COLABORADOR"],
           criadoEm: agora,
           atualizadoEm: agora,
         },

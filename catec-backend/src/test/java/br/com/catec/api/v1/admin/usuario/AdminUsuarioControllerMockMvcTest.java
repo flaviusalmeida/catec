@@ -11,11 +11,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import br.com.catec.domain.usuario.PerfilMacro;
 import br.com.catec.domain.usuario.UsuarioRepository;
 import br.com.catec.security.JwtService;
-import br.com.catec.security.MethodSecurityConfig;
+import br.com.catec.security.SecurityWebMvcTestConfig;
 import br.com.catec.security.UsuarioAutenticado;
+import br.com.catec.security.UsuarioAutenticadoFixtures;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.List;
@@ -25,13 +25,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(AdminUsuarioController.class)
 @AutoConfigureMockMvc
-@Import(MethodSecurityConfig.class)
+@Import(SecurityWebMvcTestConfig.class)
 class AdminUsuarioControllerMockMvcTest {
 
     @Autowired
@@ -76,7 +75,7 @@ class AdminUsuarioControllerMockMvcTest {
 
     @Test
     void criar_quandoPayloadValido_deveRetornar201() throws Exception {
-        var req = new UsuarioCreateRequest("Novo", "novo@catec.local", "11999990000", List.of(PerfilMacro.COLABORADOR));
+        var req = new UsuarioCreateRequest("Novo", "novo@catec.local", "11999990000", List.of("COLABORADOR"));
         when(adminUsuarioService.criar(req)).thenReturn(resposta(11L, "Novo", "novo@catec.local"));
 
         mockMvc.perform(post("/api/v1/admin/usuarios")
@@ -107,7 +106,7 @@ class AdminUsuarioControllerMockMvcTest {
     @Test
     void atualizar_quandoPayloadValido_deveRetornar200EPassarOperador() throws Exception {
         Long operadorId = 99L;
-        var req = new UsuarioUpdateRequest("Atualizado", "atualizado@catec.local", "11911112222", true, List.of(PerfilMacro.FINANCEIRO));
+        var req = new UsuarioUpdateRequest("Atualizado", "atualizado@catec.local", "11911112222", true, List.of("FINANCEIRO"));
         when(adminUsuarioService.atualizar(10L, req, operadorId)).thenReturn(resposta(10L, "Atualizado", "atualizado@catec.local"));
 
         mockMvc.perform(put("/api/v1/admin/usuarios/10")
@@ -137,8 +136,8 @@ class AdminUsuarioControllerMockMvcTest {
     }
 
     @Test
-    void listar_quandoSemRoleAdministrativo_deveRetornar403() throws Exception {
-        mockMvc.perform(get("/api/v1/admin/usuarios").with(user(colaboradorPrincipal(2L))))
+    void listar_quandoSemPermissaoGerirUsuarios_deveRetornar403() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/usuarios").with(user(UsuarioAutenticadoFixtures.colaborador(2L))))
                 .andExpect(status().isForbidden());
     }
 
@@ -156,20 +155,6 @@ class AdminUsuarioControllerMockMvcTest {
     }
 
     private static UsuarioAutenticado adminPrincipal(Long id) {
-        return new UsuarioAutenticado(
-                id,
-                "admin@catec.local",
-                "Administrador",
-                false,
-                List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRATIVO")));
-    }
-
-    private static UsuarioAutenticado colaboradorPrincipal(Long id) {
-        return new UsuarioAutenticado(
-                id,
-                "colab@catec.local",
-                "Colaborador",
-                false,
-                List.of(new SimpleGrantedAuthority("ROLE_COLABORADOR")));
+        return UsuarioAutenticadoFixtures.administrativo(id);
     }
 }

@@ -70,7 +70,7 @@ Se preferir Maven global: `mvn spring-boot:run` (requer Maven 3.6.3+ e o mesmo J
 
 O perfil Spring ativo por padrão é **`dev`** (`application-dev.yml`, conexão com o PostgreSQL). Para outro perfil: variável `SPRING_PROFILES_ACTIVE` ou, com Maven, `-Dspring-boot.run.profiles=...`.
 
-A API sobe por padrão em **http://localhost:8080**. Endpoints públicos: **`GET /api/v1/health-check`**, **`POST /api/v1/auth/login`**, **`GET /actuator/health`**. Com JWT válido: **`GET /api/v1/me`** (dados do usuário e lista de perfis) e exemplo protegido **`GET /api/v1/demo/ping`**.
+A API sobe por padrão em **http://localhost:8080**. Endpoints públicos: **`GET /api/v1/health-check`**, **`POST /api/v1/auth/login`**, **`GET /actuator/health`**. Com JWT válido: **`GET /api/v1/me`** (dados do usuário, grupos e permissões) e exemplo protegido **`GET /api/v1/demo/ping`**.
 
 ### Documentação OpenAPI (Swagger) — perfil `dev`
 
@@ -81,7 +81,7 @@ Com o backend em execução e **`SPRING_PROFILES_ACTIVE=dev`** (padrão local):
 
 A UI e o spec ficam **desabilitados** fora do perfil `dev` (`application.yml`). Tags no Swagger: **Auth**, **Clientes**, **Projetos**, **Propostas**, **Documentos**, **Usuários**, **Sessão**, **Sistema**, **Painel**. Versão da API no spec: **1.0.0**. Use **Authorize** com o token de `POST /api/v1/auth/login` (`Bearer <accessToken>`).
 
-**Gestão de usuários (task_005):** rotas sob **`/api/v1/admin/usuarios`**, restritas a JWT de usuário com perfil **`ADMINISTRATIVO`** (HTTP **403** caso contrário). Operações: **`GET`** listagem; **`GET /{id}`** detalhe; **`POST`** criação (corpo com `nome`, `email`, `senha`, `telefone` opcional, `ativo`, `perfis` como lista de enums, ex.: `["COLABORADOR","ADMINISTRATIVO"]`); **`PUT /{id}`** atualização (mesmos campos; `senha` opcional — vazia mantém a senha atual). Regras: e-mail único; não é permitido desativar a própria conta nem remover o próprio perfil `ADMINISTRATIVO`. Testes unitários do serviço: `AdminUsuarioServiceTest`. Regressão manual rápida: login como `admin@catec.local`, chamar `GET /api/v1/admin/usuarios` com `Authorization: Bearer <token>` e verificar **200**; com token inválido, **401**; sem perfil administrativo (quando existir outro usuário ativo só colaborador), **403**.
+**Gestão de usuários (task_005):** rotas sob **`/api/v1/admin/usuarios`**, restritas à permissão **`acao.usuario.gerir`** (HTTP **403** caso contrário). Operações: **`GET`** listagem; **`GET /{id}`** detalhe; **`POST`** criação (corpo com `nome`, `email`, `telefone` opcional, `grupos` como lista de códigos, ex.: `["COLABORADOR","ADMINISTRATIVO"]`); **`PUT /{id}`** atualização (mesmos campos). Regras: e-mail único; não é permitido desativar a própria conta nem remover o próprio grupo `ADMINISTRATIVO`. Testes unitários do serviço: `AdminUsuarioServiceTest`. Regressão manual rápida: login como `admin@catec.local`, chamar `GET /api/v1/admin/usuarios` com `Authorization: Bearer <token>` e verificar **200**; com token inválido, **401**; sem permissão (ex.: colaborador sem `acao.usuario.gerir`), **403**.
 
 ### Autenticação (JWT)
 
@@ -89,6 +89,7 @@ A UI e o spec ficam **desabilitados** fora do perfil `dev` (`application.yml`). 
 - **Login:** `POST /api/v1/auth/login` com corpo JSON `{ "email": "...", "password": "..." }`. Resposta: `{ "tokenType": "Bearer", "accessToken": "...", "expiresInSeconds": ... }`.
 - **Segredo e duração:** variáveis `JWT_SECRET` (mínimo **32 caracteres** para HS256) e opcional `JWT_EXPIRATION_MINUTES` (ver `application.yml`).
 - **Usuários de desenvolvimento** (migração `V2__seed_usuarios_dev.sql`): `admin@catec.local` / senha **`password`** (perfil `ADMINISTRATIVO`); `inativo@catec.local` / **`password`** — conta **inativa** (não deve autenticar).
+- **Grupos de acesso** (migrações `V27__grupos_acesso.sql`, `V28__drop_usuario_perfil.sql`): catálogo de permissões (telas/ações), grupos padrão e API `GET/POST/PUT/DELETE /api/v1/admin/grupos` (requer permissão `acao.grupo.gerir`). `GET /api/v1/me` retorna `grupos` e `permissoes`. A tabela legada `usuario_perfil` foi removida — vínculos ficam em `usuario_grupo`.
 - **CORS:** em `dev`, origens `http://localhost:5173` e `http://127.0.0.1:5173` para o React.
 
 Erros tratados pelo handler global devolvem JSON com `status`, `mensagem`, `timestamp` e `path`.
@@ -150,9 +151,9 @@ npm install
 npm run dev
 ```
 
-Por padrão o Vite serve em **http://localhost:5173** (porta indicada no terminal após `npm run dev`). Após o login, o app redireciona para **`/app/painel`** (área autenticada com menu lateral no mesmo estilo visual da tela de login). O item **Usuários** aparece apenas para quem tem perfil `ADMINISTRATIVO` e consome a API acima. A **página de login** usa a paleta da marca e a logo PNG transparente em `catec-frontend/public/logo-catec.png` (cópia de `Analise Projeto/logotipos/Logo principal azul-8.png`). A API por padrão é `http://localhost:8080`; para outro host, crie `catec-frontend/.env` com `VITE_API_BASE_URL=https://...`.
+Por padrão o Vite serve em **http://localhost:5173** (porta indicada no terminal após `npm run dev`). Após o login, o app redireciona para **`/app/painel`** (área autenticada com menu lateral no mesmo estilo visual da tela de login). Itens do menu (Painel, Projetos, Clientes, Usuários, Grupos, etc.) aparecem conforme as **permissões** do usuário (`tela.*`). A **página de login** usa a paleta da marca e a logo PNG transparente em `catec-frontend/public/logo-catec.png` (cópia de `Analise Projeto/logotipos/Logo principal azul-8.png`). A API por padrão é `http://localhost:8080`; para outro host, crie `catec-frontend/.env` com `VITE_API_BASE_URL=https://...`.
 
-**Autenticação no browser (task_017):** `AuthContext` carrega `/api/v1/me` e expõe `hasRole` / `hasAnyRole`. O menu usa `CanRole`; rotas sensíveis usam `RequireAuth` + `RequireRole`. **Importante:** ocultar botões ou rotas no React não substitui a segurança da API — o backend continua a validar JWT e perfis em cada operação.
+**Autenticação no browser (task_017):** `AuthContext` carrega `/api/v1/me` e expõe `hasPermission` / `hasAnyPermission`. O menu usa `CanPermission`; rotas sensíveis usam `RequireAuth` + `RequirePermission`. **Importante:** ocultar botões ou rotas no React não substitui a segurança da API — o backend continua a validar JWT e permissões em cada operação.
 
 ## Parar o banco
 

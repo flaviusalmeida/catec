@@ -13,12 +13,13 @@ import br.com.catec.domain.proposta.PropostaRepository;
 import br.com.catec.domain.proposta.PropostaStatus;
 import br.com.catec.domain.usuario.Usuario;
 import br.com.catec.domain.usuario.UsuarioRepository;
+import br.com.catec.security.AuthorizationService;
+import br.com.catec.security.PermissaoCodigo;
 import br.com.catec.security.UsuarioAutenticado;
 import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -40,6 +41,7 @@ public class PropostaService {
     private final AuditoriaService auditoriaService;
     private final DocumentoService documentoService;
     private final SocioPropostaNotificacaoService socioPropostaNotificacaoService;
+    private final AuthorizationService authz;
 
     public PropostaService(
             PropostaRepository propostaRepository,
@@ -47,18 +49,20 @@ public class PropostaService {
             UsuarioRepository usuarioRepository,
             AuditoriaService auditoriaService,
             DocumentoService documentoService,
-            SocioPropostaNotificacaoService socioPropostaNotificacaoService) {
+            SocioPropostaNotificacaoService socioPropostaNotificacaoService,
+            AuthorizationService authz) {
         this.propostaRepository = propostaRepository;
         this.projetoRepository = projetoRepository;
         this.usuarioRepository = usuarioRepository;
         this.auditoriaService = auditoriaService;
         this.documentoService = documentoService;
         this.socioPropostaNotificacaoService = socioPropostaNotificacaoService;
+        this.authz = authz;
     }
 
     @Transactional
     public PropostaResponse criar(Long projetoId, boolean requerAvaliacaoSocio, UsuarioAutenticado principal) {
-        exigirAdministrativo(principal);
+        authz.require(principal, PermissaoCodigo.ACAO_PROPOSTA_CRIAR);
         Projeto projeto = loadProjeto(projetoId);
         validarProjetoParaNovaProposta(projetoId, projeto);
 
@@ -100,7 +104,7 @@ public class PropostaService {
     @Transactional
     public PropostaResponse atualizarConfiguracaoRascunho(
             Long projetoId, Long propostaId, boolean requerAvaliacaoSocio, UsuarioAutenticado principal) {
-        exigirAdministrativo(principal);
+        authz.require(principal, PermissaoCodigo.ACAO_PROPOSTA_EDITAR);
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
         if (proposta.getStatus() != PropostaStatus.RASCUNHO) {
             throw badRequest("Só é possível alterar a configuração em proposta em rascunho.");
@@ -119,7 +123,7 @@ public class PropostaService {
 
     @Transactional(readOnly = true)
     public List<PropostaPendenteSocioResponse> listarPendentesSocio(UsuarioAutenticado principal) {
-        exigirSocio(principal);
+        authz.require(principal, PermissaoCodigo.TELA_SOCIO_PROPOSTAS);
         return propostaRepository
                 .findByStatusAndRequerAvaliacaoSocioTrueOrderByCriadoEmAsc(PropostaStatus.PENDENTE_AVALIACAO_SOCIO)
                 .stream()
@@ -159,7 +163,7 @@ public class PropostaService {
             String tipoArquivo,
             MultipartFile file,
             UsuarioAutenticado principal) {
-        exigirAdministrativo(principal);
+        authz.require(principal, PermissaoCodigo.ACAO_DOCUMENTO_UPLOAD);
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
         garantirUploadDocumento(proposta);
         if (proposta.getStatus() == PropostaStatus.RASCUNHO) {
@@ -171,7 +175,7 @@ public class PropostaService {
     @Transactional
     public PropostaResponse submeterParaAvaliacaoSocio(
             Long projetoId, Long propostaId, UsuarioAutenticado principal) {
-        exigirAdministrativo(principal);
+        authz.require(principal, PermissaoCodigo.ACAO_PROPOSTA_APROVAR_INTERNO);
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
         if (!proposta.isRequerAvaliacaoSocio()) {
             throw badRequest("Esta proposta não requer avaliação do sócio. Use aprovação interna direta.");
@@ -187,7 +191,7 @@ public class PropostaService {
     @Transactional
     public PropostaResponse aprovarInternamenteSemSocio(
             Long projetoId, Long propostaId, UsuarioAutenticado principal) {
-        exigirAdministrativo(principal);
+        authz.require(principal, PermissaoCodigo.ACAO_PROPOSTA_APROVAR_INTERNO);
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
         if (proposta.isRequerAvaliacaoSocio()) {
             throw badRequest("Proposta marcada para avaliação do sócio. Submeta e aguarde parecer.");
@@ -204,7 +208,7 @@ public class PropostaService {
     @Transactional
     public PropostaResponse aprovarPeloSocio(
             Long projetoId, Long propostaId, String observacao, UsuarioAutenticado principal) {
-        exigirSocio(principal);
+        authz.require(principal, PermissaoCodigo.ACAO_SOCIO_PROPOSTA_APROVAR);
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
         validarPendenteAvaliacaoSocio(proposta);
         Proposta salva = transicionar(
@@ -229,7 +233,7 @@ public class PropostaService {
     @Transactional
     public PropostaResponse devolverParaRascunho(
             Long projetoId, Long propostaId, String observacao, UsuarioAutenticado principal) {
-        exigirSocio(principal);
+        authz.require(principal, PermissaoCodigo.ACAO_SOCIO_PROPOSTA_DEVOLVER);
         if (!StringUtils.hasText(observacao)) {
             throw badRequest("Informe o parecer ao devolver a proposta para rascunho.");
         }
@@ -248,7 +252,7 @@ public class PropostaService {
     /** APROVADA_INTERNA → ENVIADA_AO_CLIENTE. */
     @Transactional
     public PropostaResponse enviarAoCliente(Long projetoId, Long propostaId, UsuarioAutenticado principal) {
-        exigirAdministrativo(principal);
+        authz.require(principal, PermissaoCodigo.ACAO_PROPOSTA_ENVIAR_CLIENTE);
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
         Instant agora = Instant.now();
         Proposta salva = transicionar(proposta, PropostaStatus.ENVIADA_AO_CLIENTE, "ENVIAR_CLIENTE", principal);
@@ -403,46 +407,9 @@ public class PropostaService {
     }
 
     private void garantirLeitura(Projeto projeto, UsuarioAutenticado principal) {
-        if (isAdministrativo(principal) || isSocio(principal)) {
-            return;
+        if (!authz.podeLerProjeto(principal, projeto.getCriadoPor().getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado a propostas deste projeto.");
         }
-        if (isColaborador(principal) && projeto.getCriadoPor().getId().equals(principal.id())) {
-            return;
-        }
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado a propostas deste projeto.");
-    }
-
-    private static void exigirAdministrativo(UsuarioAutenticado principal) {
-        if (!isAdministrativo(principal)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Ação restrita ao perfil administrativo.");
-        }
-    }
-
-    private static void exigirSocio(UsuarioAutenticado principal) {
-        if (!isSocio(principal)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Ação restrita ao perfil sócio.");
-        }
-    }
-
-    private static boolean isAdministrativo(UsuarioAutenticado principal) {
-        return hasRole(principal, "ROLE_ADMINISTRATIVO");
-    }
-
-    private static boolean isSocio(UsuarioAutenticado principal) {
-        return hasRole(principal, "ROLE_SOCIO");
-    }
-
-    private static boolean isColaborador(UsuarioAutenticado principal) {
-        return hasRole(principal, "ROLE_COLABORADOR");
-    }
-
-    private static boolean hasRole(UsuarioAutenticado principal, String role) {
-        for (GrantedAuthority authority : principal.getAuthorities()) {
-            if (role.equals(authority.getAuthority())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static String labelEstado(PropostaStatus status) {

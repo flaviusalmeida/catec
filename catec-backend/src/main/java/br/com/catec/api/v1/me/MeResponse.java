@@ -6,7 +6,8 @@ public record MeResponse(
         Long id,
         String nome,
         String email,
-        List<String> perfis,
+        List<String> grupos,
+        List<String> permissoes,
         boolean ativo,
         String telefone,
         boolean requerTrocaSenha) {}

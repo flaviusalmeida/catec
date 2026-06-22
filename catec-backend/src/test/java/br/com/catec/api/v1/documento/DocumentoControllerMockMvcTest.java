@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -14,8 +15,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import br.com.catec.domain.documento.TipoVinculoDocumento;
 import br.com.catec.domain.usuario.UsuarioRepository;
 import br.com.catec.security.JwtService;
-import br.com.catec.security.MethodSecurityConfig;
+import br.com.catec.security.SecurityWebMvcTestConfig;
 import br.com.catec.security.UsuarioAutenticado;
+import br.com.catec.security.UsuarioAutenticadoFixtures;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -27,12 +29,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(DocumentoController.class)
 @AutoConfigureMockMvc
-@Import(MethodSecurityConfig.class)
+@Import(SecurityWebMvcTestConfig.class)
 class DocumentoControllerMockMvcTest {
 
     @Autowired
@@ -77,7 +78,8 @@ class DocumentoControllerMockMvcTest {
                         .param("tipoVinculo", "PROJETO")
                         .param("vinculoId", "10")
                         .param("tipoArquivo", "ANEXO")
-                        .with(user(colab(2L))))
+                        .with(user(colab(2L)))
+                        .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.versao").value(1));
@@ -119,13 +121,11 @@ class DocumentoControllerMockMvcTest {
                         .file(file)
                         .param("tipoVinculo", "PROJETO")
                         .param("vinculoId", "1")
-                        .with(user(new UsuarioAutenticado(
-                                9L, "socio@catec.local", "Socio", false, List.of(new SimpleGrantedAuthority("ROLE_SOCIO"))))))
+                        .with(user(UsuarioAutenticadoFixtures.semPermissoes(9L))))
                 .andExpect(status().isForbidden());
     }
 
     private static UsuarioAutenticado colab(long id) {
-        return new UsuarioAutenticado(
-                id, "colab@catec.local", "Colab", false, List.of(new SimpleGrantedAuthority("ROLE_COLABORADOR")));
+        return UsuarioAutenticadoFixtures.colaborador(id);
     }
 }

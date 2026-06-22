@@ -15,11 +15,12 @@ import br.com.catec.domain.projeto.ProjetoRepository;
 import br.com.catec.domain.projeto.ProjetoStatus;
 import br.com.catec.domain.usuario.Usuario;
 import br.com.catec.domain.usuario.UsuarioRepository;
+import br.com.catec.security.AuthorizationService;
+import br.com.catec.security.PermissaoCodigo;
 import br.com.catec.security.UsuarioAutenticado;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,6 +38,7 @@ public class ContratoService {
     private final AuditoriaService auditoriaService;
     private final DocumentoService documentoService;
     private final DocumentoRepository documentoRepository;
+    private final AuthorizationService authz;
 
     public ContratoService(
             ContratoRepository contratoRepository,
@@ -44,13 +46,15 @@ public class ContratoService {
             UsuarioRepository usuarioRepository,
             AuditoriaService auditoriaService,
             DocumentoService documentoService,
-            DocumentoRepository documentoRepository) {
+            DocumentoRepository documentoRepository,
+            AuthorizationService authz) {
         this.contratoRepository = contratoRepository;
         this.projetoRepository = projetoRepository;
         this.usuarioRepository = usuarioRepository;
         this.auditoriaService = auditoriaService;
         this.documentoService = documentoService;
         this.documentoRepository = documentoRepository;
+        this.authz = authz;
     }
 
     @Transactional(readOnly = true)
@@ -62,7 +66,7 @@ public class ContratoService {
 
     @Transactional
     public ContratoResponse criar(Long projetoId, UsuarioAutenticado principal) {
-        exigirAdministrativo(principal);
+        authz.require(principal, PermissaoCodigo.ACAO_CONTRATO_CRIAR);
         Projeto projeto = loadProjeto(projetoId);
         validarProjetoParaNovoContrato(projeto);
         if (contratoRepository.existsByProjetoId(projetoId)) {
@@ -111,7 +115,7 @@ public class ContratoService {
             String tipoArquivo,
             MultipartFile file,
             UsuarioAutenticado principal) {
-        exigirAdministrativo(principal);
+        authz.require(principal, PermissaoCodigo.ACAO_DOCUMENTO_UPLOAD);
         Contrato contrato = loadContratoDoProjeto(projetoId, contratoId, principal);
         if (!STATUS_UPLOAD_DOCUMENTO.contains(contrato.getStatus())) {
             throw badRequest("Não é possível anexar documentos no estado atual do contrato.");
@@ -125,7 +129,7 @@ public class ContratoService {
     /** RASCUNHO com documento → ENVIADO_AO_CLIENTE. */
     @Transactional
     public ContratoResponse enviarAoCliente(Long projetoId, Long contratoId, UsuarioAutenticado principal) {
-        exigirAdministrativo(principal);
+        authz.require(principal, PermissaoCodigo.ACAO_CONTRATO_ENVIAR);
         Contrato contrato = loadContratoDoProjeto(projetoId, contratoId, principal);
         if (contrato.getStatus() != ContratoStatus.RASCUNHO) {
             throw badRequest("Só é possível enviar ao cliente um contrato em rascunho.");
@@ -175,40 +179,9 @@ public class ContratoService {
     }
 
     private void garantirLeitura(Projeto projeto, UsuarioAutenticado principal) {
-        if (isAdministrativo(principal) || isSocio(principal)) {
-            return;
+        if (!authz.podeLerProjeto(principal, projeto.getCriadoPor().getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado ao contrato deste projeto.");
         }
-        if (isColaborador(principal) && projeto.getCriadoPor().getId().equals(principal.id())) {
-            return;
-        }
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado ao contrato deste projeto.");
-    }
-
-    private static void exigirAdministrativo(UsuarioAutenticado principal) {
-        if (!isAdministrativo(principal)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Ação restrita ao perfil administrativo.");
-        }
-    }
-
-    private static boolean isAdministrativo(UsuarioAutenticado principal) {
-        return hasRole(principal, "ROLE_ADMINISTRATIVO");
-    }
-
-    private static boolean isSocio(UsuarioAutenticado principal) {
-        return hasRole(principal, "ROLE_SOCIO");
-    }
-
-    private static boolean isColaborador(UsuarioAutenticado principal) {
-        return hasRole(principal, "ROLE_COLABORADOR");
-    }
-
-    private static boolean hasRole(UsuarioAutenticado principal, String role) {
-        for (GrantedAuthority authority : principal.getAuthorities()) {
-            if (role.equals(authority.getAuthority())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     ContratoResponse toResponse(Contrato c) {

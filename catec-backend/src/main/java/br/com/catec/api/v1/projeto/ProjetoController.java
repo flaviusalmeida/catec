@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Projetos", description = "Projetos comerciais e vínculo com cliente")
 @RestController
 @RequestMapping("/api/v1/projetos")
-@PreAuthorize("hasAnyRole('COLABORADOR','ADMINISTRATIVO','SOCIO')")
 public class ProjetoController {
 
     private final ProjetoService projetoService;
@@ -31,12 +30,14 @@ public class ProjetoController {
 
     @Operation(summary = "Listar projetos", description = "Colaborador vê só os que criou; ADM e Sócio veem todos.")
     @GetMapping
+    @PreAuthorize("@authz.has('tela.projetos')")
     public List<ProjetoResponse> listar(@AuthenticationPrincipal UsuarioAutenticado principal) {
         return projetoService.listar(principal);
     }
 
     @Operation(summary = "Detalhe do projeto")
     @GetMapping("/{id}")
+    @PreAuthorize("@authz.has('tela.projeto.detalhe')")
     public ProjetoResponse obter(@PathVariable Long id, @AuthenticationPrincipal UsuarioAutenticado principal) {
         return projetoService.obter(id, principal);
     }
@@ -44,6 +45,7 @@ public class ProjetoController {
     @Operation(summary = "Criar projeto", description = "Colaborador ou ADM. Cliente pode ser associado depois.")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("@authz.has('acao.projeto.criar')")
     public ProjetoResponse criar(
             @Valid @RequestBody ProjetoCreateRequest body, @AuthenticationPrincipal UsuarioAutenticado principal) {
         return projetoService.criar(body, principal);
@@ -51,6 +53,7 @@ public class ProjetoController {
 
     @Operation(summary = "Atualizar projeto")
     @PutMapping("/{id}")
+    @PreAuthorize("@authz.has('acao.projeto.editar')")
     public ProjetoResponse atualizar(
             @PathVariable Long id,
             @Valid @RequestBody ProjetoUpdateRequest body,
@@ -60,6 +63,7 @@ public class ProjetoController {
 
     @Operation(summary = "Associar cliente ao projeto")
     @PutMapping("/{id}/cliente")
+    @PreAuthorize("@authz.has('acao.projeto.associar_cliente')")
     public ProjetoResponse associarCliente(
             @PathVariable Long id,
             @Valid @RequestBody ProjetoAssociarClienteRequest body,

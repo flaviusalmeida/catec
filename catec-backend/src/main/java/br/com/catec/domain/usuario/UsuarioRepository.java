@@ -8,14 +8,18 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
-    @EntityGraph(attributePaths = "perfis")
+    @EntityGraph(attributePaths = {"grupos", "grupos.grupo", "grupos.grupo.permissoes"})
     Optional<Usuario> findByEmailIgnoreCase(String email);
 
     boolean existsByEmailIgnoreCase(String email);
 
     boolean existsByEmailIgnoreCaseAndIdNot(String email, Long id);
 
-    @EntityGraph(attributePaths = "perfis")
+    @EntityGraph(attributePaths = {"grupos", "grupos.grupo", "grupos.grupo.permissoes"})
     @Override
     List<Usuario> findAll(Sort sort);
+
+    @EntityGraph(attributePaths = {"grupos", "grupos.grupo", "grupos.grupo.permissoes"})
+    @Override
+    Optional<Usuario> findById(Long id);
 }

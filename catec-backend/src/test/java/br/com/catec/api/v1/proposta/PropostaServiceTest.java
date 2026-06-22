@@ -17,7 +17,9 @@ import br.com.catec.domain.proposta.Proposta;
 import br.com.catec.domain.proposta.PropostaRepository;
 import br.com.catec.domain.proposta.PropostaStatus;
 import br.com.catec.domain.usuario.Usuario;
+import br.com.catec.security.AuthorizationService;
 import br.com.catec.security.UsuarioAutenticado;
+import br.com.catec.security.UsuarioAutenticadoFixtures;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,9 +27,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,6 +53,9 @@ class PropostaServiceTest {
     @Mock
     private SocioPropostaNotificacaoService socioPropostaNotificacaoService;
 
+    @Spy
+    private AuthorizationService authz = new AuthorizationService();
+
     @InjectMocks
     private PropostaService service;
 
@@ -60,10 +65,8 @@ class PropostaServiceTest {
 
     @BeforeEach
     void setUp() {
-        admin = new UsuarioAutenticado(
-                1L, "admin@catec.local", "Admin", false, List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRATIVO")));
-        socio = new UsuarioAutenticado(
-                3L, "socio@catec.local", "Socio", false, List.of(new SimpleGrantedAuthority("ROLE_SOCIO")));
+        admin = UsuarioAutenticadoFixtures.administrativo(1L);
+        socio = UsuarioAutenticadoFixtures.socio(3L);
 
         projeto = new Projeto();
         org.springframework.test.util.ReflectionTestUtils.setField(projeto, "id", 10L);
@@ -109,7 +112,6 @@ class PropostaServiceTest {
         when(projetoRepository.findById(10L)).thenReturn(Optional.of(projeto));
         when(propostaRepository.existsByProjetoIdAndStatus(10L, PropostaStatus.AGUARDANDO_AJUSTE_ADM))
                 .thenReturn(true);
-        when(propostaRepository.existsByProjetoIdAndConsideracoesPendentesTrue(10L)).thenReturn(false);
         when(propostaRepository.existsByProjetoIdAndStatusIn(eq(10L), any())).thenReturn(false);
         when(propostaRepository.findMaxVersaoByProjetoId(10L)).thenReturn(1);
         when(usuarioRepository.getReferenceById(1L)).thenReturn(new Usuario());
@@ -161,12 +163,21 @@ class PropostaServiceTest {
 
         assertEquals(PropostaStatus.ENVIADA_AO_CLIENTE, res.status());
         verify(auditoriaService)
-                .registrarTransicaoStatus(
+                .registrar(
                         TipoEntidadeAuditoria.PROPOSTA,
                         50L,
                         "ENVIAR_CLIENTE",
                         "APROVADA_INTERNA",
                         "ENVIADA_AO_CLIENTE",
+                        1L,
+                        null);
+        verify(auditoriaService)
+                .registrarTransicaoStatus(
+                        TipoEntidadeAuditoria.PROJETO,
+                        10L,
+                        "SINCRONIZAR_PROPOSTA",
+                        "ELABORANDO_PROPOSTA",
+                        "AGUARDANDO_ACEITE_PROPOSTA",
                         1L);
     }
 
@@ -218,9 +229,6 @@ class PropostaServiceTest {
 
     @Test
     void devolverParaRascunho_semObservacao_deveRetornar400() {
-        Proposta proposta = proposta(53L, PropostaStatus.PENDENTE_AVALIACAO_SOCIO, true);
-        when(propostaRepository.findById(53L)).thenReturn(Optional.of(proposta));
-
         ResponseStatusException ex = assertThrows(
                 ResponseStatusException.class, () -> service.devolverParaRascunho(10L, 53L, "  ", socio));
 

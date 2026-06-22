@@ -17,6 +17,7 @@ import br.com.catec.domain.projeto.ProjetoRepository;
 import br.com.catec.domain.usuario.Usuario;
 import br.com.catec.domain.usuario.UsuarioRepository;
 import br.com.catec.security.UsuarioAutenticado;
+import br.com.catec.security.UsuarioAutenticadoFixtures;
 import br.com.catec.storage.DocumentStorage;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -86,7 +87,7 @@ class DocumentoServiceTest {
                 documentoAutorizacaoService,
                 documentStorage,
                 properties);
-        principal = new UsuarioAutenticado(2L, "colab@catec.local", "Colab", false, List.of(new SimpleGrantedAuthority("ROLE_COLABORADOR")));
+        principal = UsuarioAutenticadoFixtures.colaborador(2L);
     }
 
     @Test
@@ -125,8 +126,6 @@ class DocumentoServiceTest {
 
     @Test
     void upload_quandoProposta_deveIndicarEndpointAninhado() {
-        when(multipartFile.isEmpty()).thenReturn(false);
-
         ResponseStatusException ex = assertThrows(
                 ResponseStatusException.class,
                 () -> service.upload(TipoVinculoDocumento.PROPOSTA, 1L, null, multipartFile, principal));

@@ -19,7 +19,7 @@ public class MeController {
         this.meService = meService;
     }
 
-    @Operation(summary = "Perfil autenticado", description = "Retorna id, nome, e-mail e perfis do usuário do JWT.")
+    @Operation(summary = "Perfil autenticado", description = "Retorna id, nome, e-mail, grupos e permissões efetivas do usuário.")
     @GetMapping("/me")
     public MeResponse me(@AuthenticationPrincipal UsuarioAutenticado principal) {
         return meService.obterPerfil(principal.id());

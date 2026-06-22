@@ -21,16 +21,18 @@ import br.com.catec.domain.proposta.PropostaRepository;
 import br.com.catec.domain.proposta.PropostaStatus;
 import br.com.catec.domain.usuario.Usuario;
 import br.com.catec.domain.usuario.UsuarioRepository;
+import br.com.catec.security.AuthorizationService;
 import br.com.catec.security.UsuarioAutenticado;
+import br.com.catec.security.UsuarioAutenticadoFixtures;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,6 +58,9 @@ class InteracaoFluxoServiceTest {
 
     @Mock
     private AuditoriaService auditoriaService;
+
+    @Spy
+    private AuthorizationService authz = new AuthorizationService();
 
     @InjectMocks
     private InteracaoFluxoService service;
@@ -147,9 +152,6 @@ class InteracaoFluxoServiceTest {
 
     @Test
     void registrarRecusa_quandoColaborador_deveRetornar403() {
-        Proposta proposta = proposta(7L, PropostaStatus.ENVIADA_AO_CLIENTE);
-        when(propostaRepository.findById(7L)).thenReturn(Optional.of(proposta));
-
         var req = new InteracaoFluxoCreateRequest(TipoInteracaoFluxo.RECUSA_CLIENTE, "Não aprovou.", null);
         ResponseStatusException ex = assertThrows(
                 ResponseStatusException.class,
@@ -182,12 +184,10 @@ class InteracaoFluxoServiceTest {
     }
 
     private static UsuarioAutenticado admin() {
-        return new UsuarioAutenticado(
-                1L, "adm@catec.local", "Adm", false, List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRATIVO")));
+        return UsuarioAutenticadoFixtures.administrativo(1L);
     }
 
     private static UsuarioAutenticado colab(long id) {
-        return new UsuarioAutenticado(
-                id, "colab@catec.local", "Colab", false, List.of(new SimpleGrantedAuthority("ROLE_COLABORADOR")));
+        return UsuarioAutenticadoFixtures.colaborador(id);
     }
 }

@@ -8,10 +8,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
-import br.com.catec.domain.usuario.PerfilMacro;
+import br.com.catec.domain.acesso.GrupoAcesso;
+import br.com.catec.domain.acesso.GrupoAcessoRepository;
+import br.com.catec.domain.acesso.UsuarioGrupo;
+import br.com.catec.domain.acesso.UsuarioGrupoRepository;
 import br.com.catec.domain.usuario.Usuario;
-import br.com.catec.domain.usuario.UsuarioPerfil;
-import br.com.catec.domain.usuario.UsuarioPerfilRepository;
 import br.com.catec.domain.usuario.UsuarioRepository;
 import br.com.catec.mail.EmailNotificacaoService;
 import br.com.catec.security.SenhaProvisoriaGenerator;
@@ -38,7 +39,10 @@ class AdminUsuarioServiceTest {
     private UsuarioRepository usuarioRepository;
 
     @Mock
-    private UsuarioPerfilRepository usuarioPerfilRepository;
+    private GrupoAcessoRepository grupoAcessoRepository;
+
+    @Mock
+    private UsuarioGrupoRepository usuarioGrupoRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -56,12 +60,18 @@ class AdminUsuarioServiceTest {
 
     @BeforeEach
     void setUp() {
-        admin = usuario(1L, "Administrador", "admin@catec.local", true, false, PerfilMacro.ADMINISTRATIVO);
+        admin = usuario(1L, "Administrador", "admin@catec.local", true, false, "ADMINISTRATIVO");
+        for (String codigo :
+                List.of("COLABORADOR", "ADMINISTRATIVO", "SOCIO", "SALA_TECNICA", "CAMPO", "FINANCEIRO")) {
+            lenient()
+                    .when(grupoAcessoRepository.findByCodigo(codigo))
+                    .thenReturn(java.util.Optional.of(grupo(codigo)));
+        }
     }
 
     @Test
     void listar_deveRetornarUsuariosMapeados() {
-        var colaborador = usuario(2L, "Colaborador", "colab@catec.local", true, false, PerfilMacro.COLABORADOR);
+        var colaborador = usuario(2L, "Colaborador", "colab@catec.local", true, false, "COLABORADOR");
         when(usuarioRepository.findAll(any(org.springframework.data.domain.Sort.class)))
                 .thenReturn(List.of(admin, colaborador));
 
@@ -69,7 +79,7 @@ class AdminUsuarioServiceTest {
 
         assertEquals(2, result.size());
         assertEquals("Administrador", result.get(0).nome());
-        assertEquals(List.of("ADMINISTRATIVO"), result.get(0).perfis());
+        assertEquals(List.of("ADMINISTRATIVO"), result.get(0).grupos());
         assertEquals("Colaborador", result.get(1).nome());
     }
 
@@ -92,18 +102,17 @@ class AdminUsuarioServiceTest {
             ReflectionTestUtils.setField(saved, "id", 10L);
             return saved;
         });
-        var persisted = usuario(10L, "Novo Usuário", "novo@catec.local", false, true, PerfilMacro.COLABORADOR);
+        var persisted = usuario(10L, "Novo Usuário", "novo@catec.local", false, true, "COLABORADOR");
         when(usuarioRepository.findById(10L)).thenReturn(java.util.Optional.of(persisted));
 
-        var req =
-                new UsuarioCreateRequest(" Novo Usuário ", " NOVO@catec.local ", " 11999990000 ", List.of(PerfilMacro.COLABORADOR));
+        var req = new UsuarioCreateRequest(" Novo Usuário ", " NOVO@catec.local ", " 11999990000 ", List.of("COLABORADOR"));
         var response = service.criar(req);
 
         assertEquals("novo@catec.local", response.email());
         assertFalse(response.ativo());
         assertTrue(response.requerTrocaSenha());
-        verify(usuarioPerfilRepository).deleteByUsuarioId(10L);
-        verify(usuarioPerfilRepository).save(any(UsuarioPerfil.class));
+        verify(usuarioGrupoRepository).deleteByUsuarioId(10L);
+        verify(usuarioGrupoRepository).save(any(UsuarioGrupo.class));
         verify(emailNotificacaoService).enviarSenhaProvisoria("novo@catec.local", "Novo Usuário", "Senha@Provisoria123");
     }
 
@@ -111,7 +120,7 @@ class AdminUsuarioServiceTest {
     void criar_comEmailJaExistente_deveLancarConflict() {
         when(usuarioRepository.existsByEmailIgnoreCase("duplicado@catec.local")).thenReturn(true);
 
-        var req = new UsuarioCreateRequest("Duplicado", "duplicado@catec.local", null, List.of(PerfilMacro.COLABORADOR));
+        var req = new UsuarioCreateRequest("Duplicado", "duplicado@catec.local", null, List.of("COLABORADOR"));
         var ex = assertThrows(ResponseStatusException.class, () -> service.criar(req));
 
         assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
@@ -120,14 +129,11 @@ class AdminUsuarioServiceTest {
     }
 
     @Test
-    void criar_comPerfisDuplicados_deveLancarBadRequest() {
-        when(usuarioRepository.existsByEmailIgnoreCase("dup-perfil@catec.local")).thenReturn(false);
+    void criar_comGruposDuplicados_deveLancarBadRequest() {
+        when(usuarioRepository.existsByEmailIgnoreCase("dup-grupo@catec.local")).thenReturn(false);
 
         var req = new UsuarioCreateRequest(
-                "Duplicado Perfil",
-                "dup-perfil@catec.local",
-                null,
-                Arrays.asList(PerfilMacro.COLABORADOR, PerfilMacro.COLABORADOR));
+                "Duplicado Grupo", "dup-grupo@catec.local", null, Arrays.asList("COLABORADOR", "COLABORADOR"));
         var ex = assertThrows(ResponseStatusException.class, () -> service.criar(req));
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
@@ -140,7 +146,7 @@ class AdminUsuarioServiceTest {
         when(passwordEncoder.encode("Senha@Provisoria123")).thenReturn("hash");
         when(usuarioRepository.save(any(Usuario.class))).thenThrow(new DataIntegrityViolationException("unique"));
 
-        var req = new UsuarioCreateRequest("Erro", "erro@catec.local", null, List.of(PerfilMacro.COLABORADOR));
+        var req = new UsuarioCreateRequest("Erro", "erro@catec.local", null, List.of("COLABORADOR"));
         var ex = assertThrows(ResponseStatusException.class, () -> service.criar(req));
 
         assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
@@ -151,22 +157,22 @@ class AdminUsuarioServiceTest {
         when(usuarioRepository.findById(1L)).thenReturn(java.util.Optional.of(admin));
         when(usuarioRepository.existsByEmailIgnoreCaseAndIdNot("a@catec.local", 1L)).thenReturn(false);
 
-        var req = new UsuarioUpdateRequest("A", "a@catec.local", null, false, List.of(PerfilMacro.ADMINISTRATIVO));
+        var req = new UsuarioUpdateRequest("A", "a@catec.local", null, false, List.of("ADMINISTRATIVO"));
 
         var ex = assertThrows(ResponseStatusException.class, () -> service.atualizar(1L, req, 1L));
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-        verify(usuarioPerfilRepository, never()).deleteByUsuarioId(anyLong());
+        verify(usuarioGrupoRepository, never()).deleteByUsuarioId(anyLong());
     }
 
     @Test
     void atualizar_naoPodeAtivarComTrocaSenhaPendente() {
-        var u = usuario(2L, "A", "a@catec.local", true, false, PerfilMacro.ADMINISTRATIVO);
+        var u = usuario(2L, "A", "a@catec.local", true, false, "ADMINISTRATIVO");
         u.setAtivo(false);
         u.setRequerTrocaSenha(true);
         when(usuarioRepository.findById(2L)).thenReturn(java.util.Optional.of(u));
         when(usuarioRepository.existsByEmailIgnoreCaseAndIdNot("a@catec.local", 2L)).thenReturn(false);
 
-        var req = new UsuarioUpdateRequest("A", "a@catec.local", null, true, List.of(PerfilMacro.ADMINISTRATIVO));
+        var req = new UsuarioUpdateRequest("A", "a@catec.local", null, true, List.of("ADMINISTRATIVO"));
 
         var ex = assertThrows(ResponseStatusException.class, () -> service.atualizar(2L, req, 99L));
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
@@ -177,7 +183,7 @@ class AdminUsuarioServiceTest {
         when(usuarioRepository.findById(1L)).thenReturn(java.util.Optional.of(admin));
         when(usuarioRepository.existsByEmailIgnoreCaseAndIdNot("a@catec.local", 1L)).thenReturn(false);
 
-        var req = new UsuarioUpdateRequest("A", "a@catec.local", null, true, List.of(PerfilMacro.COLABORADOR));
+        var req = new UsuarioUpdateRequest("A", "a@catec.local", null, true, List.of("COLABORADOR"));
 
         var ex = assertThrows(ResponseStatusException.class, () -> service.atualizar(1L, req, 1L));
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
@@ -187,14 +193,14 @@ class AdminUsuarioServiceTest {
     void atualizar_quandoNaoEncontrado_deveLancarNotFound() {
         when(usuarioRepository.findById(42L)).thenReturn(java.util.Optional.empty());
 
-        var req = new UsuarioUpdateRequest("A", "a@catec.local", null, true, List.of(PerfilMacro.COLABORADOR));
+        var req = new UsuarioUpdateRequest("A", "a@catec.local", null, true, List.of("COLABORADOR"));
         var ex = assertThrows(ResponseStatusException.class, () -> service.atualizar(42L, req, 99L));
 
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
     }
 
     @Test
-    void atualizar_comPerfisDuplicados_deveLancarBadRequest() {
+    void atualizar_comGruposDuplicados_deveLancarBadRequest() {
         when(usuarioRepository.findById(1L)).thenReturn(java.util.Optional.of(admin));
         when(usuarioRepository.existsByEmailIgnoreCaseAndIdNot("admin@catec.local", 1L)).thenReturn(false);
 
@@ -203,32 +209,28 @@ class AdminUsuarioServiceTest {
                 "admin@catec.local",
                 null,
                 true,
-                Arrays.asList(PerfilMacro.ADMINISTRATIVO, PerfilMacro.ADMINISTRATIVO));
+                Arrays.asList("ADMINISTRATIVO", "ADMINISTRATIVO"));
         var ex = assertThrows(ResponseStatusException.class, () -> service.atualizar(1L, req, 99L));
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
     }
 
     @Test
-    void atualizar_comSucesso_deveAplicarCamposEPerfis() {
-        var atual = usuario(5L, "Nome Antigo", "antigo@catec.local", true, false, PerfilMacro.COLABORADOR);
-        var atualizado = usuario(5L, "Nome Novo", "novo@catec.local", true, false, PerfilMacro.ADMINISTRATIVO, PerfilMacro.FINANCEIRO);
+    void atualizar_comSucesso_deveAplicarCamposEGrupos() {
+        var atual = usuario(5L, "Nome Antigo", "antigo@catec.local", true, false, "COLABORADOR");
+        var atualizado = usuario(5L, "Nome Novo", "novo@catec.local", true, false, "ADMINISTRATIVO", "FINANCEIRO");
         atualizado.setTelefone("11911112222");
         when(usuarioRepository.findById(5L)).thenReturn(java.util.Optional.of(atual), java.util.Optional.of(atualizado));
         when(usuarioRepository.existsByEmailIgnoreCaseAndIdNot("novo@catec.local", 5L)).thenReturn(false);
 
         var req = new UsuarioUpdateRequest(
-                " Nome Novo ",
-                " NOVO@catec.local ",
-                " 11911112222 ",
-                true,
-                List.of(PerfilMacro.ADMINISTRATIVO, PerfilMacro.FINANCEIRO));
+                " Nome Novo ", " NOVO@catec.local ", " 11911112222 ", true, List.of("ADMINISTRATIVO", "FINANCEIRO"));
         var response = service.atualizar(5L, req, 99L);
 
         assertEquals("Nome Novo", response.nome());
         assertEquals("novo@catec.local", response.email());
-        assertEquals(List.of("ADMINISTRATIVO", "FINANCEIRO"), response.perfis());
-        verify(usuarioPerfilRepository).deleteByUsuarioId(5L);
+        assertEquals(List.of("ADMINISTRATIVO", "FINANCEIRO"), response.grupos());
+        verify(usuarioGrupoRepository).deleteByUsuarioId(5L);
     }
 
     @Test
@@ -236,7 +238,7 @@ class AdminUsuarioServiceTest {
         when(usuarioRepository.findById(1L)).thenReturn(java.util.Optional.of(admin));
         when(usuarioRepository.existsByEmailIgnoreCaseAndIdNot("conflito@catec.local", 1L)).thenReturn(true);
 
-        var req = new UsuarioUpdateRequest("A", "conflito@catec.local", null, true, List.of(PerfilMacro.ADMINISTRATIVO));
+        var req = new UsuarioUpdateRequest("A", "conflito@catec.local", null, true, List.of("ADMINISTRATIVO"));
         var ex = assertThrows(ResponseStatusException.class, () -> service.atualizar(1L, req, 99L));
 
         assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
@@ -248,7 +250,7 @@ class AdminUsuarioServiceTest {
         when(usuarioRepository.existsByEmailIgnoreCaseAndIdNot("admin@catec.local", 1L)).thenReturn(false);
         when(usuarioRepository.save(any(Usuario.class))).thenThrow(new DataIntegrityViolationException("unique"));
 
-        var req = new UsuarioUpdateRequest("A", "admin@catec.local", null, true, List.of(PerfilMacro.ADMINISTRATIVO));
+        var req = new UsuarioUpdateRequest("A", "admin@catec.local", null, true, List.of("ADMINISTRATIVO"));
         var ex = assertThrows(ResponseStatusException.class, () -> service.atualizar(1L, req, 99L));
 
         assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
@@ -265,7 +267,7 @@ class AdminUsuarioServiceTest {
 
     @Test
     void resetarSenhaProvisoria_comSucesso_deveDesativarEEnviarEmail() {
-        var u = usuario(4L, "Fulano", "fulano@catec.local", true, false, PerfilMacro.COLABORADOR);
+        var u = usuario(4L, "Fulano", "fulano@catec.local", true, false, "COLABORADOR");
         when(usuarioRepository.findById(4L)).thenReturn(java.util.Optional.of(u));
         when(senhaProvisoriaGenerator.gerar()).thenReturn("Nova@Senha123");
         when(passwordEncoder.encode("Nova@Senha123")).thenReturn("hash-nova");
@@ -279,7 +281,7 @@ class AdminUsuarioServiceTest {
     }
 
     private static Usuario usuario(
-            long id, String nome, String email, boolean ativo, boolean requerTrocaSenha, PerfilMacro... perfisMacro) {
+            long id, String nome, String email, boolean ativo, boolean requerTrocaSenha, String... codigosGrupo) {
         var u = new Usuario();
         ReflectionTestUtils.setField(u, "id", id);
         u.setNome(nome);
@@ -290,11 +292,22 @@ class AdminUsuarioServiceTest {
         u.setRequerTrocaSenha(requerTrocaSenha);
         u.setCriadoEm(Instant.now());
         u.setAtualizadoEm(Instant.now());
-        var perfis = new ArrayList<UsuarioPerfil>();
-        for (PerfilMacro macro : perfisMacro) {
-            perfis.add(UsuarioPerfil.associar(u, macro));
+        var grupos = new ArrayList<UsuarioGrupo>();
+        for (String codigo : codigosGrupo) {
+            grupos.add(UsuarioGrupo.associar(u, grupo(codigo)));
         }
-        u.setPerfis(perfis);
+        u.setGrupos(grupos);
         return u;
+    }
+
+    private static GrupoAcesso grupo(String codigo) {
+        var g = new GrupoAcesso();
+        g.setCodigo(codigo);
+        g.setNome(codigo);
+        g.setAtivo(true);
+        g.setSistema(true);
+        g.setCriadoEm(Instant.now());
+        g.setAtualizadoEm(Instant.now());
+        return g;
     }
 }

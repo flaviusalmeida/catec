@@ -22,12 +22,13 @@ import br.com.catec.domain.proposta.PropostaRepository;
 import br.com.catec.domain.proposta.PropostaStatus;
 import br.com.catec.domain.usuario.Usuario;
 import br.com.catec.domain.usuario.UsuarioRepository;
+import br.com.catec.security.AuthorizationService;
+import br.com.catec.security.PermissaoCodigo;
 import br.com.catec.security.UsuarioAutenticado;
 import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -51,6 +52,7 @@ public class InteracaoFluxoService {
     private final DocumentoRepository documentoRepository;
     private final UsuarioRepository usuarioRepository;
     private final AuditoriaService auditoriaService;
+    private final AuthorizationService authz;
 
     public InteracaoFluxoService(
             InteracaoFluxoRepository interacaoFluxoRepository,
@@ -59,7 +61,8 @@ public class InteracaoFluxoService {
             ProjetoRepository projetoRepository,
             DocumentoRepository documentoRepository,
             UsuarioRepository usuarioRepository,
-            AuditoriaService auditoriaService) {
+            AuditoriaService auditoriaService,
+            AuthorizationService authz) {
         this.interacaoFluxoRepository = interacaoFluxoRepository;
         this.propostaRepository = propostaRepository;
         this.contratoRepository = contratoRepository;
@@ -67,6 +70,7 @@ public class InteracaoFluxoService {
         this.documentoRepository = documentoRepository;
         this.usuarioRepository = usuarioRepository;
         this.auditoriaService = auditoriaService;
+        this.authz = authz;
     }
 
     @Transactional(readOnly = true)
@@ -84,7 +88,7 @@ public class InteracaoFluxoService {
     @Transactional
     public RegistroInteracaoResult registrarRespostaCliente(
             Long projetoId, Long propostaId, InteracaoFluxoCreateRequest request, UsuarioAutenticado principal) {
-        exigirAdministrativo(principal);
+        authz.require(principal, PermissaoCodigo.ACAO_INTERACAO_REGISTRAR);
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
         String texto = request.texto().trim();
         if (!StringUtils.hasText(texto)) {
@@ -158,7 +162,7 @@ public class InteracaoFluxoService {
     @Transactional
     public RegistroInteracaoContratoResult registrarInteracaoClienteContrato(
             Long projetoId, Long contratoId, InteracaoFluxoCreateRequest request, UsuarioAutenticado principal) {
-        exigirAdministrativo(principal);
+        authz.require(principal, PermissaoCodigo.ACAO_INTERACAO_REGISTRAR);
         Contrato contrato = loadContratoDoProjeto(projetoId, contratoId);
         String texto = request.texto().trim();
         if (!StringUtils.hasText(texto)) {
@@ -305,14 +309,9 @@ public class InteracaoFluxoService {
     }
 
     private void garantirLeituraContrato(Contrato contrato, UsuarioAutenticado principal) {
-        if (isAdministrativo(principal) || isSocio(principal)) {
-            return;
+        if (!authz.podeLerProjeto(principal, contrato.getProjeto().getCriadoPor().getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado a interações deste contrato.");
         }
-        if (isColaborador(principal)
-                && contrato.getProjeto().getCriadoPor().getId().equals(principal.id())) {
-            return;
-        }
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado a interações deste contrato.");
     }
 
     private Documento resolverDocumentoOpcional(Long documentoId, Long propostaId) {
@@ -339,41 +338,9 @@ public class InteracaoFluxoService {
     }
 
     private void garantirLeituraProposta(Proposta proposta, UsuarioAutenticado principal) {
-        if (isAdministrativo(principal) || isSocio(principal)) {
-            return;
+        if (!authz.podeLerProjeto(principal, proposta.getProjeto().getCriadoPor().getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado a interações desta proposta.");
         }
-        if (isColaborador(principal)
-                && proposta.getProjeto().getCriadoPor().getId().equals(principal.id())) {
-            return;
-        }
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado a interações desta proposta.");
-    }
-
-    private static void exigirAdministrativo(UsuarioAutenticado principal) {
-        if (!isAdministrativo(principal)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Ação restrita ao perfil administrativo.");
-        }
-    }
-
-    private static boolean isAdministrativo(UsuarioAutenticado principal) {
-        return hasRole(principal, "ROLE_ADMINISTRATIVO");
-    }
-
-    private static boolean isSocio(UsuarioAutenticado principal) {
-        return hasRole(principal, "ROLE_SOCIO");
-    }
-
-    private static boolean isColaborador(UsuarioAutenticado principal) {
-        return hasRole(principal, "ROLE_COLABORADOR");
-    }
-
-    private static boolean hasRole(UsuarioAutenticado principal, String role) {
-        for (GrantedAuthority authority : principal.getAuthorities()) {
-            if (role.equals(authority.getAuthority())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private InteracaoFluxoResponse toResponse(InteracaoFluxo i) {

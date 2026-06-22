@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import CanRole from "../auth/CanRole";
+import CanPermission from "../auth/CanPermission";
+import { PermissaoCodigo } from "../auth/permissao";
 import { useAuth } from "../auth/AuthContext";
 import "./AppLayout.css";
 
@@ -11,6 +12,14 @@ function IconUsers({ className }: { className?: string }) {
       <circle cx="9" cy="7" r="4" />
       <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
+function IconShield({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
   );
 }
@@ -174,36 +183,42 @@ export default function AppLayout() {
           ) : null}
         </div>
         <nav className="app-shell-nav">
-          <CanRole anyOf={["COLABORADOR", "ADMINISTRATIVO", "SOCIO"]}>
+          <CanPermission code={PermissaoCodigo.TELA_PAINEL}>
             <NavLink to="/app/painel" className={navLinkClass} end onClick={fecharMenu}>
               <IconLayoutDashboard className="app-shell-nav-icon" />
               <span>Painel</span>
             </NavLink>
-          </CanRole>
-          <CanRole anyOf={["COLABORADOR", "ADMINISTRATIVO"]}>
+          </CanPermission>
+          <CanPermission code={PermissaoCodigo.TELA_PROJETOS}>
             <NavLink to="/app/projetos" className={navLinkClass} onClick={fecharMenu}>
               <IconFolderKanban className="app-shell-nav-icon" />
               <span>Projetos</span>
             </NavLink>
-          </CanRole>
-          <CanRole anyOf={["SOCIO"]}>
+          </CanPermission>
+          <CanPermission code={PermissaoCodigo.TELA_SOCIO_PROPOSTAS}>
             <NavLink to="/app/socio/propostas" className={navLinkClass} onClick={fecharMenu}>
               <IconFolderKanban className="app-shell-nav-icon" />
               <span>Fila sócio</span>
             </NavLink>
-          </CanRole>
-          <CanRole anyOf={["ADMINISTRATIVO"]}>
+          </CanPermission>
+          <CanPermission code={PermissaoCodigo.TELA_CLIENTES}>
             <NavLink to="/app/clientes" className={navLinkClass} onClick={fecharMenu}>
               <IconClients className="app-shell-nav-icon" />
               <span>Clientes</span>
             </NavLink>
-          </CanRole>
-          <CanRole anyOf={["ADMINISTRATIVO"]}>
+          </CanPermission>
+          <CanPermission code={PermissaoCodigo.TELA_USUARIOS}>
             <NavLink to="/app/usuarios" className={navLinkClass} onClick={fecharMenu}>
               <IconUsers className="app-shell-nav-icon" />
               <span>Usuários</span>
             </NavLink>
-          </CanRole>
+          </CanPermission>
+          <CanPermission code={PermissaoCodigo.TELA_GRUPOS}>
+            <NavLink to="/app/grupos" className={navLinkClass} onClick={fecharMenu}>
+              <IconShield className="app-shell-nav-icon" />
+              <span>Grupos</span>
+            </NavLink>
+          </CanPermission>
         </nav>
         <div className="app-shell-footer">
           <div className="app-shell-user-card">
@@ -245,4 +260,3 @@ export default function AppLayout() {
     </div>
   );
 }
-

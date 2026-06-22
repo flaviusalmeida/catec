@@ -1,6 +1,8 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../api/http";
+import CanPermission from "../auth/CanPermission";
+import { PermissaoCodigo } from "../auth/permissao";
 import { useAuth } from "../auth/AuthContext";
 import GhostButton from "../components/buttons/GhostButton";
 import PrimaryButton from "../components/buttons/PrimaryButton";
@@ -28,7 +30,7 @@ import ToastAlert from "../components/ui/ToastAlert";
 import "../styles/admin-crud-table.css";
 import "./UsuariosPage.css";
 
-const PERFIS_OPCOES = [
+const GRUPOS_OPCOES = [
   {
     valor: "COLABORADOR",
     rotulo: "Colaborador",
@@ -68,7 +70,7 @@ type AdminUsuario = {
   telefone: string | null;
   ativo: boolean;
   requerTrocaSenha: boolean;
-  perfis: string[];
+  grupos: string[];
   criadoEm: string;
   atualizadoEm: string;
 };
@@ -78,7 +80,7 @@ type FormState = {
   email: string;
   telefone: string;
   ativo: boolean;
-  perfis: Set<string>;
+  grupos: Set<string>;
 };
 
 function emptyForm(): FormState {
@@ -87,7 +89,7 @@ function emptyForm(): FormState {
     email: "",
     telefone: "",
     ativo: true,
-    perfis: new Set(["COLABORADOR"]),
+    grupos: new Set(["COLABORADOR"]),
   };
 }
 
@@ -97,7 +99,7 @@ function formFromUsuario(u: AdminUsuario): FormState {
     email: u.email,
     telefone: u.telefone ?? "",
     ativo: u.ativo,
-    perfis: new Set(u.perfis),
+    grupos: new Set(u.grupos),
   };
 }
 
@@ -113,7 +115,7 @@ function filtrarUsuarios(
   return lista.filter((u) => {
     if (n && !u.nome.toLowerCase().includes(n)) return false;
     if (e && !u.email.toLowerCase().includes(e)) return false;
-    if (perfil && !u.perfis.includes(perfil)) return false;
+    if (perfil && !u.grupos.includes(perfil)) return false;
     if (status === "ativo" && !u.ativo) return false;
     if (status === "inativo" && u.ativo) return false;
     return true;
@@ -182,11 +184,11 @@ export default function UsuariosPage() {
         render: (u) => u.email,
       },
       {
-        id: "perfis",
-        header: "Perfis",
-        dataLabel: "Perfis",
+        id: "grupos",
+        header: "Grupos",
+        dataLabel: "Grupos",
         cellClassName: "usuarios-perfis",
-        render: (u) => u.perfis.join(", "),
+        render: (u) => u.grupos.join(", "),
       },
       {
         id: "status",
@@ -268,13 +270,13 @@ export default function UsuariosPage() {
 
   function togglePerfil(valor: string) {
     setForm((f) => {
-      const next = new Set(f.perfis);
+      const next = new Set(f.grupos);
       if (next.has(valor)) {
         next.delete(valor);
       } else {
         next.add(valor);
       }
-      return { ...f, perfis: next };
+      return { ...f, grupos: next };
     });
   }
 
@@ -302,14 +304,14 @@ export default function UsuariosPage() {
   }
 
   async function salvar() {
-    if (form.perfis.size === 0) {
-      setErro("Selecione pelo menos um perfil.");
+    if (form.grupos.size === 0) {
+      setErro("Selecione pelo menos um grupo.");
       return;
     }
     setSalvando(true);
     setErro(null);
     try {
-      const perfis = [...form.perfis];
+      const grupos = [...form.grupos];
       if (modo === "criar") {
         const res = await apiFetch("/api/v1/admin/usuarios", {
           method: "POST",
@@ -317,7 +319,7 @@ export default function UsuariosPage() {
             nome: form.nome.trim(),
             email: form.email.trim(),
             telefone: form.telefone.trim() || null,
-            perfis,
+            grupos,
           }),
         });
         if (!res.ok) {
@@ -332,7 +334,7 @@ export default function UsuariosPage() {
           email: form.email.trim(),
           telefone: form.telefone.trim() || null,
           ativo: form.ativo,
-          perfis,
+          grupos,
         };
         const res = await apiFetch(`/api/v1/admin/usuarios/${editandoId}`, {
           method: "PUT",
@@ -368,11 +370,13 @@ export default function UsuariosPage() {
 
       <PageHeader
         title="Usuários"
-        subtitle="Gestão de contas internas e perfis de acesso."
+        subtitle="Gestão de contas internas e grupos de acesso."
         actions={
-          <PrimaryButton variant="toolbar" onClick={abrirCriar}>
-            Novo usuário
-          </PrimaryButton>
+          <CanPermission code={PermissaoCodigo.ACAO_USUARIO_GERIR}>
+            <PrimaryButton variant="toolbar" onClick={abrirCriar}>
+              Novo usuário
+            </PrimaryButton>
+          </CanPermission>
         }
       />
 
@@ -400,7 +404,7 @@ export default function UsuariosPage() {
             autoComplete="off"
           />
         </FilterField>
-        <FilterField id="flt-perfil" label="Perfil">
+        <FilterField id="flt-perfil" label="Grupo">
           <FieldControl
             as="select"
             id="flt-perfil"
@@ -409,7 +413,7 @@ export default function UsuariosPage() {
             variant="compact"
           >
             <option value="">Todos</option>
-            {PERFIS_OPCOES.map((p) => (
+            {GRUPOS_OPCOES.map((p) => (
               <option key={p.valor} value={p.valor}>
                 {p.rotulo}
               </option>
@@ -447,7 +451,9 @@ export default function UsuariosPage() {
           filterEmptyMessage="Não há usuários que correspondam aos filtros."
           tableClassName="data-table--usuarios"
           renderActions={(u) => (
-            <TableAction ariaLabel={`Editar ${u.nome}`} onClick={() => abrirEditar(u)} />
+            <CanPermission code={PermissaoCodigo.ACAO_USUARIO_GERIR}>
+              <TableAction ariaLabel={`Editar ${u.nome}`} onClick={() => abrirEditar(u)} />
+            </CanPermission>
           )}
         />
       </DataTableSection>
@@ -518,22 +524,24 @@ export default function UsuariosPage() {
                 />
               ) : null}
               {form.ativo ? (
-                <button
-                  type="button"
-                  className="usuarios-btn-reset-senha"
-                  onClick={() => setConfirmarResetAberto(true)}
-                  disabled={salvando || resetandoSenha}
-                >
-                  {resetandoSenha ? "A enviar…" : "Redefinir senha"}
-                </button>
+                <CanPermission code={PermissaoCodigo.ACAO_USUARIO_REDEFINIR_SENHA}>
+                  <button
+                    type="button"
+                    className="usuarios-btn-reset-senha"
+                    onClick={() => setConfirmarResetAberto(true)}
+                    disabled={salvando || resetandoSenha}
+                  >
+                    {resetandoSenha ? "A enviar…" : "Redefinir senha"}
+                  </button>
+                </CanPermission>
               ) : null}
             </>
           )}
         </ModalSection>
 
-        <ModalSection title="Permissões" titleId="usuario-modal-sec-permis">
+        <ModalSection title="Grupos de acesso" titleId="usuario-modal-sec-permis">
           <div className="usuarios-perfis-modal-grid">
-            {PERFIS_OPCOES.map((p) => {
+            {GRUPOS_OPCOES.map((p) => {
               const popId = `catec-perfil-pop-${p.valor}`;
               return (
                 <div key={p.valor} className="usuarios-perfil-option">
@@ -542,7 +550,7 @@ export default function UsuariosPage() {
                       id={`uf-perfil-${p.valor}`}
                       type="checkbox"
                       className="usuarios-perfil-option-input"
-                      checked={form.perfis.has(p.valor)}
+                      checked={form.grupos.has(p.valor)}
                       onChange={() => togglePerfil(p.valor)}
                       disabled={salvando}
                     />
@@ -576,9 +584,11 @@ export default function UsuariosPage() {
           >
             Cancelar
           </GhostButton>
-          <PrimaryButton onClick={() => void salvar()} disabled={salvando || resetandoSenha}>
-            {salvando ? "Salvando…" : "Salvar"}
-          </PrimaryButton>
+          <CanPermission code={PermissaoCodigo.ACAO_USUARIO_GERIR}>
+            <PrimaryButton onClick={() => void salvar()} disabled={salvando || resetandoSenha}>
+              {salvando ? "Salvando…" : "Salvar"}
+            </PrimaryButton>
+          </CanPermission>
         </ModalFooter>
       </FormDialog>
 

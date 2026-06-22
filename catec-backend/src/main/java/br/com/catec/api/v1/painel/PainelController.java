@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Painel", description = "Resumo, indicadores e histórico do fluxo comercial (somente leitura)")
 @RestController
 @RequestMapping("/api/v1/painel")
-@PreAuthorize("hasAnyRole('COLABORADOR','ADMINISTRATIVO','SOCIO')")
+@PreAuthorize("@authz.has('tela.painel')")
 public class PainelController {
 
     private final PainelService painelService;

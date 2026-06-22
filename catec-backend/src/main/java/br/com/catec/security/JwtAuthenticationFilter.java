@@ -2,6 +2,7 @@ package br.com.catec.security;
 
 import br.com.catec.api.error.ApiError;
 import br.com.catec.domain.usuario.Usuario;
+import br.com.catec.domain.acesso.PermissaoResolver;
 import br.com.catec.domain.usuario.UsuarioRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.JwtException;
@@ -23,12 +24,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UsuarioRepository usuarioRepository;
+    private final PermissaoResolver permissaoResolver;
     private final ObjectMapper objectMapper;
 
     public JwtAuthenticationFilter(
-            JwtService jwtService, UsuarioRepository usuarioRepository, ObjectMapper objectMapper) {
+            JwtService jwtService,
+            UsuarioRepository usuarioRepository,
+            PermissaoResolver permissaoResolver,
+            ObjectMapper objectMapper) {
         this.jwtService = jwtService;
         this.usuarioRepository = usuarioRepository;
+        this.permissaoResolver = permissaoResolver;
         this.objectMapper = objectMapper;
     }
 
@@ -50,7 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 .filter(u -> u.isAtivo() || u.isRequerTrocaSenha())
                                 .filter(u -> jwtService.isTokenValid(token, u))
                                 .ifPresent(u -> {
-                                    UsuarioAutenticado principal = UsuarioAutenticado.from(u);
+                                    UsuarioAutenticado principal = UsuarioAutenticado.from(u, permissaoResolver);
                                     var authentication =
                                             new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
                                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

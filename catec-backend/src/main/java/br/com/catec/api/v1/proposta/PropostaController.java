@@ -29,7 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "Propostas", description = "Proposta comercial, anexos, interações e transições de status")
 @RestController
 @RequestMapping("/api/v1/projetos/{projetoId}/propostas")
-@PreAuthorize("hasAnyRole('COLABORADOR','ADMINISTRATIVO','SOCIO')")
+@PreAuthorize("@authz.has('tela.projeto.detalhe')")
 public class PropostaController {
 
     private final PropostaService propostaService;

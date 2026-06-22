@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import br.com.catec.domain.acesso.PermissaoResolver;
 import br.com.catec.security.UsuarioAutenticado;
 import br.com.catec.security.JwtService;
 import br.com.catec.domain.usuario.UsuarioRepository;
@@ -41,6 +42,9 @@ class AuthControllerMockMvcTest {
 
     @MockBean
     private UsuarioRepository usuarioRepository;
+
+    @MockBean
+    private PermissaoResolver permissaoResolver;
 
     @Test
     void login_quandoPayloadValido_deveRetornar200ComToken() throws Exception {
@@ -100,7 +104,7 @@ class AuthControllerMockMvcTest {
     }
 
     private static UsuarioAutenticado usuarioAutenticado(Long id) {
-        return new UsuarioAutenticado(
+        return UsuarioAutenticado.comAutoridades(
                 id,
                 "admin@catec.local",
                 "Administrador",

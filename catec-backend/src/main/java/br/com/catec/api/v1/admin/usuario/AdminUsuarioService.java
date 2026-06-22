@@ -1,9 +1,9 @@
 package br.com.catec.api.v1.admin.usuario;
 
-import br.com.catec.domain.usuario.PerfilMacro;
+import br.com.catec.domain.acesso.GrupoAcessoRepository;
+import br.com.catec.domain.acesso.UsuarioGrupo;
+import br.com.catec.domain.acesso.UsuarioGrupoRepository;
 import br.com.catec.domain.usuario.Usuario;
-import br.com.catec.domain.usuario.UsuarioPerfil;
-import br.com.catec.domain.usuario.UsuarioPerfilRepository;
 import br.com.catec.domain.usuario.UsuarioRepository;
 import br.com.catec.mail.EmailNotificacaoService;
 import br.com.catec.security.SenhaProvisoriaGenerator;
@@ -22,20 +22,25 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class AdminUsuarioService {
 
+    private static final String GRUPO_ADMINISTRATIVO = "ADMINISTRATIVO";
+
     private final UsuarioRepository usuarioRepository;
-    private final UsuarioPerfilRepository usuarioPerfilRepository;
+    private final GrupoAcessoRepository grupoAcessoRepository;
+    private final UsuarioGrupoRepository usuarioGrupoRepository;
     private final PasswordEncoder passwordEncoder;
     private final SenhaProvisoriaGenerator senhaProvisoriaGenerator;
     private final EmailNotificacaoService emailNotificacaoService;
 
     public AdminUsuarioService(
             UsuarioRepository usuarioRepository,
-            UsuarioPerfilRepository usuarioPerfilRepository,
+            GrupoAcessoRepository grupoAcessoRepository,
+            UsuarioGrupoRepository usuarioGrupoRepository,
             PasswordEncoder passwordEncoder,
             SenhaProvisoriaGenerator senhaProvisoriaGenerator,
             EmailNotificacaoService emailNotificacaoService) {
         this.usuarioRepository = usuarioRepository;
-        this.usuarioPerfilRepository = usuarioPerfilRepository;
+        this.grupoAcessoRepository = grupoAcessoRepository;
+        this.usuarioGrupoRepository = usuarioGrupoRepository;
         this.passwordEncoder = passwordEncoder;
         this.senhaProvisoriaGenerator = senhaProvisoriaGenerator;
         this.emailNotificacaoService = emailNotificacaoService;
@@ -58,7 +63,7 @@ public class AdminUsuarioService {
         if (usuarioRepository.existsByEmailIgnoreCase(req.email().trim().toLowerCase())) {
             throw conflict("Já existe usuário com este e-mail.");
         }
-        validarPerfisDistintos(req.perfis());
+        validarGruposDistintos(req.grupos());
         Instant agora = Instant.now();
         String provisoria = senhaProvisoriaGenerator.gerar();
         var u = new Usuario();
@@ -75,7 +80,7 @@ public class AdminUsuarioService {
         } catch (DataIntegrityViolationException ex) {
             throw conflict("Já existe usuário com este e-mail.");
         }
-        substituirPerfis(u, req.perfis());
+        substituirGrupos(u, req.grupos());
         emailNotificacaoService.enviarSenhaProvisoria(u.getEmail(), u.getNome(), provisoria);
         return toResponse(usuarioRepository.findById(u.getId()).orElseThrow(() -> notFound()));
     }
@@ -86,16 +91,16 @@ public class AdminUsuarioService {
         if (usuarioRepository.existsByEmailIgnoreCaseAndIdNot(req.email().trim().toLowerCase(), id)) {
             throw conflict("Já existe usuário com este e-mail.");
         }
-        validarPerfisDistintos(req.perfis());
+        validarGruposDistintos(req.grupos());
         if (id.equals(operadorId)) {
             if (!req.ativo()) {
                 throw badRequest("Você não pode desativar a própria conta.");
             }
-            boolean tinhaAdmin = u.getPerfis().stream()
-                    .anyMatch(p -> PerfilMacro.ADMINISTRATIVO.name().equals(p.getPerfil()));
-            boolean mantemAdmin = req.perfis().contains(PerfilMacro.ADMINISTRATIVO);
+            boolean tinhaAdmin = u.getGrupos().stream()
+                    .anyMatch(v -> v.getGrupo() != null && GRUPO_ADMINISTRATIVO.equals(v.getGrupo().getCodigo()));
+            boolean mantemAdmin = req.grupos().contains(GRUPO_ADMINISTRATIVO);
             if (tinhaAdmin && !mantemAdmin) {
-                throw badRequest("Você não pode remover o perfil ADMINISTRATIVO da própria conta.");
+                throw badRequest("Você não pode remover o grupo ADMINISTRATIVO da própria conta.");
             }
         }
         if (req.ativo() && u.isRequerTrocaSenha()) {
@@ -112,7 +117,7 @@ public class AdminUsuarioService {
         } catch (DataIntegrityViolationException ex) {
             throw conflict("Já existe usuário com este e-mail.");
         }
-        substituirPerfis(u, req.perfis());
+        substituirGrupos(u, req.grupos());
         usuarioRepository.flush();
         return toResponse(usuarioRepository.findById(id).orElseThrow(() -> notFound()));
     }
@@ -129,23 +134,26 @@ public class AdminUsuarioService {
         emailNotificacaoService.enviarSenhaProvisoria(u.getEmail(), u.getNome(), provisoria);
     }
 
-    private void validarPerfisDistintos(List<PerfilMacro> perfis) {
-        var set = new LinkedHashSet<>(perfis);
-        if (set.size() != perfis.size()) {
-            throw badRequest("Perfis duplicados não são permitidos.");
+    private void validarGruposDistintos(List<String> grupos) {
+        var set = new LinkedHashSet<>(grupos);
+        if (set.size() != grupos.size()) {
+            throw badRequest("Grupos duplicados não são permitidos.");
         }
     }
 
-    private void substituirPerfis(Usuario usuario, List<PerfilMacro> perfis) {
-        usuarioPerfilRepository.deleteByUsuarioId(usuario.getId());
-        for (PerfilMacro p : perfis) {
-            usuarioPerfilRepository.save(UsuarioPerfil.associar(usuario, p));
+    private void substituirGrupos(Usuario usuario, List<String> codigosGrupo) {
+        usuarioGrupoRepository.deleteByUsuarioId(usuario.getId());
+        for (String codigo : codigosGrupo) {
+            var grupo = grupoAcessoRepository
+                    .findByCodigo(codigo.trim())
+                    .orElseThrow(() -> badRequest("Grupo de acesso não encontrado: " + codigo));
+            usuarioGrupoRepository.save(UsuarioGrupo.associar(usuario, grupo));
         }
     }
 
     private AdminUsuarioResponse toResponse(Usuario u) {
-        var perfis = u.getPerfis().stream()
-                .map(UsuarioPerfil::getPerfil)
+        var grupos = u.getGrupos().stream()
+                .map(v -> v.getGrupo().getCodigo())
                 .sorted()
                 .collect(Collectors.toList());
         return new AdminUsuarioResponse(
@@ -155,7 +163,7 @@ public class AdminUsuarioService {
                 u.getTelefone(),
                 u.isAtivo(),
                 u.isRequerTrocaSenha(),
-                perfis,
+                grupos,
                 u.getCriadoEm(),
                 u.getAtualizadoEm());
     }

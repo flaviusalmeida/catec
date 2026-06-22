@@ -1,5 +1,6 @@
 package br.com.catec.domain.usuario;
 
+import br.com.catec.domain.acesso.UsuarioGrupo;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -46,7 +47,7 @@ public class Usuario {
     private Instant atualizadoEm;
 
     @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
-    private List<UsuarioPerfil> perfis = new ArrayList<>();
+    private List<UsuarioGrupo> grupos = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -84,10 +85,6 @@ public class Usuario {
         return atualizadoEm;
     }
 
-    public List<UsuarioPerfil> getPerfis() {
-        return perfis;
-    }
-
     public void setNome(String nome) {
         this.nome = nome;
     }
@@ -120,7 +117,11 @@ public class Usuario {
         this.criadoEm = criadoEm;
     }
 
-    public void setPerfis(List<UsuarioPerfil> perfis) {
-        this.perfis = perfis;
+    public List<UsuarioGrupo> getGrupos() {
+        return grupos;
+    }
+
+    public void setGrupos(List<UsuarioGrupo> grupos) {
+        this.grupos = grupos;
     }
 }

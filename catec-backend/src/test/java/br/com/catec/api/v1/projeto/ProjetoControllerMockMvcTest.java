@@ -14,8 +14,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import br.com.catec.domain.projeto.ProjetoStatus;
 import br.com.catec.domain.usuario.UsuarioRepository;
 import br.com.catec.security.JwtService;
-import br.com.catec.security.MethodSecurityConfig;
+import br.com.catec.security.SecurityWebMvcTestConfig;
 import br.com.catec.security.UsuarioAutenticado;
+import br.com.catec.security.UsuarioAutenticadoFixtures;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.List;
@@ -26,12 +27,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(ProjetoController.class)
 @AutoConfigureMockMvc
-@Import(MethodSecurityConfig.class)
+@Import(SecurityWebMvcTestConfig.class)
 class ProjetoControllerMockMvcTest {
 
     @Autowired
@@ -60,10 +60,9 @@ class ProjetoControllerMockMvcTest {
 
     @Test
     void listar_quandoSemRoleColaboradorOuAdm_deveRetornar403() throws Exception {
-        var socio = new UsuarioAutenticado(
-                9L, "socio@catec.local", "Sócio", false, List.of(new SimpleGrantedAuthority("ROLE_SOCIO")));
+        var semGrupo = UsuarioAutenticadoFixtures.semPermissoes(9L);
 
-        mockMvc.perform(get("/api/v1/projetos").with(user(socio))).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/projetos").with(user(semGrupo))).andExpect(status().isForbidden());
     }
 
     @Test
@@ -132,12 +131,10 @@ class ProjetoControllerMockMvcTest {
     }
 
     private static UsuarioAutenticado colab(Long id) {
-        return new UsuarioAutenticado(
-                id, "colab@catec.local", "Colab", false, List.of(new SimpleGrantedAuthority("ROLE_COLABORADOR")));
+        return UsuarioAutenticadoFixtures.colaborador(id);
     }
 
     private static UsuarioAutenticado adm(Long id) {
-        return new UsuarioAutenticado(
-                id, "admin@catec.local", "Admin", false, List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRATIVO")));
+        return UsuarioAutenticadoFixtures.administrativo(id);
     }
 }

@@ -25,7 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "Documentos", description = "Upload e download de arquivos (exceto anexos de proposta — ver Propostas)")
 @RestController
 @RequestMapping("/api/v1/documentos")
-@PreAuthorize("hasAnyRole('COLABORADOR','ADMINISTRATIVO','SOCIO')")
+@PreAuthorize("@authz.hasAny('tela.projeto.detalhe','acao.documento.upload')")
 public class DocumentoController {
 
     private final DocumentoService documentoService;

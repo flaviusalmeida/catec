@@ -3,6 +3,7 @@ package br.com.catec.api.v1.proposta;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -15,8 +16,9 @@ import br.com.catec.domain.documento.TipoVinculoDocumento;
 import br.com.catec.domain.proposta.PropostaStatus;
 import br.com.catec.domain.usuario.UsuarioRepository;
 import br.com.catec.security.JwtService;
-import br.com.catec.security.MethodSecurityConfig;
+import br.com.catec.security.SecurityWebMvcTestConfig;
 import br.com.catec.security.UsuarioAutenticado;
+import br.com.catec.security.UsuarioAutenticadoFixtures;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.List;
@@ -28,12 +30,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(PropostaController.class)
 @AutoConfigureMockMvc
-@Import(MethodSecurityConfig.class)
+@Import(SecurityWebMvcTestConfig.class)
 class PropostaControllerMockMvcTest {
 
     @Autowired
@@ -62,7 +63,8 @@ class PropostaControllerMockMvcTest {
         mockMvc.perform(post("/api/v1/projetos/10/propostas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"requerAvaliacaoSocio\":true}")
-                        .with(user(admin())))
+                        .with(user(admin()))
+                        .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.status").value("RASCUNHO"));
@@ -75,7 +77,7 @@ class PropostaControllerMockMvcTest {
         var res = propostaResposta(2L);
         when(propostaService.aprovarPeloSocio(eq(10L), eq(2L), eq(socio()))).thenReturn(res);
 
-        mockMvc.perform(post("/api/v1/projetos/10/propostas/2/aprovar-socio").with(user(socio())))
+        mockMvc.perform(post("/api/v1/projetos/10/propostas/2/aprovar-socio").with(user(socio())).with(csrf()))
                 .andExpect(status().isOk());
 
         verify(propostaService).aprovarPeloSocio(eq(10L), eq(2L), eq(socio()));
@@ -104,7 +106,8 @@ class PropostaControllerMockMvcTest {
         mockMvc.perform(multipart("/api/v1/projetos/10/propostas/1/documentos")
                         .file(file)
                         .param("tipoArquivo", "PROPOSTA_PDF")
-                        .with(user(admin())))
+                        .with(user(admin()))
+                        .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.nomeOriginal").value("prop.pdf"));
     }
@@ -134,16 +137,14 @@ class PropostaControllerMockMvcTest {
     }
 
     private static UsuarioAutenticado admin() {
-        return new UsuarioAutenticado(
-                1L, "adm@catec.local", "Adm", false, List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRATIVO")));
+        return UsuarioAutenticadoFixtures.administrativo(1L);
     }
 
     private static UsuarioAutenticado socio() {
-        return new UsuarioAutenticado(
-                3L, "socio@catec.local", "Socio", false, List.of(new SimpleGrantedAuthority("ROLE_SOCIO")));
+        return UsuarioAutenticadoFixtures.socio(3L);
     }
 
     private static UsuarioAutenticado semRole() {
-        return new UsuarioAutenticado(9L, "x@local", "X", false, List.of());
+        return UsuarioAutenticadoFixtures.semPermissoes(9L);
     }
 }

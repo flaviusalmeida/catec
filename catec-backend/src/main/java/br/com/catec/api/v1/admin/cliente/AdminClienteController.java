@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Clientes", description = "CRUD de clientes (perfil ADMINISTRATIVO)")
 @RestController
 @RequestMapping("/api/v1/admin/clientes")
-@PreAuthorize("hasRole('ADMINISTRATIVO')")
 public class AdminClienteController {
 
     private final AdminClienteService adminClienteService;
@@ -30,12 +29,14 @@ public class AdminClienteController {
 
     @Operation(summary = "Listar clientes")
     @GetMapping
+    @PreAuthorize("@authz.has('tela.clientes')")
     public List<ClienteResponse> listar() {
         return adminClienteService.listar();
     }
 
     @Operation(summary = "Detalhe do cliente")
     @GetMapping("/{id}")
+    @PreAuthorize("@authz.has('tela.clientes')")
     public ClienteResponse obter(@PathVariable Long id) {
         return adminClienteService.obter(id);
     }
@@ -43,12 +44,14 @@ public class AdminClienteController {
     @Operation(summary = "Criar cliente")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("@authz.has('acao.cliente.criar')")
     public ClienteResponse criar(@Valid @RequestBody ClienteRequest body) {
         return adminClienteService.criar(body);
     }
 
     @Operation(summary = "Atualizar cliente")
     @PutMapping("/{id}")
+    @PreAuthorize("@authz.has('acao.cliente.editar')")
     public ClienteResponse atualizar(@PathVariable Long id, @Valid @RequestBody ClienteRequest body) {
         return adminClienteService.atualizar(id, body);
     }
@@ -56,6 +59,7 @@ public class AdminClienteController {
     @Operation(summary = "Remover cliente")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("@authz.has('acao.cliente.excluir')")
     public void remover(@PathVariable Long id) {
         adminClienteService.remover(id);
     }

@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { meAdministrativo } from "./fixtures/me";
 
 type Usuario = {
   id: number;
@@ -7,7 +8,7 @@ type Usuario = {
   telefone: string | null;
   ativo: boolean;
   requerTrocaSenha: boolean;
-  perfis: string[];
+  grupos: string[];
   criadoEm: string;
   atualizadoEm: string;
 };
@@ -22,7 +23,7 @@ test("crud funcional básico na tela de usuários", async ({ page }) => {
       telefone: null,
       ativo: true,
       requerTrocaSenha: false,
-      perfis: ["ADMINISTRATIVO"],
+      grupos: ["ADMINISTRATIVO"],
       criadoEm: agora,
       atualizadoEm: agora,
     },
@@ -37,15 +38,7 @@ test("crud funcional básico na tela de usuários", async ({ page }) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({
-        id: 1,
-        nome: "Administrador",
-        email: "admin@catec.local",
-        perfis: ["ADMINISTRATIVO"],
-        ativo: true,
-        telefone: null,
-        requerTrocaSenha: false,
-      }),
+      body: JSON.stringify(meAdministrativo()),
     });
   });
 
@@ -65,7 +58,7 @@ test("crud funcional básico na tela de usuários", async ({ page }) => {
         nome: string;
         email: string;
         telefone: string | null;
-        perfis: string[];
+        grupos: string[];
       };
       const novo: Usuario = {
         id: usuarios.length + 1,
@@ -74,7 +67,7 @@ test("crud funcional básico na tela de usuários", async ({ page }) => {
         telefone: body.telefone,
         ativo: false,
         requerTrocaSenha: true,
-        perfis: body.perfis,
+        grupos: body.grupos,
         criadoEm: agora,
         atualizadoEm: agora,
       };
@@ -102,7 +95,7 @@ test("crud funcional básico na tela de usuários", async ({ page }) => {
         email: string;
         telefone: string | null;
         ativo: boolean;
-        perfis: string[];
+        grupos: string[];
       };
       usuarios[idx] = {
         ...usuarios[idx],
@@ -110,7 +103,7 @@ test("crud funcional básico na tela de usuários", async ({ page }) => {
         email: body.email,
         telefone: body.telefone,
         ativo: body.ativo,
-        perfis: body.perfis,
+        grupos: body.grupos,
         atualizadoEm: agora,
       };
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(usuarios[idx]) });

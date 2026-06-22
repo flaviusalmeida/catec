@@ -17,10 +17,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Usuários", description = "Gestão de usuários e perfis (ADMINISTRATIVO)")
+@Tag(name = "Usuários", description = "Gestão de usuários e grupos de acesso")
 @RestController
 @RequestMapping("/api/v1/admin/usuarios")
-@PreAuthorize("hasRole('ADMINISTRATIVO')")
+@PreAuthorize("@authz.has('acao.usuario.gerir')")
 public class AdminUsuarioController {
 
     private final AdminUsuarioService adminUsuarioService;
@@ -41,14 +41,14 @@ public class AdminUsuarioController {
         return adminUsuarioService.obter(id);
     }
 
-    @Operation(summary = "Criar usuário", description = "Corpo: nome, email, senha, telefone opcional, ativo, perfis (enum).")
+    @Operation(summary = "Criar usuário", description = "Corpo: nome, email, telefone opcional, grupos (códigos, ex.: COLABORADOR).")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public AdminUsuarioResponse criar(@Valid @RequestBody UsuarioCreateRequest body) {
         return adminUsuarioService.criar(body);
     }
 
-    @Operation(summary = "Atualizar usuário", description = "Senha vazia mantém a atual; não desativar a própria conta nem remover próprio perfil ADM.")
+    @Operation(summary = "Atualizar usuário", description = "Não desativar a própria conta nem remover o próprio grupo ADMINISTRATIVO.")
     @PutMapping("/{id}")
     public AdminUsuarioResponse atualizar(
             @PathVariable Long id,
@@ -60,6 +60,7 @@ public class AdminUsuarioController {
     @Operation(summary = "Resetar senha provisória")
     @PostMapping("/{id}/resetar-senha")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("@authz.has('acao.usuario.redefinir_senha')")
     public void resetarSenha(@PathVariable Long id) {
         adminUsuarioService.resetarSenhaProvisoria(id);
     }

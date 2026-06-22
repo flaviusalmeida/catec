@@ -3,6 +3,7 @@ package br.com.catec.api.v1.proposta;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -12,8 +13,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import br.com.catec.domain.proposta.PropostaStatus;
 import br.com.catec.domain.usuario.UsuarioRepository;
 import br.com.catec.security.JwtService;
-import br.com.catec.security.MethodSecurityConfig;
+import br.com.catec.security.SecurityWebMvcTestConfig;
 import br.com.catec.security.UsuarioAutenticado;
+import br.com.catec.security.UsuarioAutenticadoFixtures;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.List;
@@ -24,12 +26,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(SocioPropostaController.class)
 @AutoConfigureMockMvc
-@Import(MethodSecurityConfig.class)
+@Import(SecurityWebMvcTestConfig.class)
 class SocioPropostaControllerMockMvcTest {
 
     @Autowired
@@ -64,7 +65,8 @@ class SocioPropostaControllerMockMvcTest {
         mockMvc.perform(post("/api/v1/socio/propostas/5/aprovar")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"projetoId\":10,\"observacao\":\"Ok\"}")
-                        .with(user(socio())))
+                        .with(user(socio()))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("APROVADA_INTERNA"));
 
@@ -72,11 +74,11 @@ class SocioPropostaControllerMockMvcTest {
     }
 
     @Test
-    void aprovar_quandoAdministrativo_deveRetornar403() throws Exception {
+    void aprovar_quandoColaborador_deveRetornar403() throws Exception {
         mockMvc.perform(post("/api/v1/socio/propostas/5/aprovar")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"projetoId\":10}")
-                        .with(user(admin())))
+                        .with(user(UsuarioAutenticadoFixtures.colaborador(2L))))
                 .andExpect(status().isForbidden());
     }
 
@@ -99,12 +101,6 @@ class SocioPropostaControllerMockMvcTest {
     }
 
     private static UsuarioAutenticado socio() {
-        return new UsuarioAutenticado(
-                3L, "socio@catec.local", "Socio", false, List.of(new SimpleGrantedAuthority("ROLE_SOCIO")));
-    }
-
-    private static UsuarioAutenticado admin() {
-        return new UsuarioAutenticado(
-                1L, "adm@catec.local", "Adm", false, List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRATIVO")));
+        return UsuarioAutenticadoFixtures.socio(3L);
     }
 }

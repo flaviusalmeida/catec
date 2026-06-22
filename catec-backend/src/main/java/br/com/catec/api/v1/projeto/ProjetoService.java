@@ -7,13 +7,13 @@ import br.com.catec.domain.projeto.ProjetoRepository;
 import br.com.catec.domain.projeto.ProjetoStatus;
 import br.com.catec.domain.usuario.Usuario;
 import br.com.catec.domain.usuario.UsuarioRepository;
+import br.com.catec.security.AuthorizationService;
 import br.com.catec.security.UsuarioAutenticado;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,21 +24,24 @@ public class ProjetoService {
     private final ProjetoRepository projetoRepository;
     private final ClienteRepository clienteRepository;
     private final UsuarioRepository usuarioRepository;
+    private final AuthorizationService authz;
 
     public ProjetoService(
             ProjetoRepository projetoRepository,
             ClienteRepository clienteRepository,
-            UsuarioRepository usuarioRepository) {
+            UsuarioRepository usuarioRepository,
+            AuthorizationService authz) {
         this.projetoRepository = projetoRepository;
         this.clienteRepository = clienteRepository;
         this.usuarioRepository = usuarioRepository;
+        this.authz = authz;
     }
 
     @Transactional(readOnly = true)
     public List<ProjetoResponse> listar(UsuarioAutenticado principal) {
         Sort sort = Sort.by(Sort.Direction.DESC, "criadoEm");
         List<Projeto> rows =
-                isAdministrativo(principal)
+                authz.podeListarTodosProjetos(principal)
                         ? projetoRepository.findAll(sort)
                         : projetoRepository.findAllByCriadoPorId(principal.id(), sort);
         return rows.stream().map(this::toResponse).toList();
@@ -91,7 +94,7 @@ public class ProjetoService {
         if (p.getStatus() != ProjetoStatus.PENDENTE_CLIENTE) {
             throw badRequest("Só é possível associar cliente quando a demanda está pendente de cadastro de cliente.");
         }
-        boolean admin = isAdministrativo(principal);
+        boolean admin = authz.podeGerirFluxoAdministrativo(principal);
         if (!admin && !p.getCriadoPor().getId().equals(principal.id())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Só o criador pode associar o cliente a esta demanda.");
         }
@@ -119,7 +122,7 @@ public class ProjetoService {
                     HttpStatus.FORBIDDEN,
                     "Demanda pendente de cadastro de cliente. Associe um cliente antes de qualquer alteração.");
         }
-        boolean admin = isAdministrativo(principal);
+        boolean admin = authz.podeGerirFluxoAdministrativo(principal);
 
         if (!admin) {
             if (!p.getCriadoPor().getId().equals(principal.id())) {
@@ -212,30 +215,9 @@ public class ProjetoService {
     }
 
     private void garantirLeitura(Projeto p, UsuarioAutenticado principal) {
-        if (isAdministrativo(principal) || isSocio(principal)) {
-            return;
-        }
-        if (!p.getCriadoPor().getId().equals(principal.id())) {
+        if (!authz.podeLerProjeto(principal, p.getCriadoPor().getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado a este projeto.");
         }
-    }
-
-    private static boolean isSocio(UsuarioAutenticado principal) {
-        for (GrantedAuthority a : principal.getAuthorities()) {
-            if ("ROLE_SOCIO".equals(a.getAuthority())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean isAdministrativo(UsuarioAutenticado principal) {
-        for (GrantedAuthority a : principal.getAuthorities()) {
-            if ("ROLE_ADMINISTRATIVO".equals(a.getAuthority())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /** Copia e-mail e telefone do cadastro do cliente para o projeto (obrigatório e-mail no cliente). */

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { permissoesAdministrativo } from "../test/permissoesFixtures";
 import UsuariosPage from "./UsuariosPage";
 
 const logoutMock = vi.fn();
@@ -15,6 +16,13 @@ vi.mock("../api/http", () => ({
   apiFetch: (...args: unknown[]) => apiFetchMock(...args),
 }));
 
+function mockAuthAdmin() {
+  useAuthMock.mockReturnValue({
+    logout: logoutMock,
+    user: { permissoes: [...permissoesAdministrativo] },
+  });
+}
+
 describe("UsuariosPage", () => {
   beforeEach(() => {
     cleanup();
@@ -22,7 +30,7 @@ describe("UsuariosPage", () => {
   });
 
   it("filtra tabela por nome", async () => {
-    useAuthMock.mockReturnValue({ logout: logoutMock });
+    mockAuthAdmin();
     apiFetchMock.mockResolvedValue({
       status: 200,
       ok: true,
@@ -34,7 +42,7 @@ describe("UsuariosPage", () => {
           telefone: null,
           ativo: true,
           requerTrocaSenha: false,
-          perfis: ["ADMINISTRATIVO"],
+          grupos: ["ADMINISTRATIVO"],
           criadoEm: "2026-01-01T00:00:00Z",
           atualizadoEm: "2026-01-01T00:00:00Z",
         },
@@ -45,7 +53,7 @@ describe("UsuariosPage", () => {
           telefone: null,
           ativo: true,
           requerTrocaSenha: false,
-          perfis: ["COLABORADOR"],
+          grupos: ["COLABORADOR"],
           criadoEm: "2026-01-01T00:00:00Z",
           atualizadoEm: "2026-01-01T00:00:00Z",
         },
@@ -68,7 +76,7 @@ describe("UsuariosPage", () => {
   });
 
   it("esconde botão de redefinir senha quando conta editada está inativa", async () => {
-    useAuthMock.mockReturnValue({ logout: logoutMock });
+    mockAuthAdmin();
     apiFetchMock.mockResolvedValue({
       status: 200,
       ok: true,
@@ -80,7 +88,7 @@ describe("UsuariosPage", () => {
           telefone: null,
           ativo: false,
           requerTrocaSenha: false,
-          perfis: ["COLABORADOR"],
+          grupos: ["COLABORADOR"],
           criadoEm: "2026-01-01T00:00:00Z",
           atualizadoEm: "2026-01-01T00:00:00Z",
         },
@@ -101,7 +109,7 @@ describe("UsuariosPage", () => {
   });
 
   it("abre confirmação customizada e confirma redefinição de senha", async () => {
-    useAuthMock.mockReturnValue({ logout: logoutMock });
+    mockAuthAdmin();
     apiFetchMock
       .mockResolvedValueOnce({
         status: 200,
@@ -114,7 +122,7 @@ describe("UsuariosPage", () => {
             telefone: null,
             ativo: true,
             requerTrocaSenha: false,
-            perfis: ["COLABORADOR"],
+            grupos: ["COLABORADOR"],
             criadoEm: "2026-01-01T00:00:00Z",
             atualizadoEm: "2026-01-01T00:00:00Z",
           },
@@ -136,7 +144,7 @@ describe("UsuariosPage", () => {
             telefone: null,
             ativo: false,
             requerTrocaSenha: true,
-            perfis: ["COLABORADOR"],
+            grupos: ["COLABORADOR"],
             criadoEm: "2026-01-01T00:00:00Z",
             atualizadoEm: "2026-01-01T00:00:00Z",
           },

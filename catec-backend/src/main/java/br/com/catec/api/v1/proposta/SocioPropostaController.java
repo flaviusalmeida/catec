@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Propostas", description = "Fila e parecer do sócio (perfil SOCIO)")
 @RestController
 @RequestMapping("/api/v1/socio/propostas")
-@PreAuthorize("hasRole('SOCIO')")
+@PreAuthorize("@authz.has('tela.socio.propostas')")
 public class SocioPropostaController {
 
     private final PropostaService propostaService;
@@ -34,6 +34,7 @@ public class SocioPropostaController {
 
     @Operation(summary = "Aprovar proposta (sócio)", description = "Transição para APROVADA_INTERNA. Corpo: projetoId, observacao opcional.")
     @PostMapping("/{propostaId}/aprovar")
+    @PreAuthorize("@authz.has('acao.socio.proposta.aprovar')")
     public PropostaResponse aprovar(
             @PathVariable Long propostaId,
             @Valid @RequestBody PropostaAvaliacaoSocioRequest body,
@@ -43,6 +44,7 @@ public class SocioPropostaController {
 
     @Operation(summary = "Devolver proposta ao rascunho", description = "Parecer (observacao) obrigatório. Corpo: projetoId, observacao.")
     @PostMapping("/{propostaId}/devolver")
+    @PreAuthorize("@authz.has('acao.socio.proposta.devolver')")
     public PropostaResponse devolver(
             @PathVariable Long propostaId,
             @Valid @RequestBody PropostaAvaliacaoSocioRequest body,

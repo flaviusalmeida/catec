@@ -12,16 +12,18 @@ import br.com.catec.domain.projeto.ProjetoRepository;
 import br.com.catec.domain.proposta.Proposta;
 import br.com.catec.domain.proposta.PropostaRepository;
 import br.com.catec.domain.usuario.Usuario;
+import br.com.catec.security.AuthorizationService;
 import br.com.catec.security.UsuarioAutenticado;
+import br.com.catec.security.UsuarioAutenticadoFixtures;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +37,9 @@ class DocumentoAutorizacaoServiceTest {
 
     @Mock
     private br.com.catec.domain.contrato.ContratoRepository contratoRepository;
+
+    @Spy
+    private AuthorizationService authz = new AuthorizationService();
 
     @InjectMocks
     private DocumentoAutorizacaoService service;
@@ -68,7 +73,6 @@ class DocumentoAutorizacaoServiceTest {
     @Test
     void garantirLeitura_socioEmDocumentoProposta_devePermitir() {
         Documento doc = documentoProposta(2L, 20L);
-        when(propostaRepository.findById(20L)).thenReturn(Optional.of(propostaDoProjeto(20L, 10L)));
 
         assertDoesNotThrow(() -> service.garantirLeitura(doc, socio(3L)));
     }
@@ -112,18 +116,15 @@ class DocumentoAutorizacaoServiceTest {
     }
 
     private static UsuarioAutenticado admin(long id) {
-        return new UsuarioAutenticado(
-                id, "adm@catec.local", "Adm", false, List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRATIVO")));
+        return UsuarioAutenticadoFixtures.administrativo(id);
     }
 
     private static UsuarioAutenticado colab(long id) {
-        return new UsuarioAutenticado(
-                id, "colab@catec.local", "Colab", false, List.of(new SimpleGrantedAuthority("ROLE_COLABORADOR")));
+        return UsuarioAutenticadoFixtures.colaborador(id);
     }
 
     private static UsuarioAutenticado socio(long id) {
-        return new UsuarioAutenticado(
-                id, "socio@catec.local", "Socio", false, List.of(new SimpleGrantedAuthority("ROLE_SOCIO")));
+        return UsuarioAutenticadoFixtures.socio(id);
     }
 
     private static Documento documentoProposta(long docId, long propostaId) {

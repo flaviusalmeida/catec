@@ -10,6 +10,6 @@ public record AdminUsuarioResponse(
         String telefone,
         boolean ativo,
         boolean requerTrocaSenha,
-        List<String> perfis,
+        List<String> grupos,
         Instant criadoEm,
         Instant atualizadoEm) {}

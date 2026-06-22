@@ -1,7 +1,6 @@
 package br.com.catec.security;
 
 import br.com.catec.domain.usuario.Usuario;
-import br.com.catec.domain.usuario.UsuarioPerfil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -36,8 +35,9 @@ public class JwtService {
     public String generateToken(Usuario usuario) {
         Instant now = Instant.now();
         Instant exp = now.plusSeconds(getExpirationSeconds());
-        List<String> roles =
-                usuario.getPerfis().stream().map(UsuarioPerfil::getPerfil).collect(Collectors.toList());
+        List<String> roles = usuario.getGrupos().stream()
+                .map(v -> v.getGrupo().getCodigo())
+                .collect(Collectors.toList());
         return Jwts.builder()
                 .subject(usuario.getEmail().toLowerCase())
                 .claim("uid", usuario.getId())

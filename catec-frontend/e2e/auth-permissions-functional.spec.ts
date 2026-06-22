@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { permissoesAdministrativo } from "./fixtures/me";
 
 test("redireciona para login quando /me retorna 401", async ({ page }) => {
   await page.addInitScript(() => {
@@ -28,7 +29,8 @@ test("mostra erro de permissão quando listagem retorna 403", async ({ page }) =
         id: 2,
         nome: "Colaborador",
         email: "colab@catec.local",
-        perfis: ["ADMINISTRATIVO"],
+        grupos: ["ADMINISTRATIVO"],
+        permissoes: [...permissoesAdministrativo],
         ativo: true,
         telefone: null,
         requerTrocaSenha: false,

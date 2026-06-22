@@ -1,5 +1,6 @@
 package br.com.catec.api.v1.me;
 
+import br.com.catec.domain.acesso.PermissaoResolver;
 import br.com.catec.domain.usuario.UsuarioRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -10,9 +11,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class MeService {
 
     private final UsuarioRepository usuarioRepository;
+    private final PermissaoResolver permissaoResolver;
 
-    public MeService(UsuarioRepository usuarioRepository) {
+    public MeService(UsuarioRepository usuarioRepository, PermissaoResolver permissaoResolver) {
         this.usuarioRepository = usuarioRepository;
+        this.permissaoResolver = permissaoResolver;
     }
 
     @Transactional(readOnly = true)
@@ -20,12 +23,13 @@ public class MeService {
         var usuario = usuarioRepository
                 .findById(usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
-        var perfis = usuario.getPerfis().stream().map(p -> p.getPerfil()).sorted().toList();
+        var access = permissaoResolver.resolve(usuario.getGrupos());
         return new MeResponse(
                 usuario.getId(),
                 usuario.getNome(),
                 usuario.getEmail(),
-                perfis,
+                access.grupos(),
+                access.permissoes(),
                 usuario.isAtivo(),
                 usuario.getTelefone(),
                 usuario.isRequerTrocaSenha());

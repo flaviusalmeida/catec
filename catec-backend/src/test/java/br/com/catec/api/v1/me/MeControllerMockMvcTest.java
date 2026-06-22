@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import br.com.catec.domain.acesso.PermissaoResolver;
 import br.com.catec.security.UsuarioAutenticado;
 import br.com.catec.security.JwtService;
 import br.com.catec.domain.usuario.UsuarioRepository;
@@ -35,6 +36,9 @@ class MeControllerMockMvcTest {
     @MockBean
     private UsuarioRepository usuarioRepository;
 
+    @MockBean
+    private PermissaoResolver permissaoResolver;
+
     @Test
     void me_quandoAutenticado_deveRetornar200ComPerfil() throws Exception {
         var principal = usuarioAutenticado(7L);
@@ -43,6 +47,7 @@ class MeControllerMockMvcTest {
                 "Usuário Teste",
                 "user@catec.local",
                 List.of("ADMINISTRATIVO", "SOCIO"),
+                List.of("tela.painel", "acao.grupo.gerir"),
                 true,
                 "11999990000",
                 false);
@@ -53,8 +58,10 @@ class MeControllerMockMvcTest {
                 .andExpect(jsonPath("$.id").value(7))
                 .andExpect(jsonPath("$.nome").value("Usuário Teste"))
                 .andExpect(jsonPath("$.email").value("user@catec.local"))
-                .andExpect(jsonPath("$.perfis[0]").value("ADMINISTRATIVO"))
-                .andExpect(jsonPath("$.perfis[1]").value("SOCIO"))
+                .andExpect(jsonPath("$.grupos[0]").value("ADMINISTRATIVO"))
+                .andExpect(jsonPath("$.grupos[1]").value("SOCIO"))
+                .andExpect(jsonPath("$.permissoes[0]").value("tela.painel"))
+                .andExpect(jsonPath("$.permissoes[1]").value("acao.grupo.gerir"))
                 .andExpect(jsonPath("$.ativo").value(true))
                 .andExpect(jsonPath("$.telefone").value("11999990000"))
                 .andExpect(jsonPath("$.requerTrocaSenha").value(false));
@@ -68,11 +75,13 @@ class MeControllerMockMvcTest {
     }
 
     private static UsuarioAutenticado usuarioAutenticado(Long id) {
-        return new UsuarioAutenticado(
+        return UsuarioAutenticado.comAutoridades(
                 id,
                 "user@catec.local",
                 "Usuário Teste",
                 false,
-                List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRATIVO")));
+                List.of(
+                        new SimpleGrantedAuthority("ROLE_ADMINISTRATIVO"),
+                        new SimpleGrantedAuthority("acao.grupo.gerir")));
     }
 }

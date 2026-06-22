@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Clientes", description = "Listagem resumida para vínculo em projetos")
 @RestController
 @RequestMapping("/api/v1/clientes-resumo")
-@PreAuthorize("hasAnyRole('COLABORADOR','ADMINISTRATIVO')")
+@PreAuthorize("@authz.hasAny('acao.projeto.associar_cliente','acao.cliente.criar')")
 public class ClienteResumoController {
 
     private final ClienteResumoService clienteResumoService;

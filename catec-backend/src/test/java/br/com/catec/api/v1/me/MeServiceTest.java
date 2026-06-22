@@ -3,12 +3,13 @@ package br.com.catec.api.v1.me;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-import br.com.catec.domain.usuario.PerfilMacro;
+import br.com.catec.domain.acesso.PermissaoResolver;
+import br.com.catec.domain.acesso.UsuarioGrupo;
 import br.com.catec.domain.usuario.Usuario;
-import br.com.catec.domain.usuario.UsuarioPerfil;
 import br.com.catec.domain.usuario.UsuarioRepository;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,20 +25,27 @@ class MeServiceTest {
     @Mock
     private UsuarioRepository usuarioRepository;
 
+    @Mock
+    private PermissaoResolver permissaoResolver;
+
     @InjectMocks
     private MeService service;
 
     @Test
-    void obterPerfil_quandoUsuarioExiste_deveRetornarDadosOrdenandoPerfis() {
-        var usuario = usuario(7L, "Usuário Teste", "user@catec.local", PerfilMacro.SOCIO, PerfilMacro.ADMINISTRATIVO);
+    void obterPerfil_quandoUsuarioExiste_deveRetornarGruposEPermissoes() {
+        var usuario = usuario(7L, "Usuário Teste", "user@catec.local", "SOCIO", "ADMINISTRATIVO");
         when(usuarioRepository.findById(7L)).thenReturn(java.util.Optional.of(usuario));
+        when(permissaoResolver.resolve(usuario.getGrupos()))
+                .thenReturn(new PermissaoResolver.ResolvedAccess(
+                        List.of("ADMINISTRATIVO", "SOCIO"), List.of("tela.painel", "acao.grupo.gerir")));
 
         var response = service.obterPerfil(7L);
 
         assertEquals(7L, response.id());
         assertEquals("Usuário Teste", response.nome());
         assertEquals("user@catec.local", response.email());
-        assertEquals(java.util.List.of("ADMINISTRATIVO", "SOCIO"), response.perfis());
+        assertEquals(List.of("ADMINISTRATIVO", "SOCIO"), response.grupos());
+        assertEquals(List.of("tela.painel", "acao.grupo.gerir"), response.permissoes());
     }
 
     @Test
@@ -47,7 +55,7 @@ class MeServiceTest {
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
     }
 
-    private static Usuario usuario(long id, String nome, String email, PerfilMacro... perfisMacro) {
+    private static Usuario usuario(long id, String nome, String email, String... codigosGrupo) {
         var u = new Usuario();
         ReflectionTestUtils.setField(u, "id", id);
         u.setNome(nome);
@@ -57,9 +65,8 @@ class MeServiceTest {
         u.setRequerTrocaSenha(false);
         u.setCriadoEm(Instant.now());
         u.setAtualizadoEm(Instant.now());
-        var perfis = new ArrayList<UsuarioPerfil>();
-        for (PerfilMacro macro : perfisMacro) perfis.add(UsuarioPerfil.associar(u, macro));
-        u.setPerfis(perfis);
+        var grupos = new ArrayList<UsuarioGrupo>();
+        u.setGrupos(grupos);
         return u;
     }
 }

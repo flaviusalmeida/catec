@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,7 +21,9 @@ import br.com.catec.domain.proposta.Proposta;
 import br.com.catec.domain.proposta.PropostaRepository;
 import br.com.catec.domain.proposta.PropostaStatus;
 import br.com.catec.domain.usuario.Usuario;
+import br.com.catec.security.AuthorizationService;
 import br.com.catec.security.UsuarioAutenticado;
+import br.com.catec.security.UsuarioAutenticadoFixtures;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +34,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,7 +53,11 @@ class PainelServiceTest {
     @BeforeEach
     void setUp() {
         painelService = new PainelService(
-                projetoRepository, propostaRepository, new FaseMacroResolver(), painelHistoricoRepository);
+                projetoRepository,
+                propostaRepository,
+                new FaseMacroResolver(),
+                painelHistoricoRepository,
+                new AuthorizationService());
     }
 
     @Test
@@ -135,23 +141,23 @@ class PainelServiceTest {
         Projeto p = mock(Projeto.class);
         Cliente c = mock(Cliente.class);
         Usuario criador = mock(Usuario.class);
-        when(p.getId()).thenReturn(id);
-        when(p.getTitulo()).thenReturn(titulo);
-        when(p.getStatus()).thenReturn(status);
-        when(p.getCliente()).thenReturn(c);
-        when(c.getId()).thenReturn(10L);
-        when(c.getRazaoSocialOuNome()).thenReturn("Cliente");
-        when(p.getCriadoPor()).thenReturn(criador);
-        when(criador.getId()).thenReturn(9L);
-        when(p.getAtualizadoEm()).thenReturn(Instant.parse("2026-05-01T12:00:00Z"));
+        lenient().when(p.getId()).thenReturn(id);
+        lenient().when(p.getTitulo()).thenReturn(titulo);
+        lenient().when(p.getStatus()).thenReturn(status);
+        lenient().when(p.getCliente()).thenReturn(c);
+        lenient().when(c.getId()).thenReturn(10L);
+        lenient().when(c.getRazaoSocialOuNome()).thenReturn("Cliente");
+        lenient().when(p.getCriadoPor()).thenReturn(criador);
+        lenient().when(criador.getId()).thenReturn(9L);
+        lenient().when(p.getAtualizadoEm()).thenReturn(Instant.parse("2026-05-01T12:00:00Z"));
         return p;
     }
 
     private static UsuarioAutenticado admin() {
-        return new UsuarioAutenticado(1L, "admin@catec.local", "Admin", false, List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRATIVO")));
+        return UsuarioAutenticadoFixtures.administrativo(1L);
     }
 
     private static UsuarioAutenticado colab(long id) {
-        return new UsuarioAutenticado(id, "c@test.local", "Colab", false, List.of(new SimpleGrantedAuthority("ROLE_COLABORADOR")));
+        return UsuarioAutenticadoFixtures.colaborador(id);
     }
 }

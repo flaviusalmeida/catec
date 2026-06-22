@@ -12,6 +12,7 @@ import br.com.catec.domain.projeto.ProjetoStatus;
 import br.com.catec.domain.proposta.Proposta;
 import br.com.catec.domain.proposta.PropostaRepository;
 import br.com.catec.domain.proposta.PropostaStatus;
+import br.com.catec.security.AuthorizationService;
 import br.com.catec.security.UsuarioAutenticado;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -23,7 +24,6 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -38,16 +38,19 @@ public class PainelService {
     private final PropostaRepository propostaRepository;
     private final FaseMacroResolver faseMacroResolver;
     private final PainelHistoricoRepository painelHistoricoRepository;
+    private final AuthorizationService authz;
 
     public PainelService(
             ProjetoRepository projetoRepository,
             PropostaRepository propostaRepository,
             FaseMacroResolver faseMacroResolver,
-            PainelHistoricoRepository painelHistoricoRepository) {
+            PainelHistoricoRepository painelHistoricoRepository,
+            AuthorizationService authz) {
         this.projetoRepository = projetoRepository;
         this.propostaRepository = propostaRepository;
         this.faseMacroResolver = faseMacroResolver;
         this.painelHistoricoRepository = painelHistoricoRepository;
+        this.authz = authz;
     }
 
     @Transactional(readOnly = true)
@@ -191,37 +194,16 @@ public class PainelService {
                 linha.ocorridoEm());
     }
 
-    private static Long escopoCriador(UsuarioAutenticado principal) {
-        if (isAdministrativo(principal) || isSocio(principal)) {
+    private Long escopoCriador(UsuarioAutenticado principal) {
+        if (authz.podeListarTodosProjetos(principal)) {
             return null;
         }
         return principal.id();
     }
 
     private void garantirLeitura(Projeto p, UsuarioAutenticado principal) {
-        if (isAdministrativo(principal) || isSocio(principal)) {
-            return;
-        }
-        if (!p.getCriadoPor().getId().equals(principal.id())) {
+        if (!authz.podeLerProjeto(principal, p.getCriadoPor().getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso negado a este projeto.");
         }
-    }
-
-    private static boolean isSocio(UsuarioAutenticado principal) {
-        for (GrantedAuthority a : principal.getAuthorities()) {
-            if ("ROLE_SOCIO".equals(a.getAuthority())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean isAdministrativo(UsuarioAutenticado principal) {
-        for (GrantedAuthority a : principal.getAuthorities()) {
-            if ("ROLE_ADMINISTRATIVO".equals(a.getAuthority())) {
-                return true;
-            }
-        }
-        return false;
     }
 }

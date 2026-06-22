@@ -1,13 +1,15 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth/AuthContext";
+import { PermissaoCodigo } from "./auth/permissao";
 import AppLayout from "./layout/AppLayout";
 import RequireAuth from "./layout/RequireAuth";
-import RequireRole from "./layout/RequireRole";
+import RequirePermission from "./layout/RequirePermission";
 import "./layout/RequireAuth.css";
 import DefinirSenhaPage from "./pages/DefinirSenhaPage";
 import LoginPage from "./pages/LoginPage";
 import ClienteFormPage from "./pages/ClienteFormPage";
 import ClientesPage from "./pages/ClientesPage";
+import GruposPage from "./pages/GruposPage";
 import ProjetosPage from "./pages/ProjetosPage";
 import ProjetoDetalhePage from "./pages/ProjetoDetalhePage";
 import SocioPropostasPage from "./pages/SocioPropostasPage";
@@ -61,65 +63,73 @@ export default function App() {
           <Route
             path="painel"
             element={
-              <RequireRole anyOf={["COLABORADOR", "ADMINISTRATIVO", "SOCIO"]}>
+              <RequirePermission code={PermissaoCodigo.TELA_PAINEL}>
                 <PainelPage />
-              </RequireRole>
+              </RequirePermission>
             }
           />
           <Route
             path="projetos"
             element={
-              <RequireRole anyOf={["COLABORADOR", "ADMINISTRATIVO"]} title="Projetos">
+              <RequirePermission code={PermissaoCodigo.TELA_PROJETOS} title="Projetos">
                 <ProjetosPage />
-              </RequireRole>
+              </RequirePermission>
             }
           />
           <Route
             path="projetos/:id"
             element={
-              <RequireRole anyOf={["COLABORADOR", "ADMINISTRATIVO", "SOCIO"]}>
+              <RequirePermission code={PermissaoCodigo.TELA_PROJETO_DETALHE}>
                 <ProjetoDetalhePage />
-              </RequireRole>
+              </RequirePermission>
             }
           />
           <Route
             path="socio/propostas"
             element={
-              <RequireRole anyOf={["SOCIO"]} title="Fila do sócio">
+              <RequirePermission code={PermissaoCodigo.TELA_SOCIO_PROPOSTAS} title="Fila do sócio">
                 <SocioPropostasPage />
-              </RequireRole>
+              </RequirePermission>
             }
           />
           <Route
             path="clientes/novo"
             element={
-              <RequireRole anyOf={["ADMINISTRATIVO"]}>
+              <RequirePermission code={PermissaoCodigo.TELA_CLIENTES}>
                 <ClienteFormPage />
-              </RequireRole>
+              </RequirePermission>
             }
           />
           <Route
             path="clientes/:id/editar"
             element={
-              <RequireRole anyOf={["ADMINISTRATIVO"]}>
+              <RequirePermission code={PermissaoCodigo.TELA_CLIENTES}>
                 <ClienteFormPage />
-              </RequireRole>
+              </RequirePermission>
             }
           />
           <Route
             path="clientes"
             element={
-              <RequireRole anyOf={["ADMINISTRATIVO"]}>
+              <RequirePermission code={PermissaoCodigo.TELA_CLIENTES}>
                 <ClientesPage />
-              </RequireRole>
+              </RequirePermission>
             }
           />
           <Route
             path="usuarios"
             element={
-              <RequireRole anyOf={["ADMINISTRATIVO"]}>
+              <RequirePermission code={PermissaoCodigo.TELA_USUARIOS}>
                 <UsuariosPage />
-              </RequireRole>
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="grupos"
+            element={
+              <RequirePermission code={PermissaoCodigo.TELA_GRUPOS}>
+                <GruposPage />
+              </RequirePermission>
             }
           />
         </Route>

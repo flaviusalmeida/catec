@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { meAdministrativo } from "./fixtures/me";
 
 type Usuario = {
   id: number;
@@ -7,7 +8,7 @@ type Usuario = {
   telefone: string | null;
   ativo: boolean;
   requerTrocaSenha: boolean;
-  perfis: string[];
+  grupos: string[];
   criadoEm: string;
   atualizadoEm: string;
 };
@@ -22,7 +23,7 @@ test("modal de reset: cancelar nao chama endpoint e confirmar chama", async ({ p
       telefone: null,
       ativo: true,
       requerTrocaSenha: false,
-      perfis: ["ADMINISTRATIVO"],
+      grupos: ["ADMINISTRATIVO"],
       criadoEm: agora,
       atualizadoEm: agora,
     },
@@ -33,7 +34,7 @@ test("modal de reset: cancelar nao chama endpoint e confirmar chama", async ({ p
       telefone: null,
       ativo: true,
       requerTrocaSenha: false,
-      perfis: ["COLABORADOR"],
+      grupos: ["COLABORADOR"],
       criadoEm: agora,
       atualizadoEm: agora,
     },
@@ -50,15 +51,7 @@ test("modal de reset: cancelar nao chama endpoint e confirmar chama", async ({ p
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({
-        id: 1,
-        nome: "Administrador",
-        email: "admin@catec.local",
-        perfis: ["ADMINISTRATIVO"],
-        ativo: true,
-        telefone: null,
-        requerTrocaSenha: false,
-      }),
+      body: JSON.stringify(meAdministrativo()),
     });
   });
 

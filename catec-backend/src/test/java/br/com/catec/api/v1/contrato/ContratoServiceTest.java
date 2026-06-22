@@ -17,16 +17,18 @@ import br.com.catec.domain.projeto.ProjetoRepository;
 import br.com.catec.domain.projeto.ProjetoStatus;
 import br.com.catec.domain.usuario.Usuario;
 import br.com.catec.domain.usuario.UsuarioRepository;
+import br.com.catec.security.AuthorizationService;
 import br.com.catec.security.UsuarioAutenticado;
+import br.com.catec.security.UsuarioAutenticadoFixtures;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,6 +51,9 @@ class ContratoServiceTest {
 
     @Mock
     private br.com.catec.domain.documento.DocumentoRepository documentoRepository;
+
+    @Spy
+    private AuthorizationService authz = new AuthorizationService();
 
     @InjectMocks
     private ContratoService service;
@@ -100,7 +105,6 @@ class ContratoServiceTest {
     }
 
     private static UsuarioAutenticado admin(long id) {
-        return new UsuarioAutenticado(
-                id, "adm@catec.local", "Adm", false, List.of(new SimpleGrantedAuthority("ROLE_ADMINISTRATIVO")));
+        return UsuarioAutenticadoFixtures.administrativo(id);
     }
 }

@@ -27,7 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "Contratos", description = "Contrato do projeto e anexos")
 @RestController
 @RequestMapping("/api/v1/projetos/{projetoId}/contratos")
-@PreAuthorize("hasAnyRole('COLABORADOR','ADMINISTRATIVO','SOCIO')")
+@PreAuthorize("@authz.has('tela.projeto.detalhe')")
 public class ContratoController {
 
     private final ContratoService contratoService;

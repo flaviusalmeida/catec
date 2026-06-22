@@ -3,9 +3,9 @@ package br.com.catec.api.v1.auth;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import br.com.catec.domain.usuario.PerfilMacro;
+import br.com.catec.domain.acesso.GrupoAcesso;
+import br.com.catec.domain.acesso.UsuarioGrupo;
 import br.com.catec.domain.usuario.Usuario;
-import br.com.catec.domain.usuario.UsuarioPerfil;
 import br.com.catec.domain.usuario.UsuarioRepository;
 import br.com.catec.security.JwtService;
 import java.time.Instant;
@@ -38,7 +38,7 @@ class AuthServiceTest {
 
     @BeforeEach
     void setUp() {
-        usuario = usuario(1L, "admin@catec.local", true, false, PerfilMacro.ADMINISTRATIVO);
+        usuario = usuario(1L, "admin@catec.local", true, false, "ADMINISTRATIVO");
     }
 
     @Test
@@ -131,7 +131,7 @@ class AuthServiceTest {
         verify(usuarioRepository).save(usuario);
     }
 
-    private static Usuario usuario(long id, String email, boolean ativo, boolean trocaSenha, PerfilMacro... perfisMacro) {
+    private static Usuario usuario(long id, String email, boolean ativo, boolean trocaSenha, String... codigosGrupo) {
         var u = new Usuario();
         ReflectionTestUtils.setField(u, "id", id);
         u.setNome("Usuário");
@@ -141,9 +141,13 @@ class AuthServiceTest {
         u.setRequerTrocaSenha(trocaSenha);
         u.setCriadoEm(Instant.now());
         u.setAtualizadoEm(Instant.now());
-        var perfis = new ArrayList<UsuarioPerfil>();
-        for (PerfilMacro macro : perfisMacro) perfis.add(UsuarioPerfil.associar(u, macro));
-        u.setPerfis(perfis);
+        var grupos = new ArrayList<UsuarioGrupo>();
+        for (String codigo : codigosGrupo) {
+            var g = new GrupoAcesso();
+            g.setCodigo(codigo);
+            grupos.add(UsuarioGrupo.associar(u, g));
+        }
+        u.setGrupos(grupos);
         return u;
     }
 }
