@@ -16,6 +16,7 @@ export type StatusBadgeProps = {
   variant: StatusBadgeVariant;
   children: ReactNode;
   className?: string;
+  title?: string;
 };
 
 export function StatusBadgeGroup({ children, className }: { children: ReactNode; className?: string }) {
@@ -24,7 +25,11 @@ export function StatusBadgeGroup({ children, className }: { children: ReactNode;
 }
 
 /** Pill de estado — padrão único para listagens admin (usuários, projetos, etc.). */
-export default function StatusBadge({ variant, children, className }: StatusBadgeProps) {
+export default function StatusBadge({ variant, children, className, title }: StatusBadgeProps) {
   const classes = ["status-badge", `status-badge--${variant}`, className].filter(Boolean).join(" ");
-  return <span className={classes}>{children}</span>;
+  return (
+    <span className={classes} title={title}>
+      {children}
+    </span>
+  );
 }

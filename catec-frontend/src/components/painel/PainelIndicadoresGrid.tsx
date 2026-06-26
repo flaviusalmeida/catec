@@ -25,12 +25,13 @@ const INDICADORES: IndicadorConfig[] = [
   },
   {
     key: "propostasAguardandoAvaliacaoSocio",
-    label: "Aguardando avaliação do sócio",
+    label: "Aguardando aprovação",
     fase: "AVALIACAO_SOCIO",
+    hint: "Parecer do sócio",
   },
   {
     key: "propostasAprovadasAguardandoEnvio",
-    label: "Aprovadas — aguardando envio",
+    label: "Aguardando envio",
     fase: "APROVADA_AGUARDANDO_ENVIO",
   },
   {

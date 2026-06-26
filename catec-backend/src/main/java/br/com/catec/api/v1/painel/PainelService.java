@@ -104,9 +104,41 @@ public class PainelService {
         long emRascunho = propostaRepository.countByStatusInAndProjetoCriadoPor(
                 List.of(PropostaStatus.RASCUNHO), criadoPorFiltro);
 
+        EtapaComercial etapas = contarEtapasComerciais(principal);
+
         return new PainelIndicadoresResponse(
-                pendentesCliente, aguardandoRegistro, aguardandoSocio, aguardandoEnvio, emRascunho);
+                pendentesCliente,
+                aguardandoRegistro,
+                aguardandoSocio,
+                aguardandoEnvio,
+                emRascunho,
+                etapas.proposta(),
+                etapas.avaliacaoSocio(),
+                etapas.contrato(),
+                etapas.execucao());
     }
+
+    private EtapaComercial contarEtapasComerciais(UsuarioAutenticado principal) {
+        List<Projeto> candidatos = listarCandidatos(principal, null, null, Sort.unsorted());
+        Map<Long, Proposta> propostaPorProjeto = carregarPropostasRecentes(candidatos);
+        long proposta = 0;
+        long avaliacaoSocio = 0;
+        long contrato = 0;
+        long execucao = 0;
+        for (Projeto p : candidatos) {
+            FaseMacro fase = faseMacroResolver.resolver(p, propostaPorProjeto.get(p.getId()));
+            switch (fase) {
+                case AVALIACAO_SOCIO -> avaliacaoSocio++;
+                case AGUARDANDO_CONTRATO -> contrato++;
+                case EM_EXECUCAO -> execucao++;
+                case ENCERRADA_ACEITA, ENCERRADA_NEGADA, PROPOSTA_CONCLUIDA -> { /* fora do funil ativo */ }
+                default -> proposta++;
+            }
+        }
+        return new EtapaComercial(proposta, avaliacaoSocio, contrato, execucao);
+    }
+
+    private record EtapaComercial(long proposta, long avaliacaoSocio, long contrato, long execucao) {}
 
     @Transactional(readOnly = true)
     public PageResponse<PainelHistoricoItemResponse> historico(

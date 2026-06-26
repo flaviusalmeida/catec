@@ -81,6 +81,7 @@ class PainelServiceTest {
                 .thenReturn(0L, 1L, 3L);
         when(propostaRepository.countAguardandoSocio(PropostaStatus.PENDENTE_AVALIACAO_SOCIO, 9L))
                 .thenReturn(1L);
+        when(projetoRepository.findAll(any(Specification.class), any(Sort.class))).thenReturn(List.of());
 
         var ind = painelService.indicadores(colab(9L));
 

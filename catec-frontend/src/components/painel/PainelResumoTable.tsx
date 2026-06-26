@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import DataTableSection from "../layout/DataTableSection";
+import EmptyState from "../ui/EmptyState";
+import LoadingBlock from "../ui/LoadingBlock";
 import PaginationBar from "../table/PaginationBar";
 import FaseMacroBadge from "./FaseMacroBadge";
 import type { PainelProjetoResumo } from "../../pages/painelTypes";
@@ -13,9 +14,7 @@ export type PainelResumoTableProps = {
   pageSize: number;
   totalElements: number;
   totalPages: number;
-  projetoSelecionadoId: number | null;
   onPageChange: (page: number) => void;
-  onSelecionarProjeto: (projetoId: number) => void;
 };
 
 export default function PainelResumoTable({
@@ -25,76 +24,70 @@ export default function PainelResumoTable({
   pageSize,
   totalElements,
   totalPages,
-  projetoSelecionadoId,
   onPageChange,
-  onSelecionarProjeto,
 }: PainelResumoTableProps) {
+  const vazio = !carregando && itens.length === 0;
+
   return (
     <section className="painel-resumo-table" aria-labelledby="painel-resumo-titulo">
       <h2 id="painel-resumo-titulo" className="painel-resumo-table__titulo">
-        Visão geral dos projetos
+        Projetos em acompanhamento
       </h2>
-      <DataTableSection
-        loading={carregando}
-        loadingLabel="Carregando projetos…"
-        empty={!carregando && itens.length === 0}
-        emptyMessage="Nenhum projeto cadastrado."
-      >
-        <table className="admin-crud-table painel-resumo-table__grid">
-          <thead>
-            <tr>
-              <th scope="col">Projeto</th>
-              <th scope="col">Cliente</th>
-              <th scope="col">Fase macro</th>
-              <th scope="col">Atualizado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {itens.map((row) => {
-              const selecionado = projetoSelecionadoId === row.projetoId;
-              return (
-                <tr
-                  key={row.projetoId}
-                  className={selecionado ? "painel-resumo-table__row--selected" : undefined}
-                  onClick={() => onSelecionarProjeto(row.projetoId)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      onSelecionarProjeto(row.projetoId);
-                    }
-                  }}
-                  tabIndex={0}
-                  role="button"
-                  aria-selected={selecionado}
-                >
-                  <td data-label="Projeto">
-                    <Link
-                      to={`/app/projetos/${row.projetoId}`}
-                      className="painel-resumo-table__link"
-                      onClick={(e) => e.stopPropagation()}
+
+      <section className="data-table-section painel-resumo-table__card" aria-busy={carregando}>
+        {carregando ? (
+          <LoadingBlock label="Carregando projetos…" />
+        ) : vazio ? (
+          <EmptyState message="Nenhum projeto cadastrado." />
+        ) : (
+          <>
+            <div className="data-table-section__wrap">
+              <table className="admin-crud-table data-table--painel painel-resumo-table__grid">
+                <thead>
+                  <tr>
+                    <th scope="col">Projeto</th>
+                    <th scope="col">Fase atual</th>
+                    <th scope="col">Cliente</th>
+                    <th scope="col">Atualizado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {itens.map((row, idx) => (
+                    <tr
+                      key={row.projetoId}
+                      className={`admin-crud-table__row${idx % 2 === 1 ? " admin-crud-table__row--alt" : ""}`}
                     >
-                      {row.titulo}
-                    </Link>
-                  </td>
-                  <td data-label="Cliente">{row.clienteNome ?? "—"}</td>
-                  <td data-label="Fase macro">
-                    <FaseMacroBadge fase={row.faseMacro} />
-                  </td>
-                  <td data-label="Atualizado">{formatInstantBr(row.atualizadoEm)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        <PaginationBar
-          page={page}
-          pageSize={pageSize}
-          totalElements={totalElements}
-          totalPages={totalPages}
-          onPageChange={onPageChange}
-          disabled={carregando}
-        />
-      </DataTableSection>
+                      <td data-label="Projeto">
+                        <Link to={`/app/projetos/${row.projetoId}`} className="painel-resumo-table__link">
+                          {row.titulo}
+                        </Link>
+                      </td>
+                      <td data-label="Fase atual" className="painel-resumo-table__fase">
+                        <FaseMacroBadge fase={row.faseMacro} />
+                      </td>
+                      <td data-label="Cliente" className="painel-resumo-table__cliente">
+                        {row.clienteNome ?? "—"}
+                      </td>
+                      <td data-label="Atualizado" className="painel-resumo-table__atualizado">
+                        {formatInstantBr(row.atualizadoEm)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <PaginationBar
+              className="painel-resumo-table__paginacao"
+              page={page}
+              pageSize={pageSize}
+              totalElements={totalElements}
+              totalPages={totalPages}
+              onPageChange={onPageChange}
+              disabled={carregando}
+            />
+          </>
+        )}
+      </section>
     </section>
   );
 }

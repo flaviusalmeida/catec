@@ -1,25 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchPainelHistorico, fetchPainelIndicadores, fetchPainelResumo } from "../api/painelApi";
+import { fetchPainelIndicadores, fetchPainelResumo } from "../api/painelApi";
 import { useAuth } from "../auth/AuthContext";
 import PainelFiltros from "../components/painel/PainelFiltros";
-import PainelHistoricoLista from "../components/painel/PainelHistoricoLista";
+import PainelFluxoResumo from "../components/painel/PainelFluxoResumo";
 import PainelIndicadoresGrid from "../components/painel/PainelIndicadoresGrid";
 import PainelResumoTable from "../components/painel/PainelResumoTable";
-import PageToolbar from "../components/layout/PageToolbar";
+import { ListPage, PageHeader } from "../components/list-page";
 import InlineAlert from "../components/ui/InlineAlert";
 import type { PageResponse } from "../types/apiPage";
 import { mensagemErroApi } from "../utils/apiError";
-import type {
-  FaseMacro,
-  PainelFiltrosState,
-  PainelHistoricoItem,
-  PainelIndicadores,
-  PainelProjetoResumo,
-} from "./painelTypes";
+import type { FaseMacro, PainelFiltrosState, PainelIndicadores, PainelProjetoResumo } from "./painelTypes";
 import { PAINEL_FILTROS_VAZIOS } from "./painelTypes";
 import "./PainelPage.css";
-import "../styles/admin-crud-table.css";
 
 const PAGE_SIZE = 20;
 
@@ -38,17 +31,7 @@ export default function PainelPage() {
   const [resumoPage, setResumoPage] = useState(0);
   const [carregandoResumo, setCarregandoResumo] = useState(true);
 
-  const [projetoSelecionadoId, setProjetoSelecionadoId] = useState<number | null>(null);
-  const [historico, setHistorico] = useState<PageResponse<PainelHistoricoItem> | null>(null);
-  const [historicoPage, setHistoricoPage] = useState(0);
-  const [carregandoHistorico, setCarregandoHistorico] = useState(false);
-
   const [erro, setErro] = useState<string | null>(null);
-
-  const projetoSelecionado = useMemo(
-    () => resumo?.content.find((p) => p.projetoId === projetoSelecionadoId) ?? null,
-    [resumo?.content, projetoSelecionadoId],
-  );
 
   const carregarIndicadores = useCallback(async () => {
     setCarregandoIndicadores(true);
@@ -90,45 +73,11 @@ export default function PainelPage() {
         const data = (await res.json()) as PageResponse<PainelProjetoResumo>;
         setResumo(data);
         setResumoPage(page);
-        if (
-          projetoSelecionadoId != null &&
-          !data.content.some((p) => p.projetoId === projetoSelecionadoId)
-        ) {
-          setProjetoSelecionadoId(null);
-          setHistorico(null);
-        }
       } catch {
         setErro("Falha de rede ao carregar resumo.");
         setResumo(null);
       } finally {
         setCarregandoResumo(false);
-      }
-    },
-    [logout, navigate, projetoSelecionadoId],
-  );
-
-  const carregarHistorico = useCallback(
-    async (projetoId: number, page: number) => {
-      setCarregandoHistorico(true);
-      try {
-        const res = await fetchPainelHistorico(projetoId, page, PAGE_SIZE);
-        if (res.status === 401) {
-          logout();
-          navigate("/login", { replace: true });
-          return;
-        }
-        if (!res.ok) {
-          setErro(await mensagemErroApi(res, "Erro ao carregar histórico"));
-          setHistorico(null);
-          return;
-        }
-        setHistorico((await res.json()) as PageResponse<PainelHistoricoItem>);
-        setHistoricoPage(page);
-      } catch {
-        setErro("Falha de rede ao carregar histórico.");
-        setHistorico(null);
-      } finally {
-        setCarregandoHistorico(false);
       }
     },
     [logout, navigate],
@@ -141,14 +90,6 @@ export default function PainelPage() {
   useEffect(() => {
     void carregarResumo(resumoPage, filtrosAplicados);
   }, [carregarResumo, resumoPage, filtrosAplicados]);
-
-  useEffect(() => {
-    if (projetoSelecionadoId == null) {
-      setHistorico(null);
-      return;
-    }
-    void carregarHistorico(projetoSelecionadoId, historicoPage);
-  }, [carregarHistorico, historicoPage, projetoSelecionadoId]);
 
   function aplicarFiltros() {
     setFiltrosAplicados({ ...filtrosRascunho });
@@ -172,61 +113,43 @@ export default function PainelPage() {
     setResumoPage(0);
   }
 
-  function selecionarProjeto(projetoId: number) {
-    setProjetoSelecionadoId(projetoId);
-    setHistoricoPage(0);
-  }
-
   return (
-    <div className="painel-page clientes-page">
-      <div className="clientes-page-inner painel-page__inner">
-        <PageToolbar
-          title="Painel de visibilidade"
-          subtitle="Visão geral, filtros, indicadores e histórico do fluxo comercial (Fase 1)."
-        />
+    <ListPage className="painel-page">
+      <PageHeader
+        title="Painel de visibilidade"
+        subtitle="Acompanhamento gerencial do fluxo comercial."
+      />
 
-        {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
+      {erro ? <InlineAlert variant="error">{erro}</InlineAlert> : null}
 
+      <div className="painel-page__kpis">
         <PainelIndicadoresGrid
           indicadores={indicadores}
           carregando={carregandoIndicadores}
           faseMacroAtiva={filtrosAplicados.faseMacro}
           onFiltrarFase={filtrarPorFase}
         />
-
-        <PainelFiltros
-          filtros={filtrosRascunho}
-          onChange={setFiltrosRascunho}
-          onClear={limparFiltros}
-          onAplicar={aplicarFiltros}
-          clienteFetchError={clienteFetchError}
-          onClienteFetchError={setClienteFetchError}
-        />
-
-        <div className="painel-page__workspace">
-          <PainelResumoTable
-            itens={resumo?.content ?? []}
-            carregando={carregandoResumo}
-            page={resumoPage}
-            pageSize={PAGE_SIZE}
-            totalElements={resumo?.totalElements ?? 0}
-            totalPages={resumo?.totalPages ?? 0}
-            projetoSelecionadoId={projetoSelecionadoId}
-            onPageChange={setResumoPage}
-            onSelecionarProjeto={selecionarProjeto}
-          />
-          <PainelHistoricoLista
-            projeto={projetoSelecionado}
-            itens={historico?.content ?? []}
-            carregando={carregandoHistorico}
-            page={historicoPage}
-            pageSize={PAGE_SIZE}
-            totalElements={historico?.totalElements ?? 0}
-            totalPages={historico?.totalPages ?? 0}
-            onPageChange={setHistoricoPage}
-          />
-        </div>
+        <PainelFluxoResumo indicadores={indicadores} carregando={carregandoIndicadores} />
       </div>
-    </div>
+
+      <PainelFiltros
+        filtros={filtrosRascunho}
+        onChange={setFiltrosRascunho}
+        onClear={limparFiltros}
+        onAplicar={aplicarFiltros}
+        clienteFetchError={clienteFetchError}
+        onClienteFetchError={setClienteFetchError}
+      />
+
+      <PainelResumoTable
+        itens={resumo?.content ?? []}
+        carregando={carregandoResumo}
+        page={resumoPage}
+        pageSize={PAGE_SIZE}
+        totalElements={resumo?.totalElements ?? 0}
+        totalPages={resumo?.totalPages ?? 0}
+        onPageChange={setResumoPage}
+      />
+    </ListPage>
   );
 }

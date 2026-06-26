@@ -32,6 +32,23 @@ export const FASE_MACRO_ROTULO: Record<FaseMacro, string> = {
   PROPOSTA_CONCLUIDA: "Proposta concluída (projeto)",
 };
 
+/** Rótulos curtos para badges na listagem do painel (detalhe em `title`). */
+export const FASE_MACRO_ROTULO_CURTO: Record<FaseMacro, string> = {
+  PENDENTE_CLIENTE: "Sem cliente",
+  AGUARDANDO_INICIO_PROPOSTA: "Aguardando proposta",
+  ELABORACAO_PROPOSTA: "Em proposta",
+  AVALIACAO_SOCIO: "Em avaliação",
+  APROVADA_AGUARDANDO_ENVIO: "Aguardando envio",
+  AGUARDANDO_RESPOSTA_CLIENTE: "Aguardando cliente",
+  AVALIACAO_CLIENTE: "Em avaliação",
+  AGUARDANDO_AJUSTE_INTERNO: "Ajuste interno",
+  AGUARDANDO_CONTRATO: "Aguardando contrato",
+  EM_EXECUCAO: "Em execução",
+  ENCERRADA_ACEITA: "Encerrada (aceita)",
+  ENCERRADA_NEGADA: "Encerrada (negada)",
+  PROPOSTA_CONCLUIDA: "Proposta concluída",
+};
+
 export const FASE_MACRO_OPCOES: { value: FaseMacro; label: string }[] = (
   Object.keys(FASE_MACRO_ROTULO) as FaseMacro[]
 ).map((value) => ({ value, label: FASE_MACRO_ROTULO[value] }));
@@ -56,6 +73,10 @@ export type PainelIndicadores = {
   propostasAguardandoAvaliacaoSocio: number;
   propostasAprovadasAguardandoEnvio: number;
   propostasEmRascunho: number;
+  etapaProposta: number;
+  etapaAvaliacaoSocio: number;
+  etapaContrato: number;
+  etapaExecucao: number;
 };
 
 export type PainelHistoricoItem = {

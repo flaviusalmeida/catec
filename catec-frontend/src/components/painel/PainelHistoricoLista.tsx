@@ -30,7 +30,7 @@ export default function PainelHistoricoLista({
   return (
     <section className="painel-historico" aria-labelledby="painel-historico-titulo">
       <h2 id="painel-historico-titulo" className="painel-historico__titulo">
-        Histórico
+        Últimas movimentações
       </h2>
       {!projeto ? (
         <EmptyState message="Selecione um projeto." />
@@ -52,11 +52,12 @@ export default function PainelHistoricoLista({
                       {formatInstantBr(item.ocorridoEm)}
                     </time>
                   </div>
-                  <p className="painel-historico__item-meta">
-                    {item.usuarioNome}
-                    {detalheTransicaoHistorico(item) ? ` · ${detalheTransicaoHistorico(item)}` : null}
-                  </p>
-                  {item.texto ? <p className="painel-historico__item-texto">{item.texto}</p> : null}
+                  <p className="painel-historico__item-meta">{item.usuarioNome}</p>
+                  {detalheTransicaoHistorico(item) ? (
+                    <p className="painel-historico__item-texto">{detalheTransicaoHistorico(item)}</p>
+                  ) : item.texto ? (
+                    <p className="painel-historico__item-texto">{item.texto}</p>
+                  ) : null}
                 </li>
               ))}
             </ul>

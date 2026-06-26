@@ -1,18 +1,30 @@
 .painel-historico {
-  min-height: 12rem;
+  min-height: 8rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--catec-radius-md);
+  background: #fbfcfe;
+  border: 1px solid rgba(148, 163, 184, 0.22);
 }
 
 .painel-historico__titulo {
-  margin: 0 0 0.5rem;
-  font-size: 1rem;
+  margin: 0 0 0.35rem;
+  font-size: 0.6875rem;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--catec-color-text-muted, #64748b);
 }
 
 .painel-historico__projeto-nome {
-  margin: 0 0 0.75rem;
-  font-size: 0.9375rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--catec-color-text-muted);
+  color: var(--catec-color-text);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .painel-historico__lista {
@@ -22,41 +34,56 @@
 }
 
 .painel-historico__item {
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--catec-color-border);
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .painel-historico__item:last-child {
   border-bottom: none;
+  padding-bottom: 0;
 }
 
 .painel-historico__item-head {
   display: flex;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.35rem;
   align-items: baseline;
 }
 
 .painel-historico__item-tipo {
   font-weight: 600;
-  text-transform: capitalize;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
+  line-height: 1.25;
 }
 
 .painel-historico__item-data {
-  font-size: 0.8125rem;
+  font-size: 0.6875rem;
   color: var(--catec-color-text-muted);
   white-space: nowrap;
 }
 
 .painel-historico__item-meta {
-  margin: 0.25rem 0 0;
-  font-size: 0.8125rem;
+  margin: 0.15rem 0 0;
+  font-size: 0.6875rem;
   color: var(--catec-color-text-muted);
+  line-height: 1.3;
 }
 
 .painel-historico__item-texto {
-  margin: 0.35rem 0 0;
-  font-size: 0.875rem;
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
   white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.painel-historico .pagination-bar {
+  margin-top: 0.5rem;
+}
+
+.painel-historico .empty-state {
+  font-size: 0.8125rem;
 }

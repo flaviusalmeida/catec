@@ -1,6 +1,6 @@
 import StatusBadge, { StatusBadgeGroup, type StatusBadgeVariant } from "../ui/StatusBadge";
 import type { FaseMacro } from "../../pages/painelTypes";
-import { FASE_MACRO_ROTULO } from "../../pages/painelTypes";
+import { FASE_MACRO_ROTULO, FASE_MACRO_ROTULO_CURTO } from "../../pages/painelTypes";
 
 function variantFor(fase: FaseMacro): StatusBadgeVariant {
   switch (fase) {
@@ -17,9 +17,12 @@ function variantFor(fase: FaseMacro): StatusBadgeVariant {
 }
 
 export default function FaseMacroBadge({ fase }: { fase: FaseMacro }) {
+  const rotuloCompleto = FASE_MACRO_ROTULO[fase];
   return (
     <StatusBadgeGroup>
-      <StatusBadge variant={variantFor(fase)}>{FASE_MACRO_ROTULO[fase]}</StatusBadge>
+      <StatusBadge variant={variantFor(fase)} title={rotuloCompleto}>
+        {FASE_MACRO_ROTULO_CURTO[fase]}
+      </StatusBadge>
     </StatusBadgeGroup>
   );
 }

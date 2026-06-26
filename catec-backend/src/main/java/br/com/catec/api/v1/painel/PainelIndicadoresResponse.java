@@ -5,4 +5,8 @@ public record PainelIndicadoresResponse(
         long propostasAguardandoRegistroCliente,
         long propostasAguardandoAvaliacaoSocio,
         long propostasAprovadasAguardandoEnvio,
-        long propostasEmRascunho) {}
+        long propostasEmRascunho,
+        long etapaProposta,
+        long etapaAvaliacaoSocio,
+        long etapaContrato,
+        long etapaExecucao) {}

@@ -3,8 +3,9 @@ import { render, screen } from "@testing-library/react";
 import FaseMacroBadge from "./FaseMacroBadge";
 
 describe("FaseMacroBadge", () => {
-  it("exibe rótulo em português", () => {
+  it("exibe rótulo curto com título completo", () => {
     render(<FaseMacroBadge fase="AVALIACAO_SOCIO" />);
-    expect(screen.getByText("Avaliação do sócio")).toBeInTheDocument();
+    expect(screen.getByText("Em avaliação")).toBeInTheDocument();
+    expect(screen.getByTitle("Avaliação do sócio")).toBeInTheDocument();
   });
 });

@@ -1,0 +1,46 @@
+.painel-filtros.filters-card {
+  padding: 1rem 1.25rem;
+  border-color: rgba(148, 163, 184, 0.28);
+  box-shadow: var(--list-page-shadow-card);
+  background: #fff;
+}
+
+.painel-filtros .filters-card__head {
+  margin-bottom: 0.65rem;
+}
+
+.painel-filtros .filters-card__title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.painel-filtros .filters-card__grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem 1rem;
+  align-items: end;
+}
+
+.painel-filtros__aplicar-field {
+  margin: 0;
+}
+
+.painel-filtros__aplicar.primary-button {
+  width: 100%;
+  justify-content: center;
+  min-height: 2.25rem;
+}
+
+@media (max-width: 900px) {
+  .painel-filtros .filters-card__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .painel-filtros .filters-card__grid {
+    grid-template-columns: 1fr;
+  }
+}

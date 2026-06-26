@@ -1,9 +1,11 @@
+import PrimaryButton from "../buttons/PrimaryButton";
 import FormField from "../form/FormField";
 import FieldControl from "../form/FieldControl";
-import FiltersCard from "../layout/FiltersCard";
+import FilterCard from "../list-page/FilterCard";
 import ClienteAutocomplete from "../projeto/ClienteAutocomplete";
 import type { PainelFiltrosState } from "../../pages/painelTypes";
 import { FASE_MACRO_OPCOES } from "../../pages/painelTypes";
+import "./PainelFiltros.css";
 
 export type PainelFiltrosProps = {
   filtros: PainelFiltrosState;
@@ -30,7 +32,13 @@ export default function PainelFiltros({
   }
 
   return (
-    <FiltersCard headingId="painel-filtros-titulo" title="Filtros da visão geral" onClear={onClear}>
+    <FilterCard
+      headingId="painel-filtros-titulo"
+      title="Refinar visão"
+      className="painel-filtros"
+      onClear={onClear}
+      clearLabel="Limpar"
+    >
       <ClienteAutocomplete
         label="Cliente"
         valueId={filtros.clienteId}
@@ -46,6 +54,7 @@ export default function PainelFiltros({
         <FieldControl
           as="select"
           id="painel-filtro-fase"
+          variant="compact"
           value={filtros.faseMacro}
           onChange={(e) => patch({ faseMacro: e.target.value as PainelFiltrosState["faseMacro"] })}
         >
@@ -61,15 +70,21 @@ export default function PainelFiltros({
         <FieldControl
           id="painel-filtro-prazo"
           type="date"
+          variant="compact"
           value={filtros.prazoAte}
           onChange={(e) => patch({ prazoAte: e.target.value })}
         />
       </FormField>
-      <FormField label=" " htmlFor="painel-filtro-aplicar">
-        <button type="button" className="painel-filtros__aplicar" onClick={onAplicar}>
-          Aplicar filtros
-        </button>
+      <FormField label=" " htmlFor="painel-filtro-aplicar" className="painel-filtros__aplicar-field">
+        <PrimaryButton
+          id="painel-filtro-aplicar"
+          variant="toolbar"
+          className="painel-filtros__aplicar"
+          onClick={onAplicar}
+        >
+          Aplicar
+        </PrimaryButton>
       </FormField>
-    </FiltersCard>
+    </FilterCard>
   );
 }

@@ -2,8 +2,9 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.25rem;
-  padding: 1rem 1.1rem;
+  gap: 0.35rem;
+  padding: 1.25rem 1.35rem;
+  min-height: 6.5rem;
   border-radius: var(--catec-radius-md);
   background: var(--catec-color-surface);
   border: 1px solid var(--catec-color-border);
@@ -29,19 +30,22 @@
 }
 
 .painel-indicador-card__value {
-  font-size: 1.75rem;
+  font-size: 2.25rem;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1;
+  letter-spacing: -0.02em;
   color: var(--catec-color-brand);
 }
 
 .painel-indicador-card__label {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
+  line-height: 1.3;
   color: var(--catec-color-text);
 }
 
 .painel-indicador-card__hint {
   font-size: 0.75rem;
+  line-height: 1.3;
   color: var(--catec-color-text-muted);
 }

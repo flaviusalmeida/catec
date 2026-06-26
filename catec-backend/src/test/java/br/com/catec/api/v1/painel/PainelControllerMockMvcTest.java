@@ -53,7 +53,7 @@ class PainelControllerMockMvcTest {
     @Test
     void indicadores_quandoColaborador_deveRetornar200() throws Exception {
         when(painelService.indicadores(eq(colab(3L))))
-                .thenReturn(new PainelIndicadoresResponse(0, 0, 0, 0, 0));
+                .thenReturn(new PainelIndicadoresResponse(0, 0, 0, 0, 0, 0, 0, 0, 0));
 
         mockMvc.perform(get("/api/v1/painel/indicadores").with(user(colab(3L))))
                 .andExpect(status().isOk())
