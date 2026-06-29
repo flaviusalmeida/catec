@@ -1,11 +1,12 @@
 -- Contrato aceito: projeto aguarda início da execução (não mais EM_EXECUCAO direto).
+-- Remover o CHECK antes do UPDATE: senão valores novos violam ck_projeto_status ainda antigo.
+
+ALTER TABLE projeto DROP CONSTRAINT IF EXISTS ck_projeto_status;
 
 UPDATE projeto SET status = 'AGUARDANDO_EXECUCAO' WHERE status = 'EM_EXECUCAO';
 
 UPDATE auditoria_fluxo SET status_novo = 'AGUARDANDO_EXECUCAO'
 WHERE status_novo = 'EM_EXECUCAO' AND acao = 'CONTRATO_ACEITO_CLIENTE';
-
-ALTER TABLE projeto DROP CONSTRAINT IF EXISTS ck_projeto_status;
 
 ALTER TABLE projeto ADD CONSTRAINT ck_projeto_status CHECK (status IN (
     'PENDENTE_CLIENTE',
