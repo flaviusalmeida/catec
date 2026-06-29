@@ -15,8 +15,9 @@ import ProjetosPage from "./pages/ProjetosPage";
 import ProjetoDetalhePage from "./pages/ProjetoDetalhePage";
 import SocioPropostasPage from "./pages/SocioPropostasPage";
 import UsuariosPage from "./pages/UsuariosPage";
-import PainelPage from "./pages/PainelPage";
 import { getStoredToken } from "./api/http";
+
+const HOME_APP = "/app/projetos";
 
 function LoginRoute() {
   const { user, loading } = useAuth();
@@ -24,7 +25,7 @@ function LoginRoute() {
     if (user.requerTrocaSenha === true) {
       return <Navigate to="/definir-senha" replace />;
     }
-    return <Navigate to="/app/painel" replace />;
+    return <Navigate to={HOME_APP} replace />;
   }
   return <LoginPage />;
 }
@@ -47,7 +48,7 @@ function DefinirSenhaRoute() {
     return <Navigate to="/login" replace />;
   }
   if (user.requerTrocaSenha !== true) {
-    return <Navigate to="/app/painel" replace />;
+    return <Navigate to={HOME_APP} replace />;
   }
   return <DefinirSenhaPage />;
 }
@@ -59,16 +60,8 @@ export default function App() {
       <Route path="/definir-senha" element={<DefinirSenhaRoute />} />
       <Route path="/app" element={<RequireAuth />}>
         <Route element={<AppLayout />}>
-          <Route index element={<Navigate to="/app/painel" replace />} />
-          <Route path="inicio" element={<Navigate to="/app/painel" replace />} />
-          <Route
-            path="painel"
-            element={
-              <RequirePermission code={PermissaoCodigo.TELA_PAINEL}>
-                <PainelPage />
-              </RequirePermission>
-            }
-          />
+          <Route index element={<Navigate to={HOME_APP} replace />} />
+          <Route path="inicio" element={<Navigate to={HOME_APP} replace />} />
           <Route
             path="projetos"
             element={
@@ -151,8 +144,8 @@ export default function App() {
           />
         </Route>
       </Route>
-      <Route path="/" element={<Navigate to="/app/painel" replace />} />
-      <Route path="*" element={<Navigate to="/app/painel" replace />} />
+      <Route path="/" element={<Navigate to={HOME_APP} replace />} />
+      <Route path="*" element={<Navigate to={HOME_APP} replace />} />
     </Routes>
   );
 }

@@ -8,7 +8,7 @@ import {
   metaHistoricoItem,
   rotuloHistoricoItem,
   textoHistoricoItem,
-} from "../../../utils/painelHistoricoFormat";
+} from "../../../utils/historicoFluxoFormat";
 import ProjetoTimeline from "./ProjetoTimeline";
 
 type Props = {

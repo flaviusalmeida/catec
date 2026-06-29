@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import { fetchPainelHistorico } from "../api/painelApi";
+import { fetchProjetoHistorico } from "../api/projetoHistoricoApi";
 import type { PageResponse } from "../types/apiPage";
-import type { PainelHistoricoItem } from "../pages/painelTypes";
+import type { HistoricoFluxoItem } from "../pages/historicoFluxoTypes";
 import { mensagemErroApi } from "../utils/apiError";
 
 const PAGE_SIZE = 20;
 
 export function useProjetoHistoricoFluxo(projetoId: number, refreshKey: number, logout: () => void) {
   const [page, setPage] = useState(0);
-  const [dados, setDados] = useState<PageResponse<PainelHistoricoItem> | null>(null);
+  const [dados, setDados] = useState<PageResponse<HistoricoFluxoItem> | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -18,7 +18,7 @@ export function useProjetoHistoricoFluxo(projetoId: number, refreshKey: number, 
       setCarregando(true);
       setErro(null);
       try {
-        const res = await fetchPainelHistorico(projetoId, pagina, PAGE_SIZE);
+        const res = await fetchProjetoHistorico(projetoId, pagina, PAGE_SIZE);
         if (res.status === 401) {
           logout();
           return;
@@ -28,7 +28,7 @@ export function useProjetoHistoricoFluxo(projetoId: number, refreshKey: number, 
           setDados(null);
           return;
         }
-        setDados((await res.json()) as PageResponse<PainelHistoricoItem>);
+        setDados((await res.json()) as PageResponse<HistoricoFluxoItem>);
         setPage(pagina);
       } catch {
         setErro("Falha de rede ao carregar histórico.");

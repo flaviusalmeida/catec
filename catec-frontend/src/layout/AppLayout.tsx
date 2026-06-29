@@ -33,17 +33,6 @@ function IconClients({ className }: { className?: string }) {
   );
 }
 
-function IconLayoutDashboard({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <rect x="3" y="3" width="7" height="9" rx="1" />
-      <rect x="14" y="3" width="7" height="5" rx="1" />
-      <rect x="14" y="12" width="7" height="9" rx="1" />
-      <rect x="3" y="16" width="7" height="5" rx="1" />
-    </svg>
-  );
-}
-
 function IconFolderKanban({ className }: { className?: string }) {
   return (
     <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -183,12 +172,6 @@ export default function AppLayout() {
           ) : null}
         </div>
         <nav className="app-shell-nav">
-          <CanPermission code={PermissaoCodigo.TELA_PAINEL}>
-            <NavLink to="/app/painel" className={navLinkClass} end onClick={fecharMenu}>
-              <IconLayoutDashboard className="app-shell-nav-icon" />
-              <span>Painel</span>
-            </NavLink>
-          </CanPermission>
           <CanPermission code={PermissaoCodigo.TELA_PROJETOS}>
             <NavLink to="/app/projetos" className={navLinkClass} onClick={fecharMenu}>
               <IconFolderKanban className="app-shell-nav-icon" />

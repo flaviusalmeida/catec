@@ -1,5 +1,6 @@
 package br.com.catec.api.v1.projeto;
 
+import br.com.catec.api.v1.common.PageResponse;
 import br.com.catec.security.UsuarioAutenticado;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,9 +25,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProjetoController {
 
     private final ProjetoService projetoService;
+    private final ProjetoHistoricoService projetoHistoricoService;
 
-    public ProjetoController(ProjetoService projetoService) {
+    public ProjetoController(ProjetoService projetoService, ProjetoHistoricoService projetoHistoricoService) {
         this.projetoService = projetoService;
+        this.projetoHistoricoService = projetoHistoricoService;
     }
 
     @Operation(summary = "Listar projetos", description = "Colaborador vê só os que criou; ADM e Sócio veem todos.")
@@ -69,5 +73,18 @@ public class ProjetoController {
             @Valid @RequestBody ProjetoAssociarClienteRequest body,
             @AuthenticationPrincipal UsuarioAutenticado principal) {
         return projetoService.associarCliente(id, body, principal);
+    }
+
+    @Operation(
+            summary = "Histórico do projeto",
+            description = "União de auditoria_fluxo (projeto e propostas) e interacao_fluxo das propostas, ordenado por data descendente.")
+    @GetMapping("/{id}/historico")
+    @PreAuthorize("@authz.has('tela.projeto.detalhe')")
+    public PageResponse<ProjetoHistoricoItemResponse> historico(
+            @AuthenticationPrincipal UsuarioAutenticado principal,
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return projetoHistoricoService.historico(principal, id, page, size);
     }
 }
