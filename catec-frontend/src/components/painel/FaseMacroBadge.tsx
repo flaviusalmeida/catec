@@ -5,6 +5,7 @@ import { FASE_MACRO_ROTULO, FASE_MACRO_ROTULO_CURTO } from "../../pages/painelTy
 function variantFor(fase: FaseMacro): StatusBadgeVariant {
   switch (fase) {
     case "AGUARDANDO_CONTRATO":
+    case "AGUARDANDO_EXECUCAO":
     case "EM_EXECUCAO":
     case "ENCERRADA_ACEITA":
     case "PROPOSTA_CONCLUIDA":

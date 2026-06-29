@@ -186,6 +186,7 @@ public class ProjetoService {
                     case ELABORANDO_PROPOSTA -> novo == ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA;
                     case AGUARDANDO_ACEITE_PROPOSTA -> false;
                     case AGUARDANDO_CONTRATO -> false;
+                    case AGUARDANDO_EXECUCAO -> novo == ProjetoStatus.EM_EXECUCAO;
                     case EM_EXECUCAO -> false;
                     case CANCELADO -> false;
                 };
@@ -203,6 +204,7 @@ public class ProjetoService {
             case ELABORANDO_PROPOSTA -> "Elaborando proposta";
             case AGUARDANDO_ACEITE_PROPOSTA -> "Aguardando aceite da proposta";
             case AGUARDANDO_CONTRATO -> "Aguardando contrato";
+            case AGUARDANDO_EXECUCAO -> "Aguardando execução";
             case EM_EXECUCAO -> "Em execução";
             case CANCELADO -> "Cancelado";
         };

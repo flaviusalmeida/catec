@@ -40,10 +40,10 @@ public class InteracaoFluxoService {
     private static final EnumSet<PropostaStatus> STATUS_RESPOSTA_CLIENTE = EnumSet.of(
             PropostaStatus.ENVIADA_AO_CLIENTE,
             PropostaStatus.EM_AVALIACAO_CLIENTE,
-            PropostaStatus.AGUARDANDO_AJUSTE_ADM);
+            PropostaStatus.AGUARDANDO_AJUSTE);
 
     private static final EnumSet<ContratoStatus> STATUS_INTERACAO_CLIENTE_CONTRATO = EnumSet.of(
-            ContratoStatus.ENVIADO_AO_CLIENTE, ContratoStatus.AGUARDANDO_AJUSTE_ADM);
+            ContratoStatus.ENVIADO_AO_CLIENTE, ContratoStatus.AGUARDANDO_AJUSTE);
 
     private final InteracaoFluxoRepository interacaoFluxoRepository;
     private final PropostaRepository propostaRepository;
@@ -214,7 +214,7 @@ public class InteracaoFluxoService {
         if (novoStatus == ContratoStatus.RECUSADO) {
             sincronizarProjeto(salvo.getProjeto(), ProjetoStatus.CANCELADO, "CONTRATO_RECUSADO_CLIENTE", principal.id());
         } else if (novoStatus == ContratoStatus.ACEITO) {
-            sincronizarProjeto(salvo.getProjeto(), ProjetoStatus.EM_EXECUCAO, "CONTRATO_ACEITO_CLIENTE", principal.id());
+            sincronizarProjeto(salvo.getProjeto(), ProjetoStatus.AGUARDANDO_EXECUCAO, "CONTRATO_ACEITO_CLIENTE", principal.id());
         }
 
         return new RegistroInteracaoContratoResult(toResponse(salvaInteracao), toContratoResponse(salvo));
@@ -244,7 +244,7 @@ public class InteracaoFluxoService {
                 if (atual != PropostaStatus.ENVIADA_AO_CLIENTE && atual != PropostaStatus.EM_AVALIACAO_CLIENTE) {
                     throw badRequest("Considerações do cliente só podem ser registradas após o envio da proposta.");
                 }
-                yield PropostaStatus.AGUARDANDO_AJUSTE_ADM;
+                yield PropostaStatus.AGUARDANDO_AJUSTE;
             }
             case ACEITE_CLIENTE -> {
                 if (!STATUS_RESPOSTA_CLIENTE.contains(atual)) {
@@ -268,7 +268,7 @@ public class InteracaoFluxoService {
                 if (atual != ContratoStatus.ENVIADO_AO_CLIENTE) {
                     throw badRequest("Considerações do cliente só podem ser registradas após o envio do contrato.");
                 }
-                yield ContratoStatus.AGUARDANDO_AJUSTE_ADM;
+                yield ContratoStatus.AGUARDANDO_AJUSTE;
             }
             case ACEITE_CLIENTE -> {
                 if (!STATUS_INTERACAO_CLIENTE_CONTRATO.contains(atual)) {

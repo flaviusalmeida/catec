@@ -11,6 +11,7 @@ export type FaseMacro =
   | "AVALIACAO_CLIENTE"
   | "AGUARDANDO_AJUSTE_INTERNO"
   | "AGUARDANDO_CONTRATO"
+  | "AGUARDANDO_EXECUCAO"
   | "EM_EXECUCAO"
   | "ENCERRADA_ACEITA"
   | "ENCERRADA_NEGADA"
@@ -26,6 +27,7 @@ export const FASE_MACRO_ROTULO: Record<FaseMacro, string> = {
   AVALIACAO_CLIENTE: "Em avaliação pelo cliente",
   AGUARDANDO_AJUSTE_INTERNO: "Aguardando ajuste interno",
   AGUARDANDO_CONTRATO: "Aguardando contrato",
+  AGUARDANDO_EXECUCAO: "Aguardando execução",
   EM_EXECUCAO: "Em execução",
   ENCERRADA_ACEITA: "Encerrada — aceita",
   ENCERRADA_NEGADA: "Encerrada — negada",
@@ -43,6 +45,7 @@ export const FASE_MACRO_ROTULO_CURTO: Record<FaseMacro, string> = {
   AVALIACAO_CLIENTE: "Em avaliação",
   AGUARDANDO_AJUSTE_INTERNO: "Ajuste interno",
   AGUARDANDO_CONTRATO: "Aguardando contrato",
+  AGUARDANDO_EXECUCAO: "Aguardando execução",
   EM_EXECUCAO: "Em execução",
   ENCERRADA_ACEITA: "Encerrada (aceita)",
   ENCERRADA_NEGADA: "Encerrada (negada)",

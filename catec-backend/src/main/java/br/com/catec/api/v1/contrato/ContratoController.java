@@ -67,6 +67,16 @@ public class ContratoController {
         return contratoService.listarDocumentos(projetoId, contratoId, principal);
     }
 
+    @PostMapping(value = "/documentos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public DocumentoResponse uploadDocumentoNoFluxo(
+            @PathVariable Long projetoId,
+            @RequestParam(required = false) String tipoArquivo,
+            @RequestPart("file") MultipartFile file,
+            @AuthenticationPrincipal UsuarioAutenticado principal) {
+        return contratoService.uploadDocumentoNoFluxo(projetoId, tipoArquivo, file, principal);
+    }
+
     @PostMapping(value = "/{contratoId}/documentos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public DocumentoResponse uploadDocumento(

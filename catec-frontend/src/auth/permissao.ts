@@ -20,7 +20,6 @@ export const PermissaoCodigo = {
   ACAO_PROPOSTA_CRIAR: "acao.proposta.criar",
   ACAO_PROPOSTA_EDITAR: "acao.proposta.editar",
   ACAO_PROPOSTA_ENVIAR_CLIENTE: "acao.proposta.enviar_cliente",
-  ACAO_PROPOSTA_APROVAR_INTERNO: "acao.proposta.aprovar_interno",
   ACAO_SOCIO_PROPOSTA_APROVAR: "acao.socio.proposta.aprovar",
   ACAO_SOCIO_PROPOSTA_DEVOLVER: "acao.socio.proposta.devolver",
   ACAO_CONTRATO_CRIAR: "acao.contrato.criar",

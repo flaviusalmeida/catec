@@ -94,6 +94,48 @@ class ContratoServiceTest {
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
     }
 
+    @Test
+    void uploadDocumentoNoFluxo_semContrato_deveCriarRascunhoEAnexar() {
+        Projeto projeto = projeto(1L, ProjetoStatus.AGUARDANDO_CONTRATO);
+        when(projetoRepository.findById(1L)).thenReturn(Optional.of(projeto));
+        when(contratoRepository.findByProjetoId(1L)).thenReturn(Optional.empty());
+        when(contratoRepository.existsByProjetoId(1L)).thenReturn(false);
+        when(usuarioRepository.getReferenceById(10L)).thenReturn(new Usuario());
+        when(contratoRepository.save(any(Contrato.class))).thenAnswer(inv -> {
+            Contrato c = inv.getArgument(0);
+            org.springframework.test.util.ReflectionTestUtils.setField(c, "id", 50L);
+            return c;
+        });
+        when(contratoRepository.findById(50L)).thenAnswer(inv -> {
+            Contrato c = new Contrato();
+            org.springframework.test.util.ReflectionTestUtils.setField(c, "id", 50L);
+            c.setProjeto(projeto);
+            c.setStatus(ContratoStatus.RASCUNHO);
+            Usuario elab = new Usuario();
+            org.springframework.test.util.ReflectionTestUtils.setField(elab, "id", 10L);
+            elab.setNome("Admin");
+            c.setElaboradoPor(elab);
+            return Optional.of(c);
+        });
+        when(documentoService.uploadContratoSubstituindo(eq(50L), eq("CONTRATO"), any(), eq(admin(10L))))
+                .thenReturn(new br.com.catec.api.v1.documento.DocumentoResponse(
+                        1L,
+                        br.com.catec.domain.documento.TipoVinculoDocumento.CONTRATO,
+                        50L,
+                        "CONTRATO",
+                        "c.pdf",
+                        "application/pdf",
+                        10L,
+                        1,
+                        10L,
+                        "Admin",
+                        null));
+
+        service.uploadDocumentoNoFluxo(1L, "CONTRATO", null, admin(10L));
+
+        verify(documentoService).uploadContratoSubstituindo(eq(50L), eq("CONTRATO"), any(), eq(admin(10L)));
+    }
+
     private static Projeto projeto(long id, ProjetoStatus status) {
         Projeto p = new Projeto();
         org.springframework.test.util.ReflectionTestUtils.setField(p, "id", id);

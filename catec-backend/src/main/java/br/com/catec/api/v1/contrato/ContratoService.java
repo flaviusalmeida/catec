@@ -30,7 +30,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class ContratoService {
 
     private static final EnumSet<ContratoStatus> STATUS_UPLOAD_DOCUMENTO =
-            EnumSet.of(ContratoStatus.RASCUNHO, ContratoStatus.AGUARDANDO_AJUSTE_ADM);
+            EnumSet.of(ContratoStatus.RASCUNHO, ContratoStatus.AGUARDANDO_AJUSTE);
 
     private final ContratoRepository contratoRepository;
     private final ProjetoRepository projetoRepository;
@@ -109,6 +109,13 @@ public class ContratoService {
     }
 
     @Transactional
+    public DocumentoResponse uploadDocumentoNoFluxo(
+            Long projetoId, String tipoArquivo, MultipartFile file, UsuarioAutenticado principal) {
+        Contrato contrato = resolverContratoParaUpload(projetoId, principal);
+        return uploadDocumento(projetoId, contrato.getId(), tipoArquivo, file, principal);
+    }
+
+    @Transactional
     public DocumentoResponse uploadDocumento(
             Long projetoId,
             Long contratoId,
@@ -153,6 +160,27 @@ public class ContratoService {
                 ContratoStatus.ENVIADO_AO_CLIENTE.name(),
                 principal.id());
         return toResponse(salvo);
+    }
+
+    private Contrato resolverContratoParaUpload(Long projetoId, UsuarioAutenticado principal) {
+        Projeto projeto = loadProjeto(projetoId);
+        garantirLeitura(projeto, principal);
+
+        var existente = contratoRepository.findByProjetoId(projetoId);
+        if (existente.isPresent() && STATUS_UPLOAD_DOCUMENTO.contains(existente.get().getStatus())) {
+            return existente.get();
+        }
+        if (existente.isPresent()) {
+            throw badRequest("Não é possível anexar documentos no estado atual do contrato.");
+        }
+
+        return loadContrato(criar(projetoId, principal).id());
+    }
+
+    private Contrato loadContrato(Long id) {
+        return contratoRepository
+                .findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contrato não encontrado."));
     }
 
     private void validarProjetoParaNovoContrato(Projeto projeto) {

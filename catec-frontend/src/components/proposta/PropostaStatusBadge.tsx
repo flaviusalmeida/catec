@@ -5,12 +5,11 @@ import { STATUS_PROPOSTA_ROTULO } from "../../pages/propostaTypes";
 function variantFor(status: PropostaStatus): StatusBadgeVariant {
   switch (status) {
     case "ACEITA":
-    case "APROVADA_INTERNA":
       return "ativo";
     case "NEGADA":
       return "inativo";
-    case "PENDENTE_AVALIACAO_SOCIO":
-    case "AGUARDANDO_AJUSTE_ADM":
+    case "PENDENTE_AVALIACAO":
+    case "AGUARDANDO_AJUSTE":
     case "ENVIADA_AO_CLIENTE":
     case "EM_AVALIACAO_CLIENTE":
       return "pendente";

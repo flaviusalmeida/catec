@@ -3,7 +3,7 @@ import type { TipoInteracaoFluxo } from "./propostaTypes";
 export type ContratoStatus =
   | "RASCUNHO"
   | "ENVIADO_AO_CLIENTE"
-  | "AGUARDANDO_AJUSTE_ADM"
+  | "AGUARDANDO_AJUSTE"
   | "ACEITO"
   | "RECUSADO";
 
@@ -24,23 +24,23 @@ export type Contrato = {
 export const STATUS_CONTRATO_ROTULO: Record<ContratoStatus, string> = {
   RASCUNHO: "Em elaboração",
   ENVIADO_AO_CLIENTE: "Enviado ao cliente",
-  AGUARDANDO_AJUSTE_ADM: "Aguardando ajuste ADM",
+  AGUARDANDO_AJUSTE: "Aguardando ajuste",
   ACEITO: "Aceito pelo cliente",
   RECUSADO: "Recusado pelo cliente",
 };
 
-export const STATUS_CONTRATO_UPLOAD: ContratoStatus[] = ["RASCUNHO", "AGUARDANDO_AJUSTE_ADM"];
+export const STATUS_CONTRATO_UPLOAD: ContratoStatus[] = ["RASCUNHO", "AGUARDANDO_AJUSTE"];
 
 /** Contrato aguardando registro da resposta do cliente. */
 export const STATUS_CONTRATO_INTERACAO_CLIENTE: ContratoStatus[] = [
   "ENVIADO_AO_CLIENTE",
-  "AGUARDANDO_AJUSTE_ADM",
+  "AGUARDANDO_AJUSTE",
 ];
 
 /** Contrato já encaminhado ao cliente (histórico de interações). */
 export const STATUS_CONTRATO_ENVIADO: ContratoStatus[] = [
   "ENVIADO_AO_CLIENTE",
-  "AGUARDANDO_AJUSTE_ADM",
+  "AGUARDANDO_AJUSTE",
   "ACEITO",
   "RECUSADO",
 ];

@@ -78,9 +78,11 @@ class PainelServiceTest {
         when(projetoRepository.countByStatusAndCriadoPorId(ProjetoStatus.PENDENTE_CLIENTE, 9L))
                 .thenReturn(2L);
         when(propostaRepository.countByStatusInAndProjetoCriadoPor(any(), eq(9L)))
-                .thenReturn(0L, 1L, 3L);
-        when(propostaRepository.countAguardandoSocio(PropostaStatus.PENDENTE_AVALIACAO_SOCIO, 9L))
+                .thenReturn(0L);
+        when(propostaRepository.countAguardandoSocio(PropostaStatus.PENDENTE_AVALIACAO, 9L))
                 .thenReturn(1L);
+        when(propostaRepository.countAguardandoEnvio(PropostaStatus.RASCUNHO, 9L)).thenReturn(1L);
+        when(propostaRepository.countEmRascunho(PropostaStatus.RASCUNHO, 9L)).thenReturn(3L);
         when(projetoRepository.findAll(any(Specification.class), any(Sort.class))).thenReturn(List.of());
 
         var ind = painelService.indicadores(colab(9L));
@@ -122,7 +124,7 @@ class PainelServiceTest {
                         "PROPOSTA",
                         40L,
                         "ENVIAR_CLIENTE",
-                        "APROVADA_INTERNA",
+                        "RASCUNHO",
                         "ENVIADA_AO_CLIENTE",
                         null,
                         null,

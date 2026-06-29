@@ -8,6 +8,7 @@ const VARIANT_POR_STATUS: Record<ProjetoStatus, "inativo" | "pendente" | "ativo"
   ELABORANDO_PROPOSTA: "pendente",
   AGUARDANDO_ACEITE_PROPOSTA: "pendente",
   AGUARDANDO_CONTRATO: "ativo",
+  AGUARDANDO_EXECUCAO: "ativo",
   EM_EXECUCAO: "ativo",
   CANCELADO: "inativo",
 };

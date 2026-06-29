@@ -68,7 +68,7 @@ class SocioPropostaControllerMockMvcTest {
                         .with(user(socio()))
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("APROVADA_INTERNA"));
+                .andExpect(jsonPath("$.status").value("RASCUNHO"));
 
         verify(propostaService).aprovarPeloSocio(eq(10L), eq(5L), eq("Ok"), eq(socio()));
     }
@@ -86,7 +86,7 @@ class SocioPropostaControllerMockMvcTest {
         return new PropostaResponse(
                 id,
                 10L,
-                PropostaStatus.APROVADA_INTERNA,
+                PropostaStatus.RASCUNHO,
                 1,
                 true,
                 1L,

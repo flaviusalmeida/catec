@@ -32,6 +32,10 @@ public interface PropostaRepository extends JpaRepository<Proposta, Long> {
     @EntityGraph(attributePaths = {"projeto", "projeto.cliente", "elaboradoPor"})
     List<Proposta> findByStatusAndRequerAvaliacaoSocioTrueOrderByCriadoEmAsc(PropostaStatus status);
 
+    @EntityGraph(attributePaths = {"projeto", "projeto.criadoPor", "elaboradoPor"})
+    Optional<Proposta> findFirstByProjetoIdAndStatusInOrderByVersaoDesc(
+            Long projetoId, Collection<PropostaStatus> statuses);
+
     @EntityGraph(attributePaths = {"projeto", "projeto.criadoPor"})
     Optional<Proposta> findFirstByProjetoIdOrderByVersaoDesc(Long projetoId);
 
@@ -64,4 +68,22 @@ public interface PropostaRepository extends JpaRepository<Proposta, Long> {
             """)
     long countAguardandoSocio(
             @Param("status") PropostaStatus status, @Param("criadoPorId") Long criadoPorId);
+
+    @Query(
+            """
+            SELECT COUNT(pr) FROM Proposta pr
+            WHERE pr.status = :status
+            AND pr.avaliadaSocioEm IS NOT NULL
+            AND (:criadoPorId IS NULL OR pr.projeto.criadoPor.id = :criadoPorId)
+            """)
+    long countAguardandoEnvio(@Param("status") PropostaStatus status, @Param("criadoPorId") Long criadoPorId);
+
+    @Query(
+            """
+            SELECT COUNT(pr) FROM Proposta pr
+            WHERE pr.status = :status
+            AND pr.avaliadaSocioEm IS NULL
+            AND (:criadoPorId IS NULL OR pr.projeto.criadoPor.id = :criadoPorId)
+            """)
+    long countEmRascunho(@Param("status") PropostaStatus status, @Param("criadoPorId") Long criadoPorId);
 }

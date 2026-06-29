@@ -30,10 +30,10 @@ import org.springframework.web.server.ResponseStatusException;
 public class PropostaService {
 
     private static final EnumSet<PropostaStatus> STATUS_PROPOSTA_ATIVA = EnumSet.of(
-            PropostaStatus.RASCUNHO, PropostaStatus.PENDENTE_AVALIACAO_SOCIO, PropostaStatus.APROVADA_INTERNA);
+            PropostaStatus.RASCUNHO, PropostaStatus.PENDENTE_AVALIACAO);
 
     private static final EnumSet<PropostaStatus> STATUS_UPLOAD_DOCUMENTO = EnumSet.of(
-            PropostaStatus.RASCUNHO, PropostaStatus.PENDENTE_AVALIACAO_SOCIO, PropostaStatus.APROVADA_INTERNA);
+            PropostaStatus.RASCUNHO, PropostaStatus.PENDENTE_AVALIACAO);
 
     private final PropostaRepository propostaRepository;
     private final ProjetoRepository projetoRepository;
@@ -125,7 +125,7 @@ public class PropostaService {
     public List<PropostaPendenteSocioResponse> listarPendentesSocio(UsuarioAutenticado principal) {
         authz.require(principal, PermissaoCodigo.TELA_SOCIO_PROPOSTAS);
         return propostaRepository
-                .findByStatusAndRequerAvaliacaoSocioTrueOrderByCriadoEmAsc(PropostaStatus.PENDENTE_AVALIACAO_SOCIO)
+                .findByStatusAndRequerAvaliacaoSocioTrueOrderByCriadoEmAsc(PropostaStatus.PENDENTE_AVALIACAO)
                 .stream()
                 .map(p -> new PropostaPendenteSocioResponse(
                         p.getId(),
@@ -147,13 +147,20 @@ public class PropostaService {
                 .toList();
     }
 
-    /** RASCUNHO → PENDENTE_AVALIACAO_SOCIO (quando exige avaliação do sócio). */
+    /** RASCUNHO → PENDENTE_AVALIACAO (quando exige avaliação do sócio). */
     @Transactional(readOnly = true)
     public List<DocumentoResponse> listarDocumentos(
             Long projetoId, Long propostaId, UsuarioAutenticado principal) {
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
         garantirLeitura(proposta.getProjeto(), principal);
         return documentoService.listarPorVinculo(TipoVinculoDocumento.PROPOSTA, propostaId, principal);
+    }
+
+    @Transactional
+    public DocumentoResponse uploadDocumentoNoFluxo(
+            Long projetoId, String tipoArquivo, MultipartFile file, UsuarioAutenticado principal) {
+        Proposta proposta = resolverPropostaParaUpload(projetoId, principal);
+        return uploadDocumento(projetoId, proposta.getId(), tipoArquivo, file, principal);
     }
 
     @Transactional
@@ -175,31 +182,21 @@ public class PropostaService {
     @Transactional
     public PropostaResponse submeterParaAvaliacaoSocio(
             Long projetoId, Long propostaId, UsuarioAutenticado principal) {
-        authz.require(principal, PermissaoCodigo.ACAO_PROPOSTA_APROVAR_INTERNO);
+        authz.require(principal, PermissaoCodigo.ACAO_PROPOSTA_EDITAR);
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
         if (!proposta.isRequerAvaliacaoSocio()) {
-            throw badRequest("Esta proposta não requer avaliação do sócio. Use aprovação interna direta.");
+            throw badRequest("Esta proposta não requer avaliação do sócio.");
         }
+        proposta.setAvaliadaSocioEm(null);
+        proposta.setAvaliadaPorSocio(null);
         Proposta salva =
-                transicionar(proposta, PropostaStatus.PENDENTE_AVALIACAO_SOCIO, "SUBMETER_AVALIACAO_SOCIO", principal);
+                transicionar(proposta, PropostaStatus.PENDENTE_AVALIACAO, "SUBMETER_AVALIACAO_SOCIO", principal);
         socioPropostaNotificacaoService.propostaSubmetidaParaAvaliacaoSocio(
                 salva.getId(), salva.getProjeto().getId(), salva.getProjeto().getTitulo());
         return toResponse(salva);
     }
 
-    /** RASCUNHO → APROVADA_INTERNA (sem gate de sócio). */
-    @Transactional
-    public PropostaResponse aprovarInternamenteSemSocio(
-            Long projetoId, Long propostaId, UsuarioAutenticado principal) {
-        authz.require(principal, PermissaoCodigo.ACAO_PROPOSTA_APROVAR_INTERNO);
-        Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
-        if (proposta.isRequerAvaliacaoSocio()) {
-            throw badRequest("Proposta marcada para avaliação do sócio. Submeta e aguarde parecer.");
-        }
-        return toResponse(transicionar(proposta, PropostaStatus.APROVADA_INTERNA, "APROVAR_INTERNA_SEM_SOCIO", principal));
-    }
-
-    /** PENDENTE_AVALIACAO_SOCIO → APROVADA_INTERNA. */
+    /** PENDENTE_AVALIACAO → RASCUNHO (parecer positivo do sócio). */
     @Transactional
     public PropostaResponse aprovarPeloSocio(Long projetoId, Long propostaId, UsuarioAutenticado principal) {
         return aprovarPeloSocio(projetoId, propostaId, null, principal);
@@ -213,7 +210,7 @@ public class PropostaService {
         validarPendenteAvaliacaoSocio(proposta);
         Proposta salva = transicionar(
                 proposta,
-                PropostaStatus.APROVADA_INTERNA,
+                PropostaStatus.RASCUNHO,
                 "APROVAR_SOCIO",
                 principal,
                 payloadObservacao(observacao));
@@ -224,7 +221,7 @@ public class PropostaService {
         return toResponse(salva);
     }
 
-    /** PENDENTE_AVALIACAO_SOCIO → RASCUNHO (ajustes após parecer). */
+    /** PENDENTE_AVALIACAO → RASCUNHO (ajustes após parecer). */
     @Transactional
     public PropostaResponse devolverParaRascunho(Long projetoId, Long propostaId, UsuarioAutenticado principal) {
         return devolverParaRascunho(projetoId, propostaId, null, principal);
@@ -245,15 +242,19 @@ public class PropostaService {
                 "DEVOLVER_RASCUNHO_SOCIO",
                 principal,
                 payloadObservacao(observacao.trim()));
+        salva.setAvaliadaSocioEm(null);
+        salva.setAvaliadaPorSocio(null);
+        salva = propostaRepository.save(salva);
         socioPropostaNotificacaoService.propostaDevolvidaPeloSocio(salva.getId(), principal.id(), observacao.trim());
         return toResponse(salva);
     }
 
-    /** APROVADA_INTERNA → ENVIADA_AO_CLIENTE. */
+    /** RASCUNHO → ENVIADA_AO_CLIENTE. */
     @Transactional
     public PropostaResponse enviarAoCliente(Long projetoId, Long propostaId, UsuarioAutenticado principal) {
         authz.require(principal, PermissaoCodigo.ACAO_PROPOSTA_ENVIAR_CLIENTE);
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
+        validarEnvioAoCliente(proposta);
         Instant agora = Instant.now();
         Proposta salva = transicionar(proposta, PropostaStatus.ENVIADA_AO_CLIENTE, "ENVIAR_CLIENTE", principal);
         salva.setEnviadaClienteEm(agora);
@@ -299,7 +300,7 @@ public class PropostaService {
         if (!proposta.isRequerAvaliacaoSocio()) {
             throw badRequest("Esta proposta não está no fluxo de avaliação do sócio.");
         }
-        if (proposta.getStatus() != PropostaStatus.PENDENTE_AVALIACAO_SOCIO) {
+        if (proposta.getStatus() != PropostaStatus.PENDENTE_AVALIACAO) {
             throw badRequest("Avaliação do sócio só é permitida com proposta pendente de parecer.");
         }
     }
@@ -317,17 +318,24 @@ public class PropostaService {
         return "{\"observacao\":\"" + esc + "\"}";
     }
 
+    private void validarEnvioAoCliente(Proposta proposta) {
+        if (proposta.getStatus() != PropostaStatus.RASCUNHO) {
+            throw badRequest("Só é possível enviar ao cliente uma proposta em rascunho.");
+        }
+        if (proposta.isRequerAvaliacaoSocio() && proposta.getAvaliadaSocioEm() == null) {
+            throw badRequest("Aguarde o parecer do sócio antes de enviar ao cliente.");
+        }
+    }
+
     private void validarTransicao(PropostaStatus atual, PropostaStatus novo, Proposta proposta) {
         boolean ok =
                 switch (atual) {
-                    case RASCUNHO -> novo == PropostaStatus.PENDENTE_AVALIACAO_SOCIO
-                            || (novo == PropostaStatus.APROVADA_INTERNA && !proposta.isRequerAvaliacaoSocio());
-                    case PENDENTE_AVALIACAO_SOCIO -> novo == PropostaStatus.APROVADA_INTERNA
-                            || novo == PropostaStatus.RASCUNHO;
-                    case APROVADA_INTERNA -> novo == PropostaStatus.ENVIADA_AO_CLIENTE;
+                    case RASCUNHO -> (novo == PropostaStatus.PENDENTE_AVALIACAO && proposta.isRequerAvaliacaoSocio())
+                            || novo == PropostaStatus.ENVIADA_AO_CLIENTE;
+                    case PENDENTE_AVALIACAO -> novo == PropostaStatus.RASCUNHO;
                     case ENVIADA_AO_CLIENTE,
                             EM_AVALIACAO_CLIENTE,
-                            AGUARDANDO_AJUSTE_ADM,
+                            AGUARDANDO_AJUSTE,
                             ACEITA,
                             NEGADA -> false;
                 };
@@ -349,6 +357,7 @@ public class PropostaService {
             throw badRequest("Projeto já possui proposta comercial aguardando resposta do cliente.");
         }
         if (projeto.getStatus() == ProjetoStatus.AGUARDANDO_CONTRATO
+                || projeto.getStatus() == ProjetoStatus.AGUARDANDO_EXECUCAO
                 || projeto.getStatus() == ProjetoStatus.EM_EXECUCAO) {
             throw badRequest("Projeto com contrato em andamento ou em execução; não é possível criar nova proposta comercial.");
         }
@@ -359,7 +368,7 @@ public class PropostaService {
 
     /** Cliente pediu ajustes: permite nova versão (v2+) mesmo com projeto aguardando aceite. */
     private boolean existePendenciaRevisaoProposta(Long projetoId) {
-        return propostaRepository.existsByProjetoIdAndStatus(projetoId, PropostaStatus.AGUARDANDO_AJUSTE_ADM)
+        return propostaRepository.existsByProjetoIdAndStatus(projetoId, PropostaStatus.AGUARDANDO_AJUSTE)
                 || propostaRepository.existsByProjetoIdAndConsideracoesPendentesTrue(projetoId);
     }
 
@@ -394,6 +403,24 @@ public class PropostaService {
         return proposta;
     }
 
+    private Proposta resolverPropostaParaUpload(Long projetoId, UsuarioAutenticado principal) {
+        Projeto projeto = loadProjeto(projetoId);
+        garantirLeitura(projeto, principal);
+
+        var existente = propostaRepository.findFirstByProjetoIdAndStatusInOrderByVersaoDesc(
+                projetoId, STATUS_UPLOAD_DOCUMENTO);
+        if (existente.isPresent()) {
+            return existente.get();
+        }
+
+        validarProjetoParaNovaProposta(projetoId, projeto);
+        if (propostaRepository.existsByProjetoIdAndStatusIn(projetoId, STATUS_PROPOSTA_ATIVA)) {
+            throw badRequest("Não é possível anexar documentos no estado atual da proposta.");
+        }
+
+        return loadProposta(criar(projetoId, false, principal).id());
+    }
+
     private void garantirUploadDocumento(Proposta proposta) {
         if (!STATUS_UPLOAD_DOCUMENTO.contains(proposta.getStatus())) {
             throw badRequest("Não é possível anexar documentos no estado atual da proposta.");
@@ -415,11 +442,10 @@ public class PropostaService {
     private static String labelEstado(PropostaStatus status) {
         return switch (status) {
             case RASCUNHO -> "Em elaboração";
-            case PENDENTE_AVALIACAO_SOCIO -> "Pendente avaliação sócio";
-            case APROVADA_INTERNA -> "Aprovada internamente";
+            case PENDENTE_AVALIACAO -> "Pendente avaliação";
             case ENVIADA_AO_CLIENTE -> "Enviada ao cliente";
             case EM_AVALIACAO_CLIENTE -> "Em avaliação do cliente";
-            case AGUARDANDO_AJUSTE_ADM -> "Aguardando ajuste ADM";
+            case AGUARDANDO_AJUSTE -> "Aguardando ajuste";
             case ACEITA -> "Aceita";
             case NEGADA -> "Negada";
         };

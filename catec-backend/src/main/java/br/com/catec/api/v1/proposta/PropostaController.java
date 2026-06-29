@@ -77,22 +77,13 @@ public class PropostaController {
                 projetoId, propostaId, body.requerAvaliacaoSocio(), principal);
     }
 
-    @Operation(summary = "Submeter para avaliação do sócio", description = "RASCUNHO → PENDENTE_AVALIACAO_SOCIO quando requerAvaliacaoSocio=true.")
+    @Operation(summary = "Submeter para avaliação do sócio", description = "RASCUNHO → PENDENTE_AVALIACAO quando requerAvaliacaoSocio=true.")
     @PostMapping("/{propostaId}/submeter-avaliacao-socio")
     public PropostaResponse submeterParaAvaliacaoSocio(
             @PathVariable Long projetoId,
             @PathVariable Long propostaId,
             @AuthenticationPrincipal UsuarioAutenticado principal) {
         return propostaService.submeterParaAvaliacaoSocio(projetoId, propostaId, principal);
-    }
-
-    @Operation(summary = "Aprovação interna direta", description = "ADM quando requerAvaliacaoSocio=false. RASCUNHO → APROVADA_INTERNA.")
-    @PostMapping("/{propostaId}/aprovar-interna")
-    public PropostaResponse aprovarInternamenteSemSocio(
-            @PathVariable Long projetoId,
-            @PathVariable Long propostaId,
-            @AuthenticationPrincipal UsuarioAutenticado principal) {
-        return propostaService.aprovarInternamenteSemSocio(projetoId, propostaId, principal);
     }
 
     @Operation(summary = "Aprovar pelo sócio (via projeto)", description = "Preferir fila em /api/v1/socio/propostas quando aplicável.")
@@ -113,7 +104,7 @@ public class PropostaController {
         return propostaService.devolverParaRascunho(projetoId, propostaId, principal);
     }
 
-    @Operation(summary = "Enviar proposta ao cliente", description = "ADM. Exige APROVADA_INTERNA.")
+    @Operation(summary = "Enviar proposta ao cliente", description = "ADM. Exige proposta em RASCUNHO (com parecer do sócio, se aplicável).")
     @PostMapping("/{propostaId}/enviar-cliente")
     public PropostaResponse enviarAoCliente(
             @PathVariable Long projetoId,
@@ -132,8 +123,21 @@ public class PropostaController {
     }
 
     @Operation(
+            summary = "Anexar documento à proposta vigente",
+            description = "Multipart `file`. Cria proposta em rascunho se necessário; estados RASCUNHO ou PENDENTE_AVALIACAO.")
+    @PostMapping(value = "/documentos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public DocumentoResponse uploadDocumentoNoFluxo(
+            @PathVariable Long projetoId,
+            @RequestParam(required = false) String tipoArquivo,
+            @RequestPart("file") MultipartFile file,
+            @AuthenticationPrincipal UsuarioAutenticado principal) {
+        return propostaService.uploadDocumentoNoFluxo(projetoId, tipoArquivo, file, principal);
+    }
+
+    @Operation(
             summary = "Anexar documento à proposta",
-            description = "Multipart `file`. Só ADM; estados RASCUNHO, PENDENTE_AVALIACAO_SOCIO ou APROVADA_INTERNA.")
+            description = "Multipart `file`. Só ADM; estados RASCUNHO ou PENDENTE_AVALIACAO.")
     @PostMapping(value = "/{propostaId}/documentos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public DocumentoResponse uploadDocumento(

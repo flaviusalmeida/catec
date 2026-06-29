@@ -49,7 +49,6 @@ public final class UsuarioAutenticadoFixtures {
         auths.add(perm(PermissaoCodigo.ACAO_PROPOSTA_CRIAR));
         auths.add(perm(PermissaoCodigo.ACAO_PROPOSTA_EDITAR));
         auths.add(perm(PermissaoCodigo.ACAO_PROPOSTA_ENVIAR_CLIENTE));
-        auths.add(perm(PermissaoCodigo.ACAO_PROPOSTA_APROVAR_INTERNO));
         auths.add(perm(PermissaoCodigo.ACAO_SOCIO_PROPOSTA_APROVAR));
         auths.add(perm(PermissaoCodigo.ACAO_SOCIO_PROPOSTA_DEVOLVER));
         auths.add(perm(PermissaoCodigo.ACAO_CONTRATO_CRIAR));

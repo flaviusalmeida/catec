@@ -96,13 +96,11 @@ public class PainelService {
                 propostaRepository.countByStatusInAndProjetoCriadoPor(STATUS_AGUARDANDO_REGISTRO_CLIENTE, criadoPorFiltro);
 
         long aguardandoSocio = propostaRepository.countAguardandoSocio(
-                PropostaStatus.PENDENTE_AVALIACAO_SOCIO, criadoPorFiltro);
+                PropostaStatus.PENDENTE_AVALIACAO, criadoPorFiltro);
 
-        long aguardandoEnvio = propostaRepository.countByStatusInAndProjetoCriadoPor(
-                List.of(PropostaStatus.APROVADA_INTERNA), criadoPorFiltro);
+        long aguardandoEnvio = propostaRepository.countAguardandoEnvio(PropostaStatus.RASCUNHO, criadoPorFiltro);
 
-        long emRascunho = propostaRepository.countByStatusInAndProjetoCriadoPor(
-                List.of(PropostaStatus.RASCUNHO), criadoPorFiltro);
+        long emRascunho = propostaRepository.countEmRascunho(PropostaStatus.RASCUNHO, criadoPorFiltro);
 
         EtapaComercial etapas = contarEtapasComerciais(principal);
 
@@ -129,7 +127,7 @@ public class PainelService {
             FaseMacro fase = faseMacroResolver.resolver(p, propostaPorProjeto.get(p.getId()));
             switch (fase) {
                 case AVALIACAO_SOCIO -> avaliacaoSocio++;
-                case AGUARDANDO_CONTRATO -> contrato++;
+                case AGUARDANDO_CONTRATO, AGUARDANDO_EXECUCAO -> contrato++;
                 case EM_EXECUCAO -> execucao++;
                 case ENCERRADA_ACEITA, ENCERRADA_NEGADA, PROPOSTA_CONCLUIDA -> { /* fora do funil ativo */ }
                 default -> proposta++;

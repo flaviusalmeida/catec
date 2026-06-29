@@ -1,10 +1,9 @@
 export type PropostaStatus =
   | "RASCUNHO"
-  | "PENDENTE_AVALIACAO_SOCIO"
-  | "APROVADA_INTERNA"
+  | "PENDENTE_AVALIACAO"
   | "ENVIADA_AO_CLIENTE"
   | "EM_AVALIACAO_CLIENTE"
-  | "AGUARDANDO_AJUSTE_ADM"
+  | "AGUARDANDO_AJUSTE"
   | "ACEITA"
   | "NEGADA";
 
@@ -63,11 +62,10 @@ export type PropostaPendenteSocio = {
 
 export const STATUS_PROPOSTA_ROTULO: Record<PropostaStatus, string> = {
   RASCUNHO: "Rascunho",
-  PENDENTE_AVALIACAO_SOCIO: "Pendente avaliação sócio",
-  APROVADA_INTERNA: "Aprovada internamente",
+  PENDENTE_AVALIACAO: "Pendente avaliação",
   ENVIADA_AO_CLIENTE: "Enviada ao cliente",
   EM_AVALIACAO_CLIENTE: "Em avaliação do cliente",
-  AGUARDANDO_AJUSTE_ADM: "Aguardando ajuste ADM",
+  AGUARDANDO_AJUSTE: "Aguardando ajuste",
   ACEITA: "Aceita pelo cliente",
   NEGADA: "Negada pelo cliente",
 };
@@ -87,21 +85,20 @@ export const ORDEM_TIPO_INTERACAO: TipoInteracaoFluxo[] = [
 
 export const STATUS_PROPOSTA_UPLOAD: PropostaStatus[] = [
   "RASCUNHO",
-  "PENDENTE_AVALIACAO_SOCIO",
-  "APROVADA_INTERNA",
+  "PENDENTE_AVALIACAO",
 ];
 
 export const STATUS_PROPOSTA_RESPOSTA_CLIENTE: PropostaStatus[] = [
   "ENVIADA_AO_CLIENTE",
   "EM_AVALIACAO_CLIENTE",
-  "AGUARDANDO_AJUSTE_ADM",
+  "AGUARDANDO_AJUSTE",
 ];
 
 /** Propostas já encaminhadas ao cliente (histórico de envio). */
 export const STATUS_PROPOSTA_ENVIADA: PropostaStatus[] = [
   "ENVIADA_AO_CLIENTE",
   "EM_AVALIACAO_CLIENTE",
-  "AGUARDANDO_AJUSTE_ADM",
+  "AGUARDANDO_AJUSTE",
   "ACEITA",
   "NEGADA",
 ];

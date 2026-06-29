@@ -29,7 +29,7 @@ class AuditoriaServiceTest {
         when(usuarioRepository.getReferenceById(1L)).thenReturn(new Usuario());
 
         service.registrarTransicaoStatus(
-                TipoEntidadeAuditoria.PROPOSTA, 5L, "ENVIAR_CLIENTE", "APROVADA_INTERNA", "ENVIADA_AO_CLIENTE", 1L);
+                TipoEntidadeAuditoria.PROPOSTA, 5L, "ENVIAR_CLIENTE", "RASCUNHO", "ENVIADA_AO_CLIENTE", 1L);
 
         verify(auditoriaFluxoRepository).save(any(AuditoriaFluxo.class));
     }

@@ -26,13 +26,13 @@ public class SocioPropostaController {
         this.propostaService = propostaService;
     }
 
-    @Operation(summary = "Fila de propostas pendentes", description = "Propostas em PENDENTE_AVALIACAO_SOCIO visíveis ao perfil SOCIO.")
+    @Operation(summary = "Fila de propostas pendentes", description = "Propostas em PENDENTE_AVALIACAO visíveis ao perfil SOCIO.")
     @GetMapping("/pendentes")
     public List<PropostaPendenteSocioResponse> listarPendentes(@AuthenticationPrincipal UsuarioAutenticado principal) {
         return propostaService.listarPendentesSocio(principal);
     }
 
-    @Operation(summary = "Aprovar proposta (sócio)", description = "Transição para APROVADA_INTERNA. Corpo: projetoId, observacao opcional.")
+    @Operation(summary = "Aprovar proposta (sócio)", description = "Transição para RASCUNHO com parecer positivo. Corpo: projetoId, observacao opcional.")
     @PostMapping("/{propostaId}/aprovar")
     @PreAuthorize("@authz.has('acao.socio.proposta.aprovar')")
     public PropostaResponse aprovar(

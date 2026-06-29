@@ -28,7 +28,7 @@ class FaseMacroResolverTest {
         when(projeto.getStatus()).thenReturn(ProjetoStatus.ELABORANDO_PROPOSTA);
 
         Proposta proposta = mock(Proposta.class);
-        when(proposta.getStatus()).thenReturn(PropostaStatus.PENDENTE_AVALIACAO_SOCIO);
+        when(proposta.getStatus()).thenReturn(PropostaStatus.PENDENTE_AVALIACAO);
 
         assertEquals(FaseMacro.AVALIACAO_SOCIO, resolver.resolver(projeto, proposta));
     }
@@ -39,6 +39,14 @@ class FaseMacroResolverTest {
         when(projeto.getStatus()).thenReturn(ProjetoStatus.AGUARDANDO_CONTRATO);
 
         assertEquals(FaseMacro.AGUARDANDO_CONTRATO, resolver.resolver(projeto, null));
+    }
+
+    @Test
+    void projetoAguardandoExecucao_mapeiaAguardandoExecucao() {
+        Projeto projeto = mock(Projeto.class);
+        when(projeto.getStatus()).thenReturn(ProjetoStatus.AGUARDANDO_EXECUCAO);
+
+        assertEquals(FaseMacro.AGUARDANDO_EXECUCAO, resolver.resolver(projeto, null));
     }
 
     @Test
@@ -73,5 +81,15 @@ class FaseMacroResolverTest {
         when(proposta.getStatus()).thenReturn(PropostaStatus.ENVIADA_AO_CLIENTE);
 
         assertEquals(FaseMacro.AGUARDANDO_RESPOSTA_CLIENTE, resolver.resolver(projeto, proposta));
+    }
+
+    @Test
+    void rascunhoComParecerSocio_mapeiaAguardandoEnvio() {
+        Projeto projeto = mock(Projeto.class);
+        Proposta proposta = mock(Proposta.class);
+        when(proposta.getStatus()).thenReturn(PropostaStatus.RASCUNHO);
+        when(proposta.getAvaliadaSocioEm()).thenReturn(java.time.Instant.parse("2026-01-01T10:00:00Z"));
+
+        assertEquals(FaseMacro.APROVADA_AGUARDANDO_ENVIO, resolver.resolver(projeto, proposta));
     }
 }

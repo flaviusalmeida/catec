@@ -8,14 +8,8 @@ import {
   STATUS_PROPOSTA_RESPOSTA_CLIENTE,
   STATUS_PROPOSTA_ROTULO,
   TIPO_INTERACAO_ROTULO_PROPOSTA,
-  type PropostaStatus,
 } from "../pages/propostaTypes";
 
-const STATUS_PROPOSTA_ATIVA: PropostaStatus[] = [
-  "RASCUNHO",
-  "PENDENTE_AVALIACAO_SOCIO",
-  "APROVADA_INTERNA",
-];
 import type { Projeto } from "../pages/projetoTypes";
 
 export type InteracaoTimelineItem = {
@@ -125,18 +119,10 @@ export function useProjetoFluxoData(projetoId: number, refreshKey: number, logou
   const propostaParaRegistro =
     propostas.find((p) => STATUS_PROPOSTA_RESPOSTA_CLIENTE.includes(p.status)) ?? null;
   const contratoParaRegistro =
-    contrato && (contrato.status === "ENVIADO_AO_CLIENTE" || contrato.status === "AGUARDANDO_AJUSTE_ADM")
+    contrato && (contrato.status === "ENVIADO_AO_CLIENTE" || contrato.status === "AGUARDANDO_AJUSTE")
       ? contrato
       : null;
 
-  const temPropostaAtiva = propostas.some((p) => STATUS_PROPOSTA_ATIVA.includes(p.status));
-  const aguardandoAjusteCliente = propostas.some(
-    (p) => p.status === "AGUARDANDO_AJUSTE_ADM" || p.consideracoesPendentes,
-  );
-  const podeCriarNovaProposta =
-    projeto?.clienteId != null &&
-    !temPropostaAtiva &&
-    (propostas.length === 0 || aguardandoAjusteCliente);
   const podeRegistrarInteracao = propostaParaRegistro != null || contratoParaRegistro != null;
 
   return {
@@ -153,7 +139,6 @@ export function useProjetoFluxoData(projetoId: number, refreshKey: number, logou
     rotuloProposta: propostaAtual ? STATUS_PROPOSTA_ROTULO[propostaAtual.status] : "—",
     rotuloContrato: contrato ? STATUS_CONTRATO_ROTULO[contrato.status] : "—",
     ultimaInteracao: interacoes[0] ?? null,
-    podeCriarNovaProposta,
     podeRegistrarInteracao,
   };
 }

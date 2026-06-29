@@ -19,7 +19,6 @@ export const permissoesAdministrativo = [
   "acao.proposta.criar",
   "acao.proposta.editar",
   "acao.proposta.enviar_cliente",
-  "acao.proposta.aprovar_interno",
   "acao.socio.proposta.aprovar",
   "acao.socio.proposta.devolver",
   "acao.contrato.criar",

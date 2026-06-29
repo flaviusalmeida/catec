@@ -4,6 +4,7 @@ export type ProjetoStatus =
   | "ELABORANDO_PROPOSTA"
   | "AGUARDANDO_ACEITE_PROPOSTA"
   | "AGUARDANDO_CONTRATO"
+  | "AGUARDANDO_EXECUCAO"
   | "EM_EXECUCAO"
   | "CANCELADO";
 
@@ -39,6 +40,7 @@ export const ORDEM_STATUS_PROJETO: ProjetoStatus[] = [
   "ELABORANDO_PROPOSTA",
   "AGUARDANDO_ACEITE_PROPOSTA",
   "AGUARDANDO_CONTRATO",
+  "AGUARDANDO_EXECUCAO",
   "EM_EXECUCAO",
   "CANCELADO",
 ];
@@ -50,6 +52,7 @@ export const STATUS_PROJETO_ROTULO: Record<ProjetoStatus, string> = {
   ELABORANDO_PROPOSTA: "Elaborando proposta",
   AGUARDANDO_ACEITE_PROPOSTA: "Aguardando aceite da proposta",
   AGUARDANDO_CONTRATO: "Aguardando contrato",
+  AGUARDANDO_EXECUCAO: "Aguardando execução",
   EM_EXECUCAO: "Em execução",
   CANCELADO: "Cancelado",
 };
@@ -61,6 +64,7 @@ export const STATUS_PROJETO_ROTULO_BADGE: Record<ProjetoStatus, string> = {
   ELABORANDO_PROPOSTA: "Elaborando",
   AGUARDANDO_ACEITE_PROPOSTA: "Aguard. aceite",
   AGUARDANDO_CONTRATO: "Aguard. contrato",
+  AGUARDANDO_EXECUCAO: "Aguard. execução",
   EM_EXECUCAO: "Em execução",
   CANCELADO: "Cancelado",
 };

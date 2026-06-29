@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch } from "../../api/http";
 import { useAuth } from "../../auth/AuthContext";
 import { PermissaoCodigo } from "../../auth/permissao";
@@ -25,22 +25,17 @@ import { STATUS_CONTRATO_ROTULO, STATUS_CONTRATO_UPLOAD } from "../../pages/cont
 import "../../pages/ClientesPage.css";
 import "../proposta/PropostaPanel.css";
 
-export type ContratoPanelHandle = {
-  criarContrato: () => void;
-  podeCriar: boolean;
-};
-
 type Props = {
   projetoId: number;
   onContratoAtualizado?: () => void;
   embedded?: boolean;
-  hideHeaderActions?: boolean;
 };
 
-const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPanel(
-  { projetoId, onContratoAtualizado, embedded = false, hideHeaderActions = false },
-  ref,
-) {
+export default function ContratoPanel({
+  projetoId,
+  onContratoAtualizado,
+  embedded = false,
+}: Props) {
   const { hasPermission, logout } = useAuth();
   const [contrato, setContrato] = useState<Contrato | null>(null);
   const [documentos, setDocumentos] = useState<DocumentoAnexo[]>([]);
@@ -51,14 +46,22 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
   const uploadEmAndamentoRef = useRef(false);
 
   const temAnexo = documentos.length > 0;
-  const podeCriar = hasPermission(PermissaoCodigo.ACAO_CONTRATO_CRIAR) && !contrato && !processando;
-  const podeUpload =
+  const podeIniciarContrato =
+    hasPermission(PermissaoCodigo.ACAO_CONTRATO_CRIAR) && !contrato && !processando;
+  const podeUploadExistente =
     hasPermission(PermissaoCodigo.ACAO_DOCUMENTO_UPLOAD) &&
     contrato != null &&
-    STATUS_CONTRATO_UPLOAD.includes(contrato.status) &&
-    (contrato.status === "RASCUNHO" ||
-      contrato.status === "AGUARDANDO_AJUSTE_ADM" ||
-      !temAnexo);
+    STATUS_CONTRATO_UPLOAD.includes(contrato.status);
+  const podeExibirUpload =
+    hasPermission(PermissaoCodigo.ACAO_DOCUMENTO_UPLOAD) &&
+    (podeUploadExistente || podeIniciarContrato);
+  const mostrarUploadCard = Boolean(
+    podeExibirUpload &&
+      (contrato == null ||
+        contrato.status === "RASCUNHO" ||
+        contrato.status === "AGUARDANDO_AJUSTE" ||
+        !temAnexo),
+  );
   const podeEnviarCliente =
     hasPermission(PermissaoCodigo.ACAO_CONTRATO_ENVIAR) &&
     contrato?.status === "RASCUNHO" &&
@@ -113,43 +116,25 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
     void carregar();
   }, [carregar]);
 
-  async function criarContrato() {
-    if (!podeCriar) return;
-    setProcessando(true);
-    setAcaoErro(null);
-    try {
-      const res = await apiFetch(`/api/v1/projetos/${projetoId}/contratos`, { method: "POST" });
-      if (!res.ok) {
-        setAcaoErro(await mensagemErroApi(res, "Erro ao iniciar contrato"));
-        return;
-      }
-      await carregar();
-      onContratoAtualizado?.();
-    } catch {
-      setAcaoErro("Falha de rede ao iniciar contrato.");
-    } finally {
-      setProcessando(false);
-    }
-  }
-
   async function enviarDocumento(arquivo: File) {
-    if (!contrato || uploadEmAndamentoRef.current) return;
+    if (!podeExibirUpload || uploadEmAndamentoRef.current) return;
     uploadEmAndamentoRef.current = true;
     setProcessando(true);
     setAcaoErro(null);
     const fd = new FormData();
     fd.append("file", arquivo);
     fd.append("tipoArquivo", "CONTRATO");
+    const uploadPath =
+      contrato != null
+        ? `/api/v1/projetos/${projetoId}/contratos/${contrato.id}/documentos`
+        : `/api/v1/projetos/${projetoId}/contratos/documentos`;
     try {
-      const res = await apiFetch(
-        `/api/v1/projetos/${projetoId}/contratos/${contrato.id}/documentos`,
-        { method: "POST", body: fd },
-      );
+      const res = await apiFetch(uploadPath, { method: "POST", body: fd });
       if (!res.ok) {
         setAcaoErro(await mensagemErroApi(res, "Erro no upload"));
         return;
       }
-      await carregarDocumentos(contrato.id, contrato.status);
+      await carregar();
       onContratoAtualizado?.();
     } catch {
       setAcaoErro("Falha de rede no upload.");
@@ -160,12 +145,6 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
   }
 
   const documentoAtual = documentoMaisRecente(documentos);
-  const uploadComSubstituicao = Boolean(
-    podeUpload &&
-      (contrato?.status === "RASCUNHO" ||
-        contrato?.status === "AGUARDANDO_AJUSTE_ADM" ||
-        !temAnexo),
-  );
 
   async function enviarAoCliente() {
     if (!contrato || !podeEnviarCliente) return;
@@ -193,17 +172,8 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
     void downloadDocumento(doc.id, doc.nomeOriginal).catch(() => setAcaoErro("Download falhou."));
   }
 
-  useImperativeHandle(ref, () => ({
-    criarContrato: () => void criarContrato(),
-    podeCriar,
-  }));
-
-  const acoesNova =
-    !hideHeaderActions && podeCriar ? (
-      <PrimaryButton variant="toolbar" onClick={() => void criarContrato()} disabled={processando}>
-        Nova
-      </PrimaryButton>
-    ) : undefined;
+  const metaDocumento = (d: DocumentoAnexo) =>
+    `Versão ${d.versao}${d.criadoEm ? ` • ${formatarDataCurta(d.criadoEm)}` : ""}${d.uploadedPorNome ? ` • ${d.uploadedPorNome}` : ""}`;
 
   const conteudo = (
     <>
@@ -214,40 +184,42 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
         <p className="admin-entity-form-loading" role="status">
           Carregando contrato…
         </p>
-      ) : !contrato ? (
+      ) : !podeExibirUpload && !contrato ? (
         <StateCard type="empty" title={STATE_EMPTY_CONTRATO} />
       ) : (
         <>
-          {embedded ? (
-            <InfoGrid>
-              <InfoItem label="Status">{STATUS_CONTRATO_ROTULO[contrato.status]}</InfoItem>
-              <InfoItem label="Elaborado por">{contrato.elaboradoPorNome || "—"}</InfoItem>
-            </InfoGrid>
-          ) : (
-            <AdminFormFields>
-              <FormField label="Status" htmlFor="cont-status">
-                <FieldControl
-                  id="cont-status"
-                  className="clientes-input"
-                  variant="modal"
-                  readOnly
-                  value={STATUS_CONTRATO_ROTULO[contrato.status]}
-                />
-              </FormField>
+          {contrato ? (
+            embedded ? (
+              <InfoGrid>
+                <InfoItem label="Status">{STATUS_CONTRATO_ROTULO[contrato.status]}</InfoItem>
+                <InfoItem label="Elaborado por">{contrato.elaboradoPorNome || "—"}</InfoItem>
+              </InfoGrid>
+            ) : (
+              <AdminFormFields>
+                <FormField label="Status" htmlFor="cont-status">
+                  <FieldControl
+                    id="cont-status"
+                    className="clientes-input"
+                    variant="modal"
+                    readOnly
+                    value={STATUS_CONTRATO_ROTULO[contrato.status]}
+                  />
+                </FormField>
 
-              <FormField label="Elaboração" htmlFor="cont-elaboracao">
-                <FieldControl
-                  id="cont-elaboracao"
-                  className="clientes-input"
-                  variant="modal"
-                  readOnly
-                  value={contrato.elaboradoPorNome}
-                />
-              </FormField>
-            </AdminFormFields>
-          )}
+                <FormField label="Elaboração" htmlFor="cont-elaboracao">
+                  <FieldControl
+                    id="cont-elaboracao"
+                    className="clientes-input"
+                    variant="modal"
+                    readOnly
+                    value={contrato.elaboradoPorNome}
+                  />
+                </FormField>
+              </AdminFormFields>
+            )
+          ) : null}
 
-          {uploadComSubstituicao ? (
+          {!carregando && mostrarUploadCard ? (
             embedded ? (
               <div className="proj-detalhe-block">
                 <UploadCard
@@ -256,7 +228,7 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
                     documentoAtual
                       ? {
                           nomeArquivo: documentoAtual.nomeOriginal,
-                          meta: `Versão ${documentoAtual.versao}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ""}${documentoAtual.uploadedPorNome ? ` • ${documentoAtual.uploadedPorNome}` : ""}`,
+                          meta: metaDocumento(documentoAtual),
                         }
                       : null
                   }
@@ -278,7 +250,7 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
                     documentoAtual
                       ? {
                           nomeArquivo: documentoAtual.nomeOriginal,
-                          meta: `Versão ${documentoAtual.versao}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ""}${documentoAtual.uploadedPorNome ? ` • ${documentoAtual.uploadedPorNome}` : ""}`,
+                          meta: metaDocumento(documentoAtual),
                         }
                       : null
                   }
@@ -301,7 +273,7 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
                     <FileRow
                       key={d.id}
                       nomeArquivo={d.nomeOriginal}
-                      meta={`Versão ${d.versao}${d.criadoEm ? ` • ${formatarDataCurta(d.criadoEm)}` : ""}${d.uploadedPorNome ? ` • ${d.uploadedPorNome}` : ""}`}
+                      meta={metaDocumento(d)}
                       onDownload={() => baixarDocumento(d)}
                     />
                   ))}
@@ -316,7 +288,7 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
                     <FileRow
                       key={d.id}
                       nomeArquivo={d.nomeOriginal}
-                      meta={`Versão ${d.versao}${d.criadoEm ? ` • ${formatarDataCurta(d.criadoEm)}` : ""}${d.uploadedPorNome ? ` • ${d.uploadedPorNome}` : ""}`}
+                      meta={metaDocumento(d)}
                       onDownload={() => baixarDocumento(d)}
                     />
                   ))}
@@ -352,17 +324,15 @@ const ContratoPanel = forwardRef<ContratoPanelHandle, Props>(function ContratoPa
 
   if (embedded) {
     return (
-      <DashboardCard title="Contrato" titleId="cont-sec-principal" actions={acoesNova}>
+      <DashboardCard title="Contrato" titleId="cont-sec-principal">
         {conteudo}
       </DashboardCard>
     );
   }
 
   return (
-    <AdminFormSection title="Contrato" titleId="cont-sec-principal" actions={acoesNova}>
+    <AdminFormSection title="Contrato" titleId="cont-sec-principal">
       {conteudo}
     </AdminFormSection>
   );
-});
-
-export default ContratoPanel;
+}

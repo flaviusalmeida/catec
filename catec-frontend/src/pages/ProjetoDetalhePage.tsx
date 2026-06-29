@@ -5,7 +5,7 @@ import { PermissaoCodigo } from "../auth/permissao";
 import { podeExibirEditarProjeto } from "../auth/projetoAcesso";
 import ContratoPanel from "../components/contrato/ContratoPanel";
 import ProjetoDetalheHeaderActions from "../components/projeto/detalhe/ProjetoDetalheHeaderActions";
-import PropostaPanel, { type PropostaPanelHandle } from "../components/proposta/PropostaPanel";
+import PropostaPanel from "../components/proposta/PropostaPanel";
 import ProjetoStatusBadge from "../components/projeto/ProjetoStatusBadge";
 import ProjetoResumoSidebar from "../components/projeto/detalhe/ProjetoResumoSidebar";
 import ProjetoTabGeral, { ProjetoTabGeralEscopo } from "../components/projeto/detalhe/ProjetoTabGeral";
@@ -43,7 +43,6 @@ export default function ProjetoDetalhePage() {
   const { logout, user, hasPermission } = useAuth();
   const [tab, setTab] = useState<TabId>("geral");
   const [refreshKey, setRefreshKey] = useState(0);
-  const propostaRef = useRef<PropostaPanelHandle>(null);
   const interacaoRef = useRef<RegistrarInteracaoHandle>(null);
 
   const fluxo = useProjetoFluxoData(projetoId, refreshKey, logout);
@@ -58,7 +57,9 @@ export default function ProjetoDetalhePage() {
   const mostrarEditarProjeto =
     fluxo.projeto != null && podeExibirEditarProjeto(fluxo.projeto, user?.id, hasPermission);
   const mostrarContrato =
-    fluxo.projeto?.status === "AGUARDANDO_CONTRATO" || fluxo.projeto?.status === "EM_EXECUCAO";
+    fluxo.projeto?.status === "AGUARDANDO_CONTRATO" ||
+    fluxo.projeto?.status === "AGUARDANDO_EXECUCAO" ||
+    fluxo.projeto?.status === "EM_EXECUCAO";
 
   function editarProjeto() {
     if (!fluxo.projeto) return;
@@ -133,7 +134,6 @@ export default function ProjetoDetalhePage() {
 
                   {tab === "propostas" ? (
                     <PropostaPanel
-                      ref={propostaRef}
                       embedded
                       projetoId={fluxo.projeto.id}
                       projetoTemCliente={fluxo.projeto.clienteId != null}

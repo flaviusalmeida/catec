@@ -21,7 +21,7 @@ public class SocioPropostaNotificacaoService {
     }
 
     public void propostaAprovadaPeloSocio(Long propostaId, Long socioId) {
-        log.info("NOTIFICACAO_SOCIO propostaId={} avaliadaPorSocioId={} — aprovada internamente", propostaId, socioId);
+        log.info("NOTIFICACAO_SOCIO propostaId={} avaliadaPorSocioId={} — parecer positivo", propostaId, socioId);
     }
 
     public void propostaDevolvidaPeloSocio(Long propostaId, Long socioId, String observacao) {

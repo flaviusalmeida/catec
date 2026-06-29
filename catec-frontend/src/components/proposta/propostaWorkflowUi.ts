@@ -2,13 +2,12 @@ import type { PropostaStatus } from "../../pages/propostaTypes";
 import { STATE_PROPOSTA_APROVADA_TITLE, STATE_PROPOSTA_REPROVADA_TITLE } from "../projeto/detalhe/stateMessages";
 
 export type PropostaWorkflowPermissions = {
-  podeAprovarInterno: boolean;
   podeEnviarCliente: boolean;
+  podeSubmeterSocio: boolean;
   podeSocio: boolean;
 };
 
 export type PropostaWorkflowActionKey =
-  | "aprovar-rascunho"
   | "solicitar-revisao"
   | "aprovar-socio"
   | "reprovar-socio"
@@ -33,9 +32,16 @@ export type PropostaWorkflowUi =
 
 export function propostaWorkflowPermissions(perms: PropostaWorkflowPermissions): string[] {
   const list: string[] = [];
-  if (perms.podeAprovarInterno || perms.podeEnviarCliente) list.push("admin");
+  if (perms.podeEnviarCliente || perms.podeSubmeterSocio) list.push("admin");
   if (perms.podeSocio) list.push("socio");
   return list;
+}
+
+function podeEnviarAoCliente(
+  requerAvaliacaoSocio: boolean,
+  avaliadaSocioEm: string | null,
+): boolean {
+  return !requerAvaliacaoSocio || avaliadaSocioEm != null;
 }
 
 /**
@@ -43,45 +49,51 @@ export function propostaWorkflowPermissions(perms: PropostaWorkflowPermissions):
  */
 export function resolvePropostaWorkflowUi(
   status: PropostaStatus,
-  opts: { hasAttachment: boolean; permissions: PropostaWorkflowPermissions },
+  opts: {
+    hasAttachment: boolean;
+    requerAvaliacaoSocio: boolean;
+    avaliadaSocioEm: string | null;
+    permissions: PropostaWorkflowPermissions;
+  },
 ): PropostaWorkflowUi {
-  const { hasAttachment, permissions } = opts;
+  const { hasAttachment, requerAvaliacaoSocio, avaliadaSocioEm, permissions } = opts;
 
-  if (status === "RASCUNHO" && hasAttachment && permissions.podeAprovarInterno) {
-    return {
-      kind: "actions",
-      actions: [
-        { key: "aprovar-rascunho", label: "Aprovar", variant: "primary", permission: "admin" },
-        {
-          key: "solicitar-revisao",
-          label: "Solicitar revisão",
-          variant: "secondary",
-          permission: "admin",
-        },
-      ],
-    };
+  if (status === "RASCUNHO" && hasAttachment && permissions.podeEnviarCliente) {
+    const actions: PropostaWorkflowActionDef[] = [];
+
+    if (podeEnviarAoCliente(requerAvaliacaoSocio, avaliadaSocioEm)) {
+      actions.push({
+        key: "enviar-cliente",
+        label: "Enviar ao cliente",
+        variant: "primary",
+        permission: "admin",
+      });
+    }
+
+    if (
+      permissions.podeSubmeterSocio &&
+      requerAvaliacaoSocio &&
+      avaliadaSocioEm == null
+    ) {
+      actions.push({
+        key: "solicitar-revisao",
+        label: "Solicitar revisão",
+        variant: actions.length > 0 ? "secondary" : "primary",
+        permission: "admin",
+      });
+    }
+
+    if (actions.length > 0) {
+      return { kind: "actions", actions };
+    }
   }
 
-  if (status === "PENDENTE_AVALIACAO_SOCIO" && permissions.podeSocio) {
+  if (status === "PENDENTE_AVALIACAO" && permissions.podeSocio) {
     return {
       kind: "actions",
       actions: [
         { key: "aprovar-socio", label: "Aprovar", variant: "primary", permission: "socio" },
         { key: "reprovar-socio", label: "Reprovar", variant: "danger", permission: "socio" },
-      ],
-    };
-  }
-
-  if (status === "APROVADA_INTERNA" && permissions.podeEnviarCliente) {
-    return {
-      kind: "actions",
-      actions: [
-        {
-          key: "enviar-cliente",
-          label: "Enviar ao cliente",
-          variant: "primary",
-          permission: "admin",
-        },
       ],
     };
   }
