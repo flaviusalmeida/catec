@@ -12,7 +12,6 @@ import { toast } from 'react-toastify'
 import type { CatecCliente, CatecClienteFormState } from '@/types/catec/clienteTypes'
 
 import CustomTextField from '@core/components/mui/TextField'
-import { formatTelefoneBrasil, onlyDigits } from '@/utils/catec/brFormat'
 
 import { clienteToFormState } from '../clienteFormHelpers'
 
@@ -21,7 +20,7 @@ type Props = {
   onSave: (patch: Partial<CatecCliente>) => void
 }
 
-const ClienteContatoTab = ({ cliente, onSave }: Props) => {
+const ClienteFaturamentoTab = ({ cliente, onSave }: Props) => {
   const [form, setForm] = useState<CatecClienteFormState>(() => clienteToFormState(cliente))
   const [salvando, setSalvando] = useState(false)
 
@@ -32,8 +31,8 @@ const ClienteContatoTab = ({ cliente, onSave }: Props) => {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    if (!form.email.trim() || !onlyDigits(form.telefone)) {
-      toast.error('Informe e-mail e telefone.')
+    if (!form.periodoFaturamento.trim()) {
+      toast.error('Informe o período de faturamento.')
 
       return
     }
@@ -41,39 +40,25 @@ const ClienteContatoTab = ({ cliente, onSave }: Props) => {
     setSalvando(true)
     await new Promise(r => setTimeout(r, 400))
     onSave({
-      email: form.email.trim(),
-      telefone: onlyDigits(form.telefone) || null
+      periodoFaturamento: form.periodoFaturamento.trim()
     })
     setSalvando(false)
-    toast.success('Contato atualizado (mock).')
+    toast.success('Faturamento atualizado (mock).')
   }
 
   return (
     <Card>
-      <CardHeader title='Contato' />
+      <CardHeader title='Faturamento' />
       <CardContent>
         <form onSubmit={e => void handleSubmit(e)}>
           <Grid container spacing={4}>
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12 }}>
               <CustomTextField
                 fullWidth
-                type='email'
-                label='E-mail'
-                value={form.email}
-                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CustomTextField
-                fullWidth
-                label='Telefone'
-                value={form.telefone}
-                onChange={e => {
-                  const d = onlyDigits(e.target.value).slice(0, 11)
-
-                  setForm(f => ({ ...f, telefone: d ? formatTelefoneBrasil(d) : '' }))
-                }}
-                placeholder='(00) 00000-0000'
+                label='Período de faturamento'
+                value={form.periodoFaturamento}
+                onChange={e => setForm(f => ({ ...f, periodoFaturamento: e.target.value }))}
+                placeholder='Ex.: Até todo dia 15'
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
@@ -88,4 +73,4 @@ const ClienteContatoTab = ({ cliente, onSave }: Props) => {
   )
 }
 
-export default ClienteContatoTab
+export default ClienteFaturamentoTab

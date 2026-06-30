@@ -42,26 +42,6 @@ const ClienteDetails = ({ cliente }: Props) => {
               <Typography color='text.secondary'>{cliente.nomeFantasia}</Typography>
             ) : null}
           </div>
-          <div className='flex items-center justify-around flex-wrap gap-4'>
-            <div className='flex items-center gap-4'>
-              <CustomAvatar variant='rounded' color='primary' skin='light'>
-                <i className='tabler-file-invoice' />
-              </CustomAvatar>
-              <div>
-                <Typography variant='h5'>1</Typography>
-                <Typography>Faturamento</Typography>
-              </div>
-            </div>
-            <div className='flex items-center gap-4'>
-              <CustomAvatar variant='rounded' color='primary' skin='light'>
-                <i className='tabler-user' />
-              </CustomAvatar>
-              <div>
-                <Typography variant='h5'>{cliente.responsaveis.length}</Typography>
-                <Typography>Responsável</Typography>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div>
@@ -85,6 +65,12 @@ const ClienteDetails = ({ cliente }: Props) => {
                 Telefone:
               </Typography>
               <Typography>{cliente.telefone ? formatTelefoneBrasil(cliente.telefone) : '—'}</Typography>
+            </div>
+            <div className='flex items-center flex-wrap gap-x-1.5'>
+              <Typography className='font-medium' color='text.primary'>
+                Período de faturamento:
+              </Typography>
+              <Typography>{cliente.periodoFaturamento || '—'}</Typography>
             </div>
             <div className='flex items-center flex-wrap gap-x-1.5'>
               <Typography className='font-medium' color='text.primary'>

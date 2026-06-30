@@ -10,7 +10,7 @@ import ClienteListTable from './ClienteListTable'
 import { useClientesStore } from '../useClientesStore'
 
 const ClienteList = () => {
-  const { lista, addCliente, removeCliente } = useClientesStore()
+  const { lista, addCliente } = useClientesStore()
 
   const proximoId = useMemo(() => (lista.length ? Math.max(...lista.map(c => c.id)) + 1 : 1), [lista])
 
@@ -18,13 +18,12 @@ const ClienteList = () => {
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
         <Typography variant='h4'>Clientes</Typography>
-        <Typography color='text.secondary'>Gestão de clientes.</Typography>
       </Grid>
       <Grid size={{ xs: 12 }}>
         <ClienteListCards lista={lista} />
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <ClienteListTable lista={lista} onAdd={addCliente} onRemove={removeCliente} proximoId={proximoId} />
+        <ClienteListTable lista={lista} onAdd={addCliente} proximoId={proximoId} />
       </Grid>
     </Grid>
   )

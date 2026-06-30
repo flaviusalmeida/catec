@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -32,7 +32,6 @@ import type { CatecCliente } from '@/types/catec/clienteTypes'
 import { rotuloTipoPessoa } from '@/types/catec/clienteTypes'
 import type { Locale } from '@configs/i18n'
 
-import OptionMenu from '@core/components/option-menu'
 import CustomAvatar from '@core/components/mui/Avatar'
 import CustomTextField from '@core/components/mui/TextField'
 import TablePaginationComponent from '@components/TablePaginationComponent'
@@ -43,7 +42,7 @@ import { getLocalizedUrl } from '@/utils/i18n'
 
 import tableStyles from '@core/styles/table.module.css'
 
-import ClienteAddDrawer from './ClienteAddDrawer'
+import ClienteAddDialog from './ClienteAddDialog'
 import ClienteTableFilters from './ClienteTableFilters'
 
 type ClienteRow = CatecCliente & { action?: string }
@@ -93,16 +92,16 @@ const columnHelper = createColumnHelper<ClienteRow>()
 type Props = {
   lista: CatecCliente[]
   onAdd: (cliente: CatecCliente) => void
-  onRemove: (id: number) => void
   proximoId: number
 }
 
-const ClienteListTable = ({ lista, onAdd, onRemove, proximoId }: Props) => {
-  const [drawerOpen, setDrawerOpen] = useState(false)
+const ClienteListTable = ({ lista, onAdd, proximoId }: Props) => {
+  const [dialogOpen, setDialogOpen] = useState(false)
   const [filteredData, setFilteredData] = useState(lista)
   const [globalFilter, setGlobalFilter] = useState('')
 
   const { lang: locale } = useParams()
+  const router = useRouter()
 
   useEffect(() => {
     setFilteredData(lista)
@@ -158,10 +157,7 @@ const ClienteListTable = ({ lista, onAdd, onRemove, proximoId }: Props) => {
         header: 'Ações',
         cell: ({ row }) => (
           <div className='flex items-center'>
-            <IconButton onClick={() => onRemove(row.original.id)} aria-label='Remover'>
-              <i className='tabler-trash text-textSecondary' />
-            </IconButton>
-            <IconButton aria-label='Ver detalhes'>
+            <IconButton aria-label='Abrir cliente'>
               <Link
                 href={getLocalizedUrl(`/catec/clientes/view/${row.original.id}`, locale as Locale)}
                 className='flex'
@@ -169,30 +165,12 @@ const ClienteListTable = ({ lista, onAdd, onRemove, proximoId }: Props) => {
                 <i className='tabler-eye text-textSecondary' />
               </Link>
             </IconButton>
-            <OptionMenu
-              iconButtonProps={{ size: 'medium' }}
-              iconClassName='text-textSecondary'
-              options={[
-                {
-                  text: 'Ver perfil',
-                  icon: 'tabler-eye',
-                  href: getLocalizedUrl(`/catec/clientes/view/${row.original.id}`, locale as Locale),
-                  linkProps: { className: 'flex items-center gap-2 text-textSecondary is-full plb-2 pli-4' }
-                },
-                {
-                  text: 'Editar',
-                  icon: 'tabler-edit',
-                  href: getLocalizedUrl(`/catec/clientes/view/${row.original.id}`, locale as Locale),
-                  linkProps: { className: 'flex items-center gap-2 text-textSecondary is-full plb-2 pli-4' }
-                }
-              ]}
-            />
           </div>
         ),
         enableSorting: false
       })
     ],
-    [locale, onRemove]
+    [locale]
   )
 
   const table = useReactTable({
@@ -243,7 +221,7 @@ const ClienteListTable = ({ lista, onAdd, onRemove, proximoId }: Props) => {
             <Button
               variant='contained'
               startIcon={<i className='tabler-plus' />}
-              onClick={() => setDrawerOpen(true)}
+              onClick={() => setDialogOpen(true)}
               className='max-sm:is-full'
             >
               Novo cliente
@@ -288,9 +266,22 @@ const ClienteListTable = ({ lista, onAdd, onRemove, proximoId }: Props) => {
                 </tr>
               ) : (
                 table.getRowModel().rows.map(row => (
-                  <tr key={row.id}>
+                  <tr
+                    key={row.id}
+                    className='cursor-pointer'
+                    onClick={() =>
+                      router.push(getLocalizedUrl(`/catec/clientes/view/${row.original.id}`, locale as Locale))
+                    }
+                  >
                     {row.getVisibleCells().map(cell => (
-                      <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                      <td
+                        key={cell.id}
+                        onClick={e => {
+                          if (cell.column.id === 'action') e.stopPropagation()
+                        }}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
                     ))}
                   </tr>
                 ))
@@ -307,12 +298,7 @@ const ClienteListTable = ({ lista, onAdd, onRemove, proximoId }: Props) => {
         />
       </Card>
 
-      <ClienteAddDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        onAdd={onAdd}
-        proximoId={proximoId}
-      />
+      <ClienteAddDialog open={dialogOpen} setOpen={setDialogOpen} onAdd={onAdd} proximoId={proximoId} />
     </>
   )
 }

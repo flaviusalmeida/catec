@@ -13,7 +13,10 @@ import type { CatecCliente } from '@/types/catec/clienteTypes'
 import CustomTabList from '@core/components/mui/TabList'
 
 import ClienteContatoTab from './ClienteContatoTab'
+import ClienteEnderecoTab from './ClienteEnderecoTab'
+import ClienteFaturamentoTab from './ClienteFaturamentoTab'
 import ClienteIdentificacaoTab from './ClienteIdentificacaoTab'
+import ClienteObservacoesTab from './ClienteObservacoesTab'
 import ClienteResponsavelTab from './ClienteResponsavelTab'
 
 type Props = {
@@ -40,9 +43,27 @@ const ClienteRight = ({ cliente, onUpdate }: Props) => {
               iconPosition='start'
             />
             <Tab
-              icon={<i className='tabler-map-pin' />}
+              icon={<i className='tabler-phone' />}
               value='contato'
-              label='Contato e endereço'
+              label='Contato'
+              iconPosition='start'
+            />
+            <Tab
+              icon={<i className='tabler-file-invoice' />}
+              value='faturamento'
+              label='Faturamento'
+              iconPosition='start'
+            />
+            <Tab
+              icon={<i className='tabler-map-pin' />}
+              value='endereco'
+              label='Endereço'
+              iconPosition='start'
+            />
+            <Tab
+              icon={<i className='tabler-notes' />}
+              value='observacoes'
+              label='Observações'
               iconPosition='start'
             />
             <Tab
@@ -58,8 +79,13 @@ const ClienteRight = ({ cliente, onUpdate }: Props) => {
             {activeTab === 'identificacao' ? (
               <ClienteIdentificacaoTab cliente={cliente} onSave={onUpdate} />
             ) : null}
-            {activeTab === 'contato' ? (
-              <ClienteContatoTab cliente={cliente} onSave={onUpdate} />
+            {activeTab === 'contato' ? <ClienteContatoTab cliente={cliente} onSave={onUpdate} /> : null}
+            {activeTab === 'faturamento' ? (
+              <ClienteFaturamentoTab cliente={cliente} onSave={onUpdate} />
+            ) : null}
+            {activeTab === 'endereco' ? <ClienteEnderecoTab cliente={cliente} onSave={onUpdate} /> : null}
+            {activeTab === 'observacoes' ? (
+              <ClienteObservacoesTab cliente={cliente} onSave={onUpdate} />
             ) : null}
             {activeTab === 'responsavel' ? (
               <ClienteResponsavelTab cliente={cliente} onSave={onUpdate} />
