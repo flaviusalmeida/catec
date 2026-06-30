@@ -108,11 +108,17 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
           </MenuItem>
         </SubMenu>
         <SubMenu label='CATEC' icon={<i className='tabler-building' />}>
-          <MenuItem href={`/${locale}/catec/clientes`} icon={<i className='tabler-building-community' />}>
+          <MenuItem href={`/${locale}/catec/projetos`} icon={<i className='tabler-briefcase' />}>
+            Projetos
+          </MenuItem>
+          <MenuItem href={`/${locale}/catec/clientes`} icon={<i className='tabler-user' />}>
             Clientes
           </MenuItem>
-          <MenuItem href={`/${locale}/catec/usuarios`} icon={<i className='tabler-users' />}>
+          <MenuItem href={`/${locale}/catec/usuarios`} icon={<i className='tabler-user' />}>
             Usuários
+          </MenuItem>
+          <MenuItem href={`/${locale}/catec/grupos`} icon={<i className='tabler-lock' />}>
+            Grupos
           </MenuItem>
         </SubMenu>
         <SubMenu label={dictionary['navigation'].apps} icon={<i className='tabler-mail' />}>

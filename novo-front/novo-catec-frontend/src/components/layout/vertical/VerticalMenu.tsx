@@ -93,8 +93,18 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           <MenuItem href={`/${locale}/dashboards/logistics`}>{dictionary['navigation'].logistics}</MenuItem>
         </SubMenu>
         <SubMenu label='CATEC' icon={<i className='tabler-building' />}>
-          <MenuItem href={`/${locale}/catec/clientes`}>Clientes</MenuItem>
-          <MenuItem href={`/${locale}/catec/usuarios`}>Usuários</MenuItem>
+          <MenuItem href={`/${locale}/catec/projetos`} icon={<i className='tabler-briefcase' />}>
+            Projetos
+          </MenuItem>
+          <MenuItem href={`/${locale}/catec/clientes`} icon={<i className='tabler-user' />}>
+            Clientes
+          </MenuItem>
+          <MenuItem href={`/${locale}/catec/usuarios`} icon={<i className='tabler-user' />}>
+            Usuários
+          </MenuItem>
+          <MenuItem href={`/${locale}/catec/grupos`} icon={<i className='tabler-lock' />}>
+            Grupos
+          </MenuItem>
         </SubMenu>
         <SubMenu label={dictionary['navigation'].frontPages} icon={<i className='tabler-files' />}>
           <MenuItem href='/front-pages/landing-page' target='_blank'>

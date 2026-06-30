@@ -1,20 +1,17 @@
-// Next Imports
-import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 
-// Component Imports
-import CatecLogin from '@views/catec/auth/Login'
+import type { Locale } from '@configs/i18n'
+import { i18n } from '@configs/i18n'
 
-export const metadata: Metadata = {
-  title: 'Entrar — CATEC',
-  description: 'Login no sistema CATEC'
+type Props = {
+  params: Promise<{ lang: string }>
 }
 
-const CatecLoginPage = () => {
-  return (
-    <div className='flex flex-col justify-center items-center min-bs-[100dvh] p-6'>
-      <CatecLogin />
-    </div>
-  )
+const CatecLoginRedirectPage = async ({ params }: Props) => {
+  const { lang } = await params
+  const locale: Locale = i18n.locales.includes(lang as Locale) ? (lang as Locale) : i18n.defaultLocale
+
+  redirect(`/${locale}/login`)
 }
 
-export default CatecLoginPage
+export default CatecLoginRedirectPage

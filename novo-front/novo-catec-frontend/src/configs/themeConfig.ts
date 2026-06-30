@@ -54,8 +54,8 @@ export type Config = {
 }
 
 const themeConfig: Config = {
-  templateName: 'Vuexy',
-  homePageUrl: '/dashboards/crm',
+  templateName: 'CATEC',
+  homePageUrl: '/catec/projetos',
   settingsCookieName: 'vuexy-mui-next-demo-1',
   mode: 'system', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'

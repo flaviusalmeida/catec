@@ -6,6 +6,7 @@ import type { FormEvent } from 'react'
 
 // Next Imports
 import Image from 'next/image'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 
 // MUI Imports
 import Alert from '@mui/material/Alert'
@@ -14,10 +15,18 @@ import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
-import Typography from '@mui/material/Typography'
+
+// Third-party Imports
+import { signIn } from 'next-auth/react'
+
+// Type Imports
+import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import CustomTextField from '@core/components/mui/TextField'
+
+// Util Imports
+import { getLocalizedUrl } from '@/utils/i18n'
 
 // Styled Component Imports
 import AuthIllustrationWrapper from '@views/pages/auth/AuthIllustrationWrapper'
@@ -28,14 +37,16 @@ const CatecLogin = () => {
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { lang: locale } = useParams()
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    setSuccess(false)
 
     const emailTrim = email.trim()
 
@@ -53,11 +64,35 @@ const CatecLogin = () => {
 
     setLoading(true)
 
-    // UI mock — integração com API na Fase 4
-    await new Promise(resolve => setTimeout(resolve, 600))
+    const res = await signIn('credentials', {
+      email: emailTrim,
+      password,
+      redirect: false
+    })
 
     setLoading(false)
-    setSuccess(true)
+
+    if (res?.ok && !res.error) {
+      const redirectURL = searchParams.get('redirectTo') ?? '/catec/projetos'
+
+      router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+
+      return
+    }
+
+    if (res?.error) {
+      try {
+        const parsed = JSON.parse(res.error) as { message?: string[] }
+
+        setError(parsed.message?.[0] ?? 'Não foi possível entrar. Verifique e-mail e senha.')
+      } catch {
+        setError('Não foi possível entrar. Verifique e-mail e senha.')
+      }
+
+      return
+    }
+
+    setError('Não foi possível entrar. Verifique e-mail e senha.')
   }
 
   return (
@@ -119,20 +154,10 @@ const CatecLogin = () => {
               </Alert>
             ) : null}
 
-            {success ? (
-              <Alert severity='success' variant='outlined'>
-                Login simulado com sucesso (mock UI). A API será ligada na Fase 4.
-              </Alert>
-            ) : null}
-
             <Button fullWidth variant='contained' type='submit' disabled={loading}>
               {loading ? 'A entrar…' : 'Entrar'}
             </Button>
           </form>
-
-          <Typography variant='body2' color='text.disabled' className='text-center mts-6'>
-            © {new Date().getFullYear()} CATEC
-          </Typography>
         </CardContent>
       </Card>
     </AuthIllustrationWrapper>
