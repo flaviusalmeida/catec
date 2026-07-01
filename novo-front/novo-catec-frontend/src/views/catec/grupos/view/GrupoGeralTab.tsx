@@ -9,7 +9,6 @@ import CardHeader from '@mui/material/CardHeader'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Grid from '@mui/material/Grid'
 import Switch from '@mui/material/Switch'
-import Typography from '@mui/material/Typography'
 import { toast } from 'react-toastify'
 
 import type { CatecGrupo } from '@/types/catec/grupoTypes'
@@ -95,13 +94,6 @@ const GrupoGeralTab = ({ grupo, onSave, onExcluir }: Props) => {
                   label='Grupo ativo'
                 />
               </Grid>
-              {grupo.sistema ? (
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant='body2' color='text.secondary'>
-                    Grupo padrão do sistema — não pode ser excluído.
-                  </Typography>
-                </Grid>
-              ) : null}
               <Grid size={{ xs: 12 }} className='flex flex-wrap items-center justify-between gap-4'>
                 <Button variant='contained' type='submit' disabled={salvando || excluindo}>
                   {salvando ? 'Salvando…' : 'Salvar alterações'}

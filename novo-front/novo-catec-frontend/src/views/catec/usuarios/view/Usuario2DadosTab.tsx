@@ -6,11 +6,9 @@ import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardHeader from '@mui/material/CardHeader'
-import Divider from '@mui/material/Divider'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Grid from '@mui/material/Grid'
 import Switch from '@mui/material/Switch'
-import Typography from '@mui/material/Typography'
 import { toast } from 'react-toastify'
 
 import type { CatecAdminUsuario } from '@/types/catec/usuarioTypes'
@@ -59,14 +57,11 @@ const Usuario2DadosTab = ({ usuario, onSave, onUpdate }: Props) => {
       email: email.trim(),
       telefone: telefone.trim() || null
     })
+    if (!contaPendente) {
+      onUpdate({ ativo })
+    }
     setSalvando(false)
     toast.success('Dados atualizados (mock).')
-  }
-
-  async function handleToggleAtivo(checked: boolean) {
-    setAtivo(checked)
-    onUpdate({ ativo: checked })
-    toast.success(checked ? 'Conta ativada (mock).' : 'Conta desativada (mock).')
   }
 
   async function handleResetSenha() {
@@ -107,22 +102,14 @@ const Usuario2DadosTab = ({ usuario, onSave, onUpdate }: Props) => {
                 />
               </Grid>
 
-              <Grid size={{ xs: 12 }}>
-                <Divider className='mbe-2' />
-                <Typography variant='subtitle1' className='mbe-3 font-medium'>
-                  Estado da conta
-                </Typography>
-                <div className='flex flex-col gap-3'>
-                  {!contaPendente ? (
-                    <FormControlLabel
-                      control={
-                        <Switch checked={ativo} onChange={e => void handleToggleAtivo(e.target.checked)} />
-                      }
-                      label='Conta ativa'
-                    />
-                  ) : null}
-                </div>
-              </Grid>
+              {!contaPendente ? (
+                <Grid size={{ xs: 12 }}>
+                  <FormControlLabel
+                    control={<Switch checked={ativo} onChange={e => setAtivo(e.target.checked)} />}
+                    label='Conta ativa'
+                  />
+                </Grid>
+              ) : null}
 
               <Grid size={{ xs: 12 }} className='flex flex-wrap items-center justify-between gap-4'>
                 <Button variant='contained' type='submit' disabled={salvando}>
