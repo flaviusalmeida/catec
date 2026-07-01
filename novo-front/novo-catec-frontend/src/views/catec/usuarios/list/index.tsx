@@ -10,7 +10,7 @@ import Usuario2ListTable from './Usuario2ListTable'
 import { useUsuarios2Store } from '../useUsuarios2Store'
 
 const Usuario2List = () => {
-  const { lista, addUsuario, removeUsuario } = useUsuarios2Store()
+  const { lista, addUsuario } = useUsuarios2Store()
 
   const proximoId = useMemo(() => (lista.length ? Math.max(...lista.map(u => u.id)) + 1 : 1), [lista])
 
@@ -18,13 +18,12 @@ const Usuario2List = () => {
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
         <Typography variant='h4'>Usuários</Typography>
-        <Typography color='text.secondary'>Gestão de contas internas e grupos de acesso.</Typography>
       </Grid>
       <Grid size={{ xs: 12 }}>
         <Usuario2ListCards lista={lista} />
       </Grid>
       <Grid size={{ xs: 12 }}>
-        <Usuario2ListTable lista={lista} onAdd={addUsuario} onRemove={removeUsuario} proximoId={proximoId} />
+        <Usuario2ListTable lista={lista} onAdd={addUsuario} proximoId={proximoId} />
       </Grid>
     </Grid>
   )

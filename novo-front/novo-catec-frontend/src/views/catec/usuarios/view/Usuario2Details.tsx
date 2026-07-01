@@ -3,7 +3,6 @@
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
-import Chip from '@mui/material/Chip'
 import Divider from '@mui/material/Divider'
 import Typography from '@mui/material/Typography'
 import Link from 'next/link'
@@ -36,32 +35,6 @@ const Usuario2Details = ({ usuario }: Props) => {
                 {getInitials(usuario.nome)}
               </CustomAvatar>
               <Typography variant='h5'>{usuario.nome}</Typography>
-            </div>
-            <div className='flex flex-wrap gap-2 justify-center'>
-              {usuario.grupos.map(g => (
-                <Chip key={g} label={rotuloGrupo(g)} size='small' variant='tonal' color='secondary' />
-              ))}
-            </div>
-            <UsuarioStatusBadge ativo={usuario.ativo} requerTrocaSenha={usuario.requerTrocaSenha} />
-          </div>
-          <div className='flex items-center justify-around flex-wrap gap-4'>
-            <div className='flex items-center gap-4'>
-              <CustomAvatar variant='rounded' color='primary' skin='light'>
-                <i className='tabler-users-group' />
-              </CustomAvatar>
-              <div>
-                <Typography variant='h5'>{usuario.grupos.length}</Typography>
-                <Typography>Grupos</Typography>
-              </div>
-            </div>
-            <div className='flex items-center gap-4'>
-              <CustomAvatar variant='rounded' color='primary' skin='light'>
-                <i className='tabler-mail' />
-              </CustomAvatar>
-              <div>
-                <Typography variant='h5'>1</Typography>
-                <Typography>E-mail</Typography>
-              </div>
             </div>
           </div>
         </div>

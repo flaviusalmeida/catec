@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -33,7 +33,6 @@ import type { CatecAdminUsuario, CatecGrupoValor } from '@/types/catec/usuarioTy
 import { rotuloGrupo } from '@/types/catec/usuarioTypes'
 import type { Locale } from '@configs/i18n'
 
-import OptionMenu from '@core/components/option-menu'
 import CustomAvatar from '@core/components/mui/Avatar'
 import CustomTextField from '@core/components/mui/TextField'
 import TablePaginationComponent from '@components/TablePaginationComponent'
@@ -101,16 +100,16 @@ const columnHelper = createColumnHelper<UsuarioRow>()
 type Props = {
   lista: CatecAdminUsuario[]
   onAdd: (usuario: CatecAdminUsuario) => void
-  onRemove: (id: number) => void
   proximoId: number
 }
 
-const Usuario2ListTable = ({ lista, onAdd, onRemove, proximoId }: Props) => {
+const Usuario2ListTable = ({ lista, onAdd, proximoId }: Props) => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [filteredData, setFilteredData] = useState(lista)
   const [globalFilter, setGlobalFilter] = useState('')
 
   const { lang: locale } = useParams()
+  const router = useRouter()
 
   useEffect(() => {
     setFilteredData(lista)
@@ -168,10 +167,7 @@ const Usuario2ListTable = ({ lista, onAdd, onRemove, proximoId }: Props) => {
         header: 'Ações',
         cell: ({ row }) => (
           <div className='flex items-center'>
-            <IconButton onClick={() => onRemove(row.original.id)} aria-label='Remover'>
-              <i className='tabler-trash text-textSecondary' />
-            </IconButton>
-            <IconButton aria-label='Ver detalhes'>
+            <IconButton aria-label='Abrir usuário'>
               <Link
                 href={getLocalizedUrl(`/catec/usuarios/view/${row.original.id}`, locale as Locale)}
                 className='flex'
@@ -179,30 +175,12 @@ const Usuario2ListTable = ({ lista, onAdd, onRemove, proximoId }: Props) => {
                 <i className='tabler-eye text-textSecondary' />
               </Link>
             </IconButton>
-            <OptionMenu
-              iconButtonProps={{ size: 'medium' }}
-              iconClassName='text-textSecondary'
-              options={[
-                {
-                  text: 'Ver perfil',
-                  icon: 'tabler-eye',
-                  href: getLocalizedUrl(`/catec/usuarios/view/${row.original.id}`, locale as Locale),
-                  linkProps: { className: 'flex items-center gap-2 text-textSecondary is-full plb-2 pli-4' }
-                },
-                {
-                  text: 'Editar',
-                  icon: 'tabler-edit',
-                  href: getLocalizedUrl(`/catec/usuarios/view/${row.original.id}`, locale as Locale),
-                  linkProps: { className: 'flex items-center gap-2 text-textSecondary is-full plb-2 pli-4' }
-                }
-              ]}
-            />
           </div>
         ),
         enableSorting: false
       })
     ],
-    [locale, onRemove]
+    [locale]
   )
 
   const table = useReactTable({
@@ -298,9 +276,22 @@ const Usuario2ListTable = ({ lista, onAdd, onRemove, proximoId }: Props) => {
                 </tr>
               ) : (
                 table.getRowModel().rows.map(row => (
-                  <tr key={row.id}>
+                  <tr
+                    key={row.id}
+                    className='cursor-pointer'
+                    onClick={() =>
+                      router.push(getLocalizedUrl(`/catec/usuarios/view/${row.original.id}`, locale as Locale))
+                    }
+                  >
                     {row.getVisibleCells().map(cell => (
-                      <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                      <td
+                        key={cell.id}
+                        onClick={e => {
+                          if (cell.column.id === 'action') e.stopPropagation()
+                        }}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
                     ))}
                   </tr>
                 ))

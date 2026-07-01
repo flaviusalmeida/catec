@@ -39,7 +39,9 @@ const Usuario2GruposTab = ({ usuario, onSave }: Props) => {
     })
   }
 
-  async function handleSave() {
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault()
+
     if (grupos.size === 0) {
       toast.error('Selecione pelo menos um grupo.')
 
@@ -56,31 +58,35 @@ const Usuario2GruposTab = ({ usuario, onSave }: Props) => {
   return (
     <Card>
       <CardHeader title='Grupos de acesso' />
-      <CardContent className='flex flex-col gap-4'>
-        <Grid container spacing={2}>
-          {GRUPOS_OPCOES.map(g => (
-            <Grid size={{ xs: 12, sm: 6 }} key={g.valor}>
-              <FormControlLabel
-                control={
-                  <Checkbox checked={grupos.has(g.valor)} onChange={() => toggleGrupo(g.valor)} />
-                }
-                label={
-                  <span>
-                    <Typography component='span' className='font-medium'>
-                      {g.rotulo}
-                    </Typography>
-                    <Typography component='span' variant='body2' color='text.secondary' className='block'>
-                      {g.detalhe}
-                    </Typography>
-                  </span>
-                }
-              />
+      <CardContent>
+        <form onSubmit={e => void handleSave(e)}>
+          <Grid container spacing={4}>
+            {GRUPOS_OPCOES.map(g => (
+              <Grid size={{ xs: 12, sm: 6 }} key={g.valor}>
+                <FormControlLabel
+                  control={
+                    <Checkbox checked={grupos.has(g.valor)} onChange={() => toggleGrupo(g.valor)} />
+                  }
+                  label={
+                    <span>
+                      <Typography component='span' className='font-medium'>
+                        {g.rotulo}
+                      </Typography>
+                      <Typography component='span' variant='body2' color='text.secondary' className='block'>
+                        {g.detalhe}
+                      </Typography>
+                    </span>
+                  }
+                />
+              </Grid>
+            ))}
+            <Grid size={{ xs: 12 }}>
+              <Button variant='contained' type='submit' disabled={salvando}>
+                {salvando ? 'Salvando…' : 'Salvar grupos'}
+              </Button>
             </Grid>
-          ))}
-        </Grid>
-        <Button variant='contained' onClick={() => void handleSave()} disabled={salvando}>
-          {salvando ? 'A guardar…' : 'Guardar grupos'}
-        </Button>
+          </Grid>
+        </form>
       </CardContent>
     </Card>
   )
