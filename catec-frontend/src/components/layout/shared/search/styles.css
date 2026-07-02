@@ -5,8 +5,9 @@
   inset-block-start: 50%;
   inset-inline-start: 50%;
   transform: translate(-50%, -50%);
-  inline-size: 600px;
-  block-size: 585px;
+  inline-size: 560px;
+  block-size: auto;
+  max-block-size: min(420px, 85dvh);
   background-color: var(--mui-palette-background-paper);
   border-radius: var(--border-radius);
   overflow: hidden;
@@ -51,19 +52,24 @@
 }
 
 [cmdk-list] {
-  flex-grow: 1;
+  flex: 0 1 auto;
   overflow: auto;
+  max-block-size: min(300px, calc(85dvh - 7rem));
 }
 
 [cmdk-list-sizer] {
-  block-size: 100%;
+  block-size: auto;
 }
 
 [cmdk-group-heading] {
-  padding-block: 16px 8px;
+  padding-block: 10px 6px;
   padding-inline: 16px;
   letter-spacing: 0.8px;
   color: var(--mui-palette-text-disabled);
+}
+
+[cmdk-group]:first-child [cmdk-group-heading] {
+  padding-block-start: 6px;
 }
 
 [cmdk-item] {
@@ -93,7 +99,7 @@
 [cmdk-empty],
 [cmdk-loading] {
   font-size: 14px;
-  block-size: 100%;
+  min-block-size: 8rem;
   display: flex;
   align-items: center;
   justify-content: center;
