@@ -20,13 +20,12 @@ import { useSession } from 'next-auth/react'
 
 // Type Imports
 import type { Locale } from '@configs/i18n'
-import { parseCatecLoginResponse } from '@/types/catec/authTypes'
 
 // Component Imports
 import CustomTextField from '@core/components/mui/TextField'
 
 // Lib Imports
-import { catecApiFetch } from '@/libs/catecApi'
+import { trocarSenhaCatec } from '@/libs/catecAuthApi'
 
 // Util Imports
 import { getCatecHomeUrl } from '@/utils/catec/authPaths'
@@ -57,49 +56,13 @@ const DefinirSenha = () => {
     setLoading(true)
 
     try {
-      const res = await catecApiFetch('/api/v1/auth/trocar-senha', {
-        method: 'POST',
-        body: JSON.stringify({ senhaNova: senha })
-      })
+      const login = await trocarSenhaCatec(senha)
 
-      const text = await res.text()
-
-      let data: unknown = null
-
-      try {
-        data = text ? JSON.parse(text) : null
-      } catch {
-        data = null
-      }
-
-      if (!res.ok) {
-        const mensagem =
-          data && typeof data === 'object' && 'mensagem' in data
-            ? String((data as { mensagem?: string }).mensagem)
-            : `Erro (${res.status})`
-
-        setError(mensagem)
-
-        return
-      }
-
-      const login = parseCatecLoginResponse(data)
-
-      if (!login.accessToken) {
-        setError('Resposta inválida do servidor.')
-
-        return
-      }
-
-      await update({
-        accessToken: login.accessToken,
-        requerTrocaSenha: false,
-        trocaSenhaObrigatoria: false
-      })
+      await update({ accessToken: login.accessToken })
 
       router.replace(getCatecHomeUrl(locale as Locale))
-    } catch {
-      setError('Não foi possível contatar o servidor. Verifique se a API está em execução.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível contatar o servidor.')
     } finally {
       setLoading(false)
     }

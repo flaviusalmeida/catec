@@ -82,14 +82,21 @@ export const authOptions: NextAuthOptions = {
 
         if (patch.accessToken) {
           token.accessToken = patch.accessToken
-        }
 
-        if (patch.requerTrocaSenha !== undefined) {
-          token.requerTrocaSenha = patch.requerTrocaSenha
-        }
+          const me = await fetchCatecMe(patch.accessToken)
 
-        if (patch.trocaSenhaObrigatoria !== undefined) {
-          token.trocaSenhaObrigatoria = patch.trocaSenhaObrigatoria
+          token.permissoes = me.permissoes
+          token.grupos = me.grupos
+          token.requerTrocaSenha = me.requerTrocaSenha
+          token.trocaSenhaObrigatoria = false
+        } else {
+          if (patch.requerTrocaSenha !== undefined) {
+            token.requerTrocaSenha = patch.requerTrocaSenha
+          }
+
+          if (patch.trocaSenhaObrigatoria !== undefined) {
+            token.trocaSenhaObrigatoria = patch.trocaSenhaObrigatoria
+          }
         }
       }
 
