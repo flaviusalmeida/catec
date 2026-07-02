@@ -1,133 +1,47 @@
-import { test, expect } from "@playwright/test";
-import { meAdministrativo } from "./fixtures/me";
+import { test, expect } from '@playwright/test'
 
-type Usuario = {
-  id: number;
-  nome: string;
-  email: string;
-  telefone: string | null;
-  ativo: boolean;
-  requerTrocaSenha: boolean;
-  grupos: string[];
-  criadoEm: string;
-  atualizadoEm: string;
-};
+import { setCatecSession } from './helpers/session'
+import { mockUsuariosApi, type UsuarioMock } from './helpers/usuariosMock'
 
-test("crud funcional básico na tela de usuários", async ({ page }) => {
-  const agora = "2026-04-20T00:00:00Z";
-  const usuarios: Usuario[] = [
+test('crud funcional básico na tela de usuários', async ({ page }) => {
+  const agora = '2026-04-20T00:00:00Z'
+  const usuarios: UsuarioMock[] = [
     {
       id: 1,
-      nome: "Administrador",
-      email: "admin@catec.local",
+      nome: 'Administrador',
+      email: 'admin@catec.local',
       telefone: null,
       ativo: true,
       requerTrocaSenha: false,
-      grupos: ["ADMINISTRATIVO"],
+      grupos: ['ADMINISTRATIVO'],
       criadoEm: agora,
-      atualizadoEm: agora,
-    },
-  ];
-
-  await page.addInitScript(() => {
-    window.localStorage.setItem("catec_token", "token-e2e");
-    window.localStorage.setItem("catec_token_type", "Bearer");
-  });
-
-  await page.route("**/api/v1/me", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(meAdministrativo()),
-    });
-  });
-
-  await page.route("**/api/v1/admin/usuarios", async (route) => {
-    const request = route.request();
-    if (request.method() === "GET") {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(usuarios),
-      });
-      return;
+      atualizadoEm: agora
     }
+  ]
 
-    if (request.method() === "POST") {
-      const body = request.postDataJSON() as {
-        nome: string;
-        email: string;
-        telefone: string | null;
-        grupos: string[];
-      };
-      const novo: Usuario = {
-        id: usuarios.length + 1,
-        nome: body.nome,
-        email: body.email,
-        telefone: body.telefone,
-        ativo: false,
-        requerTrocaSenha: true,
-        grupos: body.grupos,
-        criadoEm: agora,
-        atualizadoEm: agora,
-      };
-      usuarios.push(novo);
-      await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify(novo) });
-      return;
-    }
+  await setCatecSession(page)
+  await mockUsuariosApi(page, { usuarios })
 
-    await route.fallback();
-  });
+  await page.goto('/catec/usuarios')
 
-  await page.route("**/api/v1/admin/usuarios/*", async (route) => {
-    const request = route.request();
-    const match = request.url().match(/\/api\/v1\/admin\/usuarios\/(\d+)$/);
-    const id = match ? Number(match[1]) : -1;
-    const idx = usuarios.findIndex((u) => u.id === id);
-    if (idx < 0) {
-      await route.fulfill({ status: 404 });
-      return;
-    }
+  await expect(page.getByRole('heading', { name: 'Usuários' })).toBeVisible()
 
-    if (request.method() === "PUT") {
-      const body = request.postDataJSON() as {
-        nome: string;
-        email: string;
-        telefone: string | null;
-        ativo: boolean;
-        grupos: string[];
-      };
-      usuarios[idx] = {
-        ...usuarios[idx],
-        nome: body.nome,
-        email: body.email,
-        telefone: body.telefone,
-        ativo: body.ativo,
-        grupos: body.grupos,
-        atualizadoEm: agora,
-      };
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(usuarios[idx]) });
-      return;
-    }
+  await page.getByRole('button', { name: 'Novo usuário' }).click()
 
-    await route.fallback();
-  });
+  const drawer = page.locator('.MuiDrawer-paper')
 
-  await page.goto("/app/usuarios");
+  await drawer.getByLabel('Nome').fill('Usuário E2E')
+  await drawer.getByLabel('E-mail').fill('e2e@catec.local')
+  await drawer.getByLabel('Telefone').fill('11999990000')
+  await drawer.getByRole('button', { name: 'Criar' }).click()
 
-  await expect(page.getByRole("heading", { name: "Usuários" })).toBeVisible();
+  await expect(page.getByText('Usuário E2E')).toBeVisible()
 
-  await page.getByRole("button", { name: "Novo usuário" }).click();
-  await page.getByRole("dialog", { name: "Novo usuário" }).getByLabel("Nome").fill("Usuário E2E");
-  await page.getByRole("dialog", { name: "Novo usuário" }).getByLabel("E-mail").fill("e2e@catec.local");
-  await page.getByRole("dialog", { name: "Novo usuário" }).getByLabel("Telefone").fill("11999990000");
-  await page.getByRole("dialog", { name: "Novo usuário" }).getByRole("button", { name: "Salvar" }).click();
+  await page.getByRole('row', { name: /Usuário E2E/ }).click()
+  await expect(page).toHaveURL(/\/catec\/usuarios\/view\/2/)
 
-  await expect(page.getByText("Usuário E2E")).toBeVisible();
+  await page.getByLabel('Nome').fill('Usuário E2E Editado')
+  await page.getByRole('button', { name: 'Salvar alterações' }).click()
 
-  await page.getByRole("button", { name: "Editar Usuário E2E" }).click();
-  await page.getByRole("dialog", { name: "Editar usuário" }).getByLabel("Nome").fill("Usuário E2E Editado");
-  await page.getByRole("dialog", { name: "Editar usuário" }).getByRole("button", { name: "Salvar" }).click();
-
-  await expect(page.getByText("Usuário E2E Editado")).toBeVisible();
-});
+  await expect(page.getByText('Usuário E2E Editado')).toBeVisible()
+})

@@ -44,6 +44,12 @@ class ProjetoControllerMockMvcTest {
     private ProjetoService projetoService;
 
     @MockBean
+    private ProjetoHistoricoService projetoHistoricoService;
+
+    @MockBean
+    private ProjetoResumoService projetoResumoService;
+
+    @MockBean
     private JwtService jwtService;
 
     @MockBean

@@ -1,5 +1,0 @@
-/**
- * @deprecated Importe `data-table.css` via `DataTable` ou este arquivo para compatibilidade.
- * Estilos vivem em `components/list-page/data-table.css`.
- */
-@import "../components/list-page/data-table.css";

@@ -3,6 +3,7 @@
 .env.local
 .env.*.local
 *.pem
+.pnpm-store/
 
 # Análise, planos, tarefas e documentação de projeto (não versionar)
 Analise Projeto/
@@ -18,10 +19,13 @@ catec-backend/storage/
 hs_err_pid*
 replay_pid*
 
-# Node / frontend
+# Frontend (Next.js)
 catec-frontend/node_modules/
-catec-frontend/dist/
-catec-frontend/.vite/
+catec-frontend/.next/
+catec-frontend/test-results/
+catec-frontend/playwright-report/
+catec-frontend/blob-report/
+catec-frontend/playwright/.cache/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
