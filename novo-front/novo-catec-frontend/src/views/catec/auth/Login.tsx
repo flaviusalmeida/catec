@@ -82,9 +82,9 @@ const CatecLogin = () => {
 
     if (res?.error) {
       try {
-        const parsed = JSON.parse(res.error) as { message?: string[] }
+        const parsed = JSON.parse(res.error) as { message?: string[]; mensagem?: string }
 
-        setError(parsed.message?.[0] ?? 'Não foi possível entrar. Verifique e-mail e senha.')
+        setError(parsed.mensagem ?? parsed.message?.[0] ?? 'Não foi possível entrar. Verifique e-mail e senha.')
       } catch {
         setError('Não foi possível entrar. Verifique e-mail e senha.')
       }

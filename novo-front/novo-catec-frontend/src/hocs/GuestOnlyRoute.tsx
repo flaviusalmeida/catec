@@ -1,9 +1,6 @@
 // Next Imports
 import { redirect } from 'next/navigation'
 
-// Third-party Imports
-import { getServerSession } from 'next-auth'
-
 // Type Imports
 import type { ChildrenType } from '@core/types'
 import type { Locale } from '@configs/i18n'
@@ -11,11 +8,14 @@ import type { Locale } from '@configs/i18n'
 // Config Imports
 import themeConfig from '@configs/themeConfig'
 
+// Lib Imports
+import { getAuthSession } from '@/libs/auth'
+
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
 
 const GuestOnlyRoute = async ({ children, lang }: ChildrenType & { lang: Locale }) => {
-  const session = await getServerSession()
+  const session = await getAuthSession()
 
   if (session) {
     redirect(getLocalizedUrl(themeConfig.homePageUrl, lang))
