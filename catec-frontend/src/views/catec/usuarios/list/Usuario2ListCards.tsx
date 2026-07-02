@@ -25,8 +25,6 @@ const Usuario2ListCards = ({ lista }: Props) => {
         stats: String(lista.length),
         avatarIcon: 'tabler-users',
         avatarColor: 'primary',
-        trend: 'positive',
-        trendNumber: '—',
         subtitle: 'Usuários cadastrados'
       },
       {
@@ -34,8 +32,6 @@ const Usuario2ListCards = ({ lista }: Props) => {
         stats: String(ativos),
         avatarIcon: 'tabler-user-check',
         avatarColor: 'success',
-        trend: 'positive',
-        trendNumber: '—',
         subtitle: 'Contas ativas'
       },
       {
@@ -43,8 +39,6 @@ const Usuario2ListCards = ({ lista }: Props) => {
         stats: String(pendentes),
         avatarIcon: 'tabler-user-exclamation',
         avatarColor: 'warning',
-        trend: 'negative',
-        trendNumber: '—',
         subtitle: 'Aguardam troca de senha'
       },
       {
@@ -52,8 +46,6 @@ const Usuario2ListCards = ({ lista }: Props) => {
         stats: String(inativos),
         avatarIcon: 'tabler-user-off',
         avatarColor: 'secondary',
-        trend: 'negative',
-        trendNumber: '—',
         subtitle: 'Contas desativadas'
       }
     ]

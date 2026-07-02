@@ -24,37 +24,25 @@ const GrupoListCards = ({ lista }: Props) => {
         title: 'Total',
         stats: String(lista.length),
         avatarIcon: 'tabler-users-group',
-        avatarColor: 'primary',
-        trend: 'positive',
-        trendNumber: '—',
-        subtitle: 'Grupos cadastrados'
+        avatarColor: 'primary'
       },
       {
         title: 'Sistema',
         stats: String(sistema),
         avatarIcon: 'tabler-shield-lock',
-        avatarColor: 'info',
-        trend: 'positive',
-        trendNumber: '—',
-        subtitle: 'Grupos protegidos'
+        avatarColor: 'info'
       },
       {
         title: 'Customizados',
         stats: String(custom),
         avatarIcon: 'tabler-adjustments',
-        avatarColor: 'warning',
-        trend: 'positive',
-        trendNumber: '—',
-        subtitle: 'Grupos editáveis'
+        avatarColor: 'warning'
       },
       {
         title: 'Ativos',
         stats: String(ativos),
         avatarIcon: 'tabler-user-check',
-        avatarColor: 'success',
-        trend: 'positive',
-        trendNumber: '—',
-        subtitle: 'Grupos em uso'
+        avatarColor: 'success'
       }
     ]
   }, [lista])
