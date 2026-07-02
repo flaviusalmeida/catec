@@ -71,7 +71,7 @@ public class ProjetoController {
 
     @Operation(summary = "Atualizar projeto")
     @PutMapping("/{id}")
-    @PreAuthorize("@authz.has('acao.projeto.editar')")
+    @PreAuthorize("@authz.hasAny('acao.projeto.editar', 'acao.socio.proposta.aprovar')")
     public ProjetoResponse atualizar(
             @PathVariable Long id,
             @Valid @RequestBody ProjetoUpdateRequest body,

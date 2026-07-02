@@ -21,6 +21,15 @@ export const catecNavItems: CatecNavItem[] = [
     permission: PermissaoCodigo.TELA_PROJETOS
   },
   {
+    id: 'socio-propostas',
+    name: 'Propostas pendentes',
+    url: '/catec/socio/propostas',
+    icon: 'tabler-file-check',
+    section: 'Projetos',
+    subtitle: 'Parecer do sócio em propostas comerciais',
+    permission: PermissaoCodigo.TELA_SOCIO_PROPOSTAS
+  },
+  {
     id: 'clientes',
     name: 'Clientes',
     url: '/catec/clientes',

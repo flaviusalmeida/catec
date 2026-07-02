@@ -19,5 +19,7 @@ public enum ProjetoStatus {
     /** Demanda em execução. */
     EM_EXECUCAO,
     /** Proposta ou contrato recusado pelo cliente; demanda encerrada. */
-    CANCELADO
+    CANCELADO,
+    /** Demanda concluída (encerramento manual até fluxo completo de execução — Fase 2). */
+    FINALIZADO
 }

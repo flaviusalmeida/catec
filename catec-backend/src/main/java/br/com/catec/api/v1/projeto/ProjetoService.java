@@ -128,23 +128,40 @@ public class ProjetoService {
                     "Demanda pendente de cadastro de cliente. Associe um cliente antes de qualquer alteração.");
         }
         boolean admin = authz.podeGerirFluxoAdministrativo(principal);
+        boolean podeAlterarStatus = authz.podeAlterarStatusProjetoManual(principal);
+        boolean alterandoStatus = req.status() != null && req.status() != p.getStatus();
 
         if (!admin) {
-            if (!p.getCriadoPor().getId().equals(principal.id())) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Só o criador pode editar esta demanda.");
-            }
-            if (p.getStatus() != ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL) {
-                throw new ResponseStatusException(
-                        HttpStatus.FORBIDDEN,
-                        "Só é possível editar título e descrição enquanto o projeto estiver aguardando proposta comercial.");
-            }
-            if (req.clienteId() != null && !req.clienteId().equals(p.getCliente().getId())) {
-                throw new ResponseStatusException(
-                        HttpStatus.FORBIDDEN, "Colaborador não pode alterar o cliente vinculado ao projeto.");
-            }
-            if (req.status() != null && req.status() != p.getStatus()) {
-                throw new ResponseStatusException(
-                        HttpStatus.FORBIDDEN, "Apenas o administrativo pode alterar o estado do projeto.");
+            if (alterandoStatus && podeAlterarStatus) {
+                if (req.clienteId() != null && !req.clienteId().equals(p.getCliente().getId())) {
+                    throw new ResponseStatusException(
+                            HttpStatus.FORBIDDEN, "Não é permitido alterar o cliente ao encerrar o projeto.");
+                }
+                if (req.titulo() != null && !req.titulo().trim().equals(p.getTitulo())) {
+                    throw new ResponseStatusException(
+                            HttpStatus.FORBIDDEN, "Não é permitido alterar o título ao encerrar o projeto.");
+                }
+                if (req.escopo() != null && !req.escopo().trim().equals(p.getEscopo())) {
+                    throw new ResponseStatusException(
+                            HttpStatus.FORBIDDEN, "Não é permitido alterar o escopo ao encerrar o projeto.");
+                }
+            } else {
+                if (!p.getCriadoPor().getId().equals(principal.id())) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Só o criador pode editar esta demanda.");
+                }
+                if (p.getStatus() != ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL) {
+                    throw new ResponseStatusException(
+                            HttpStatus.FORBIDDEN,
+                            "Só é possível editar título e descrição enquanto o projeto estiver aguardando proposta comercial.");
+                }
+                if (req.clienteId() != null && !req.clienteId().equals(p.getCliente().getId())) {
+                    throw new ResponseStatusException(
+                            HttpStatus.FORBIDDEN, "Colaborador não pode alterar o cliente vinculado ao projeto.");
+                }
+                if (alterandoStatus) {
+                    throw new ResponseStatusException(
+                            HttpStatus.FORBIDDEN, "Apenas administrativo ou sócio pode alterar o estado do projeto.");
+                }
             }
         }
 
@@ -172,7 +189,7 @@ public class ProjetoService {
             p.setEscopo(e);
         }
 
-        if (admin && req.status() != null && req.status() != p.getStatus()) {
+        if (podeAlterarStatus && alterandoStatus) {
             validarTransicao(p.getStatus(), req.status());
             ProjetoStatus statusAnterior = p.getStatus();
             p.setStatus(req.status());
@@ -199,9 +216,14 @@ public class ProjetoService {
                     case ELABORANDO_PROPOSTA -> novo == ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA;
                     case AGUARDANDO_ACEITE_PROPOSTA -> false;
                     case AGUARDANDO_CONTRATO -> false;
-                    case AGUARDANDO_EXECUCAO -> novo == ProjetoStatus.EM_EXECUCAO;
-                    case EM_EXECUCAO -> false;
+                    case AGUARDANDO_EXECUCAO ->
+                            novo == ProjetoStatus.EM_EXECUCAO
+                                    || novo == ProjetoStatus.CANCELADO
+                                    || novo == ProjetoStatus.FINALIZADO;
+                    case EM_EXECUCAO ->
+                            novo == ProjetoStatus.CANCELADO || novo == ProjetoStatus.FINALIZADO;
                     case CANCELADO -> false;
+                    case FINALIZADO -> false;
                 };
         if (!ok) {
             throw badRequest(
@@ -220,6 +242,7 @@ public class ProjetoService {
             case AGUARDANDO_EXECUCAO -> "Aguardando execução";
             case EM_EXECUCAO -> "Em execução";
             case CANCELADO -> "Cancelado";
+            case FINALIZADO -> "Finalizado";
         };
     }
 

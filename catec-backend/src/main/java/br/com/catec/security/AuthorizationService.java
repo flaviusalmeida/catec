@@ -55,6 +55,11 @@ public class AuthorizationService {
         return principal.hasPermissao(PermissaoCodigo.ACAO_CLIENTE_CRIAR);
     }
 
+    /** Encerramento manual de projeto (administrativo ou sócio). */
+    public boolean podeAlterarStatusProjetoManual(UsuarioAutenticado principal) {
+        return podeGerirFluxoAdministrativo(principal) || podeAprovarComoSocio(principal);
+    }
+
     public boolean podeAprovarComoSocio(UsuarioAutenticado principal) {
         return principal.hasPermissao(PermissaoCodigo.ACAO_SOCIO_PROPOSTA_APROVAR);
     }

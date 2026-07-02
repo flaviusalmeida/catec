@@ -50,12 +50,13 @@ export const catecGruposDb: CatecGrupo[] = [
     ativo: true,
     sistema: true,
     permissoes: [
+      'tela.painel',
       'tela.projetos',
       'tela.projeto.detalhe',
       'tela.socio.propostas',
+      'acao.projeto.listar_todos',
       'acao.socio.proposta.aprovar',
-      'acao.socio.proposta.devolver',
-      'acao.projeto.listar_todos'
+      'acao.socio.proposta.devolver'
     ],
     criadoEm: now,
     atualizadoEm: now

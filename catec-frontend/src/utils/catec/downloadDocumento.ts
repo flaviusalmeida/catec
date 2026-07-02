@@ -4,7 +4,9 @@ import { getSession } from 'next-auth/react'
 
 import { resolveCatecApiUrl } from '@/libs/catecApi'
 
-export async function downloadDocumentoCatec(documentoId: number, nomeOriginal: string): Promise<void> {
+export async function fetchDocumentoConteudoCatec(
+  documentoId: number
+): Promise<{ blob: Blob; mimeType: string }> {
   const session = await getSession()
   const token = session?.user?.accessToken
 
@@ -13,10 +15,17 @@ export async function downloadDocumentoCatec(documentoId: number, nomeOriginal: 
   })
 
   if (!res.ok) {
-    throw new Error(`Download falhou (${res.status})`)
+    throw new Error(`Não foi possível carregar o documento (${res.status}).`)
   }
 
+  const mimeType = res.headers.get('content-type')?.split(';')[0]?.trim() ?? 'application/octet-stream'
   const blob = await res.blob()
+
+  return { blob, mimeType }
+}
+
+export async function downloadDocumentoCatec(documentoId: number, nomeOriginal: string): Promise<void> {
+  const { blob } = await fetchDocumentoConteudoCatec(documentoId)
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
 

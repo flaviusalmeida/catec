@@ -7,6 +7,7 @@ export type CatecProjetoStatus =
   | 'AGUARDANDO_EXECUCAO'
   | 'EM_EXECUCAO'
   | 'CANCELADO'
+  | 'FINALIZADO'
 
 export type CatecProjeto = {
   id: number
@@ -113,7 +114,8 @@ export const ORDEM_STATUS_PROJETO: CatecProjetoStatus[] = [
   'AGUARDANDO_CONTRATO',
   'AGUARDANDO_EXECUCAO',
   'EM_EXECUCAO',
-  'CANCELADO'
+  'CANCELADO',
+  'FINALIZADO'
 ]
 
 export const STATUS_PROJETO_ROTULO: Record<CatecProjetoStatus, string> = {
@@ -124,7 +126,8 @@ export const STATUS_PROJETO_ROTULO: Record<CatecProjetoStatus, string> = {
   AGUARDANDO_CONTRATO: 'Aguardando contrato',
   AGUARDANDO_EXECUCAO: 'Aguardando execução',
   EM_EXECUCAO: 'Em execução',
-  CANCELADO: 'Cancelado'
+  CANCELADO: 'Cancelado',
+  FINALIZADO: 'Finalizado'
 }
 
 export const STATUS_PROJETO_ROTULO_BADGE: Record<CatecProjetoStatus, string> = {
@@ -135,5 +138,6 @@ export const STATUS_PROJETO_ROTULO_BADGE: Record<CatecProjetoStatus, string> = {
   AGUARDANDO_CONTRATO: 'Aguard. contrato',
   AGUARDANDO_EXECUCAO: 'Aguard. execução',
   EM_EXECUCAO: 'Em execução',
-  CANCELADO: 'Cancelado'
+  CANCELADO: 'Cancelado',
+  FINALIZADO: 'Finalizado'
 }

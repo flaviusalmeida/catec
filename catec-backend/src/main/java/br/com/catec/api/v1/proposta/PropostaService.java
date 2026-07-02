@@ -364,6 +364,9 @@ public class PropostaService {
         if (projeto.getStatus() == ProjetoStatus.CANCELADO) {
             throw badRequest("Projeto cancelado; não é possível criar nova proposta comercial.");
         }
+        if (projeto.getStatus() == ProjetoStatus.FINALIZADO) {
+            throw badRequest("Projeto finalizado; não é possível criar nova proposta comercial.");
+        }
     }
 
     /** Cliente pediu ajustes: permite nova versão (v2+) mesmo com projeto aguardando aceite. */

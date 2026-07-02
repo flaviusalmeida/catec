@@ -92,6 +92,66 @@ class ProjetoServiceTest {
     }
 
     @Test
+    void atualizar_quandoAdminAguardandoExecucaoParaFinalizado_devePersistir() {
+        Projeto p = projeto(1L, ProjetoStatus.AGUARDANDO_EXECUCAO, 10L, 1L);
+        when(projetoRepository.findById(1L)).thenReturn(Optional.of(p));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var req = new ProjetoUpdateRequest(null, null, null, ProjetoStatus.FINALIZADO);
+
+        ProjetoResponse out = service.atualizar(1L, req, adminPrincipal());
+
+        assertEquals(ProjetoStatus.FINALIZADO, out.status());
+        verify(auditoriaService)
+                .registrarTransicaoStatus(
+                        TipoEntidadeAuditoria.PROJETO,
+                        1L,
+                        "ATUALIZACAO_MANUAL_STATUS",
+                        ProjetoStatus.AGUARDANDO_EXECUCAO.name(),
+                        ProjetoStatus.FINALIZADO.name(),
+                        1L);
+    }
+
+    @Test
+    void atualizar_quandoAdminAguardandoExecucaoParaCancelado_devePersistir() {
+        Projeto p = projeto(1L, ProjetoStatus.AGUARDANDO_EXECUCAO, 10L, 1L);
+        when(projetoRepository.findById(1L)).thenReturn(Optional.of(p));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var req = new ProjetoUpdateRequest(null, null, null, ProjetoStatus.CANCELADO);
+
+        ProjetoResponse out = service.atualizar(1L, req, adminPrincipal());
+
+        assertEquals(ProjetoStatus.CANCELADO, out.status());
+    }
+
+    @Test
+    void atualizar_quandoAdminEmExecucaoParaFinalizado_devePersistir() {
+        Projeto p = projeto(1L, ProjetoStatus.EM_EXECUCAO, 10L, 1L);
+        when(projetoRepository.findById(1L)).thenReturn(Optional.of(p));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var req = new ProjetoUpdateRequest(null, null, null, ProjetoStatus.FINALIZADO);
+
+        ProjetoResponse out = service.atualizar(1L, req, adminPrincipal());
+
+        assertEquals(ProjetoStatus.FINALIZADO, out.status());
+    }
+
+    @Test
+    void atualizar_quandoSocioAguardandoExecucaoParaFinalizado_devePersistir() {
+        Projeto p = projeto(1L, ProjetoStatus.AGUARDANDO_EXECUCAO, 99L, 1L);
+        when(projetoRepository.findById(1L)).thenReturn(Optional.of(p));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var req = new ProjetoUpdateRequest(null, null, null, ProjetoStatus.FINALIZADO);
+
+        ProjetoResponse out = service.atualizar(1L, req, socioPrincipal());
+
+        assertEquals(ProjetoStatus.FINALIZADO, out.status());
+    }
+
+    @Test
     void atualizar_quandoColaboradorNaoDono_deve403() {
         Projeto p = projeto(1L, ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL, 99L, 1L);
         when(projetoRepository.findById(1L)).thenReturn(Optional.of(p));
@@ -131,6 +191,10 @@ class ProjetoServiceTest {
 
     private static UsuarioAutenticado colabPrincipal(long id) {
         return UsuarioAutenticadoFixtures.colaborador(id);
+    }
+
+    private static UsuarioAutenticado socioPrincipal() {
+        return UsuarioAutenticadoFixtures.socio(1L);
     }
 
     private static Projeto projeto(long id, ProjetoStatus status, long criadoPorId, long clienteId) {

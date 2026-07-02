@@ -74,6 +74,7 @@ public final class UsuarioAutenticadoFixtures {
         return List.of(
                 role("SOCIO"),
                 perm(PermissaoCodigo.TELA_PAINEL),
+                perm(PermissaoCodigo.TELA_PROJETOS),
                 perm(PermissaoCodigo.TELA_PROJETO_DETALHE),
                 perm(PermissaoCodigo.TELA_SOCIO_PROPOSTAS),
                 perm(PermissaoCodigo.ACAO_PROJETO_LISTAR_TODOS),

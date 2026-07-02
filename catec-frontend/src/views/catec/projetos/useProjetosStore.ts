@@ -79,6 +79,19 @@ async function addProjetoStore(input: CatecProjetoCreateInput): Promise<CatecPro
   return criado
 }
 
+async function atualizarStatusProjetoStore(id: number, status: CatecProjeto['status']): Promise<CatecProjeto> {
+  const atualizado = await atualizarProjetoCatec(id, { status })
+  const exists = state.lista.some(p => p.id === id)
+
+  setState({
+    lista: exists ? state.lista.map(p => (p.id === id ? atualizado : p)) : [...state.lista, atualizado]
+  })
+
+  void carregarStore()
+
+  return atualizado
+}
+
 async function updateProjetoStore(id: number, patch: Partial<CatecProjeto>): Promise<CatecProjeto> {
   const atual = state.lista.find(p => p.id === id)
   const base = atual ?? (await obterProjetoCatec(id))
@@ -154,6 +167,11 @@ export function useProjetosStore() {
     []
   )
 
+  const atualizarStatusProjeto = useCallback(
+    async (id: number, status: CatecProjeto['status']) => atualizarStatusProjetoStore(id, status),
+    []
+  )
+
   const associarCliente = useCallback(
     async (id: number, clienteId: number) => associarClienteStore(id, clienteId),
     []
@@ -169,6 +187,7 @@ export function useProjetosStore() {
     carregar,
     addProjeto,
     updateProjeto,
+    atualizarStatusProjeto,
     associarCliente,
     obterProjeto
   }

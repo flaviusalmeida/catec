@@ -15,7 +15,8 @@ const VARIANT_POR_STATUS: Record<CatecProjetoStatus, ThemeColor> = {
   AGUARDANDO_CONTRATO: 'primary',
   AGUARDANDO_EXECUCAO: 'primary',
   EM_EXECUCAO: 'success',
-  CANCELADO: 'secondary'
+  CANCELADO: 'secondary',
+  FINALIZADO: 'info'
 }
 
 type Props = {
