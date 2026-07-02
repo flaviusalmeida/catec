@@ -1,23 +1,34 @@
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig, devices } from '@playwright/test'
+import dotenv from 'dotenv'
+
+dotenv.config({ path: '.env' })
+
+const port = 3000
+const baseURL = `http://localhost:${port}`
 
 export default defineConfig({
-  testDir: "./e2e",
+  testDir: './e2e',
   fullyParallel: true,
-  retries: 0,
+  retries: process.env.CI ? 1 : 0,
   use: {
-    baseURL: "http://127.0.0.1:4173",
-    trace: "on-first-retry",
+    baseURL,
+    trace: 'on-first-retry'
   },
   webServer: {
-    command: "npm run dev -- --port 4173 --host 127.0.0.1",
-    url: "http://127.0.0.1:4173",
-    reuseExistingServer: true,
-    timeout: 120000,
+    command: `pnpm dev --port ${port}`,
+    url: baseURL,
+    reuseExistingServer: !process.env.CI,
+    timeout: 180_000,
+    env: {
+      ...process.env,
+      NEXTAUTH_URL: `${baseURL}/api/auth`,
+      NEXT_PUBLIC_SHOW_VUEXY_DEMOS: 'false'
+    }
   },
   projects: [
     {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"], channel: "chrome" },
-    },
-  ],
-});
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] }
+    }
+  ]
+})

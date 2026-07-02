@@ -56,7 +56,7 @@ export type Config = {
 const themeConfig: Config = {
   templateName: 'CATEC',
   homePageUrl: '/catec/projetos',
-  settingsCookieName: 'catec-mui-settings',
+  settingsCookieName: 'catec-mui-settings-v2',
   mode: 'system', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'
   semiDark: false, // true, false

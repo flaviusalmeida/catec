@@ -4,7 +4,7 @@
 
 | Item | Valor |
 |------|--------|
-| Pasta | `novo-front/novo-catec-frontend/` |
+| Pasta | `catec-frontend/` |
 | Stack | Next.js 16, React 19, MUI 7, NextAuth |
 | Package manager | **pnpm** |
 | URL dev | http://localhost:3000 |
@@ -21,7 +21,7 @@
 ## Configuração
 
 ```bash
-cd novo-front/novo-catec-frontend
+cd catec-frontend
 cp .env.example .env
 ```
 
@@ -39,19 +39,30 @@ Menus demo do template Vuexy ficam ocultos por padrão. Para exibir: `NEXT_PUBLI
 
 **`NO_SECRET` / `JWT_SESSION_ERROR` / `decryption operation failed`**
 
-1. Confirme que existe `novo-front/novo-catec-frontend/.env` (não vai no Git — ao mover a pasta, copie de novo: `cp .env.example .env`).
+1. Confirme que existe `catec-frontend/.env` (não vai no Git — ao mover a pasta, copie de novo: `cp .env.example .env`).
 2. `NEXTAUTH_SECRET` não pode estar vazio.
-3. Limpe cookies do site `localhost:3000` no browser (cookie antigo foi encriptado com outro segredo).
+3. Limpe cookies de `localhost:3000` no browser (sessão NextAuth ou cookie antigo do template Vuexy).
 4. Reinicie o dev server após criar/editar o `.env`.
+
+**`Turbopack Error` / crash ao abrir rotas CATEC**
+
+O `pnpm dev` usa **Webpack** por defeito. Evite `pnpm dev:turbo` neste projeto (Turbopack instável no Mac com este template). Se mudou de pasta:
+
+```bash
+rm -rf .next
+pnpm dev
+```
+
+**Redireciona para `/en/dashboards/crm`**
+
+Cookie antigo do template Vuexy. Limpe cookies de `localhost:3000` ou abra janela anónima e use `/pt/catec/projetos`.
 
 ## Executar
 
 ```bash
 pnpm install
-pnpm dev --webpack
+pnpm dev
 ```
-
-Recomenda-se `--webpack` no macOS (Turbopack pode consumir muita RAM neste monorepo).
 
 Build de produção:
 
@@ -78,10 +89,6 @@ Cinco testes funcionais (auth, permissões 403/401, CRUD usuários, reset de sen
 
 Permissões de menu e rotas seguem códigos `tela.*` / `acao.*` retornados por `GET /api/v1/me`.
 
-## Frontend legado (`catec-frontend/`)
-
-React + Vite — **descontinuado** em junho/2026. Scripts `dev`/`build`/`preview` bloqueados; código mantido só como referência. Ver [catec-frontend/README.md](../catec-frontend/README.md).
-
 ## Cutover (Fase 4D)
 
 | Subetapa | Estado |
@@ -89,4 +96,4 @@ React + Vite — **descontinuado** em junho/2026. Scripts `dev`/`build`/`preview
 | Redirects produção (`/` → `/pt/catec/projetos`) | Concluído |
 | Ocultar menus demo Vuexy (`NEXT_PUBLIC_SHOW_VUEXY_DEMOS`) | Concluído |
 | Portar e2e smoke Playwright | Concluído |
-| Desativar `catec-frontend` + docs | Concluído |
+| Renomear para `catec-frontend/` + docs | Concluído |

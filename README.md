@@ -1,8 +1,6 @@
 # CATEC — sistema de gestão de fluxo
 
-Repositório com **`catec-backend`** (Java / Spring Boot), **`novo-front/novo-catec-frontend`** (Next.js — frontend oficial) e **PostgreSQL** para desenvolvimento local via Docker Compose.
-
-O frontend legado **`catec-frontend`** (React/Vite) está **descontinuado**; ver [docs/FRONTEND.md](docs/FRONTEND.md).
+Repositório com **`catec-backend`** (Java / Spring Boot), **`catec-frontend`** (Next.js — frontend oficial) e **PostgreSQL** para desenvolvimento local via Docker Compose.
 
 Pastas de análise, planos, tarefas e documentação comercial/técnica detalhada ficam em **`Analise Projeto/`** no seu computador e **não entram no Git** (ver `.gitignore`).
 
@@ -138,11 +136,11 @@ Regra de fase macro documentada em `FaseMacro` / `FaseMacroResolver` no backend.
 ### Painel de visibilidade (frontend)
 
 - A **API** do painel (`GET /api/v1/painel/*`) está documentada acima.
-- A **UI do painel** (`/app/painel` no legado) ainda não foi portada para o novo frontend; use a API ou o código em `catec-frontend/` apenas como referência.
+- A **UI do painel** ainda não foi portada para o `catec-frontend`; use a API diretamente.
 
 ### Frontend — fluxo comercial (UI oficial)
 
-Rotas no **`novo-front/novo-catec-frontend`** (prefixo `/pt`):
+Rotas no **`catec-frontend`** (prefixo `/pt`):
 
 - Login: `/pt/login` — troca de senha obrigatória: `/pt/catec/definir-senha`
 - Projetos: `/pt/catec/projetos`, detalhe `/pt/catec/projetos/{id}` (proposta, contrato, interações, histórico)
@@ -159,7 +157,7 @@ Limites em `application.yml` (`app.documento.max-size-bytes`, `app.documento.all
 Documentação detalhada: **[docs/FRONTEND.md](docs/FRONTEND.md)**.
 
 ```bash
-cd novo-front/novo-catec-frontend
+cd catec-frontend
 cp .env.example .env
 ```
 
@@ -167,22 +165,20 @@ Preencha pelo menos `NEXTAUTH_SECRET` (ex.: `openssl rand -base64 32`) e confirm
 
 ```bash
 pnpm install
-pnpm dev --webpack
+pnpm dev
 ```
 
 - **URL:** http://localhost:3000 (redirect `/` → `/pt/catec/projetos`)
 - **Login:** http://localhost:3000/pt/login
 - **Credenciais dev:** `admin@catec.local` / `password`
 - **Menu:** itens CATEC conforme permissões `tela.*` em `GET /api/v1/me`
-- **Logo:** `novo-front/novo-catec-frontend/public/images/logo-catec.png`
+- **Logo:** `catec-frontend/public/images/logo-catec.png`
 
 **Autenticação:** NextAuth (credenciais) + JWT da API CATEC na sessão. Guards `AuthGuard`, `RequireCatecPermission` e `CanPermission` no React; a API continua a validar JWT e permissões em cada operação.
 
 **Testes smoke (Playwright):** `pnpm test:e2e` na pasta do frontend (requer `NEXTAUTH_SECRET` no `.env`).
 
-### Frontend legado (`catec-frontend/`)
-
-Descontinuado — scripts `dev`/`build`/`preview` bloqueados. Ver [catec-frontend/README.md](catec-frontend/README.md).
+> **Após mover a pasta:** copie o `.env` de novo, rode `rm -rf .next` e limpe cookies de `localhost:3000`. Ver [docs/FRONTEND.md](docs/FRONTEND.md#problemas-comuns).
 
 ## Parar o banco
 

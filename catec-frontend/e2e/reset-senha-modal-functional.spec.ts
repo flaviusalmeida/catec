@@ -1,100 +1,59 @@
-import { test, expect } from "@playwright/test";
-import { meAdministrativo } from "./fixtures/me";
+import { test, expect } from '@playwright/test'
 
-type Usuario = {
-  id: number;
-  nome: string;
-  email: string;
-  telefone: string | null;
-  ativo: boolean;
-  requerTrocaSenha: boolean;
-  grupos: string[];
-  criadoEm: string;
-  atualizadoEm: string;
-};
+import { setCatecSession } from './helpers/session'
+import { mockUsuariosApi, type UsuarioMock } from './helpers/usuariosMock'
 
-test("modal de reset: cancelar nao chama endpoint e confirmar chama", async ({ page }) => {
-  const agora = "2026-04-20T00:00:00Z";
-  const usuarios: Usuario[] = [
+test('modal de reset: cancelar não chama endpoint e confirmar chama', async ({ page }) => {
+  const agora = '2026-04-20T00:00:00Z'
+  const usuarios: UsuarioMock[] = [
     {
       id: 1,
-      nome: "Administrador",
-      email: "admin@catec.local",
+      nome: 'Administrador',
+      email: 'admin@catec.local',
       telefone: null,
       ativo: true,
       requerTrocaSenha: false,
-      grupos: ["ADMINISTRATIVO"],
+      grupos: ['ADMINISTRATIVO'],
       criadoEm: agora,
-      atualizadoEm: agora,
+      atualizadoEm: agora
     },
     {
       id: 2,
-      nome: "Usuario Reset",
-      email: "reset@catec.local",
+      nome: 'Usuario Reset',
+      email: 'reset@catec.local',
       telefone: null,
       ativo: true,
       requerTrocaSenha: false,
-      grupos: ["COLABORADOR"],
+      grupos: ['COLABORADOR'],
       criadoEm: agora,
-      atualizadoEm: agora,
-    },
-  ];
-
-  let resetChamadas = 0;
-
-  await page.addInitScript(() => {
-    window.localStorage.setItem("catec_token", "token-e2e-reset");
-    window.localStorage.setItem("catec_token_type", "Bearer");
-  });
-
-  await page.route("**/api/v1/me", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(meAdministrativo()),
-    });
-  });
-
-  await page.route("**/api/v1/admin/usuarios", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(usuarios),
-    });
-  });
-
-  await page.route("**/api/v1/admin/usuarios/*/resetar-senha", async (route) => {
-    resetChamadas += 1;
-    const idx = usuarios.findIndex((u) => u.id === 2);
-    if (idx >= 0) {
-      usuarios[idx] = {
-        ...usuarios[idx],
-        ativo: false,
-        requerTrocaSenha: true,
-        atualizadoEm: agora,
-      };
+      atualizadoEm: agora
     }
-    await route.fulfill({ status: 204, body: "" });
-  });
+  ]
 
-  await page.goto("/app/usuarios");
-  await expect(page.getByText("Usuario Reset")).toBeVisible();
+  let resetChamadas = 0
 
-  await page.getByRole("button", { name: "Editar Usuario Reset" }).click();
-  await expect(page.getByRole("dialog", { name: "Editar usuário" })).toBeVisible();
+  await setCatecSession(page)
+  await mockUsuariosApi(page, {
+    usuarios,
+    onResetSenha: () => {
+      resetChamadas += 1
+    }
+  })
 
-  await page.getByRole("button", { name: "Redefinir senha" }).click();
-  const confirmDialog = page.getByRole("dialog", { name: "Confirmar redefinição" });
-  await expect(confirmDialog).toBeVisible();
-  await confirmDialog.getByRole("button", { name: "Cancelar" }).click();
+  await page.goto('/pt/catec/usuarios/view/2')
+  await expect(page.getByText('Usuario Reset')).toBeVisible()
 
-  await expect(confirmDialog).not.toBeVisible();
-  expect(resetChamadas).toBe(0);
+  await page.getByRole('button', { name: 'Redefinir senha' }).click()
+  await expect(page.getByText('Confirmar redefinição')).toBeVisible()
 
-  await page.getByRole("button", { name: "Redefinir senha" }).click();
-  await expect(confirmDialog).toBeVisible();
-  await confirmDialog.getByRole("button", { name: "Confirmar" }).click();
+  await page.getByRole('button', { name: 'Cancelar' }).click()
+  await expect(page.getByText('Confirmar redefinição')).not.toBeVisible()
+  expect(resetChamadas).toBe(0)
 
-  await expect(page.getByText("Nova senha provisória enviada por e-mail.")).toBeVisible();
-  expect(resetChamadas).toBe(1);
-});
+  await page.getByRole('button', { name: 'Redefinir senha' }).click()
+  await expect(page.getByText('Confirmar redefinição')).toBeVisible()
+  await page.getByRole('button', { name: 'Confirmar' }).click()
+
+  await expect(page.getByText('Nova senha provisória enviada por e-mail.')).toBeVisible()
+  expect(resetChamadas).toBe(1)
+})
