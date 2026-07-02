@@ -18,7 +18,7 @@ import { clienteToFormState } from '../clienteFormHelpers'
 
 type Props = {
   cliente: CatecCliente
-  onSave: (patch: Partial<CatecCliente>) => void
+  onSave: (patch: Partial<CatecCliente>) => Promise<void>
 }
 
 const ClienteResponsavelTab = ({ cliente, onSave }: Props) => {
@@ -43,19 +43,24 @@ const ClienteResponsavelTab = ({ cliente, onSave }: Props) => {
     }
 
     setSalvando(true)
-    await new Promise(r => setTimeout(r, 400))
-    onSave({
-      responsaveis: [
-        {
-          id: cliente.responsaveis[0]?.id ?? 1,
-          nome: form.responsavel.nome.trim(),
-          email: form.responsavel.email.trim(),
-          telefone: onlyDigits(form.responsavel.telefone)
-        }
-      ]
-    })
-    setSalvando(false)
-    toast.success('Responsável atualizado (mock).')
+
+    try {
+      await onSave({
+        responsaveis: [
+          {
+            id: cliente.responsaveis[0]?.id ?? 1,
+            nome: form.responsavel.nome.trim(),
+            email: form.responsavel.email.trim(),
+            telefone: onlyDigits(form.responsavel.telefone)
+          }
+        ]
+      })
+      toast.success('Responsável atualizado.')
+    } catch {
+      /* erro no pai */
+    } finally {
+      setSalvando(false)
+    }
   }
 
   return (

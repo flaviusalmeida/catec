@@ -1,52 +1,150 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useSyncExternalStore } from 'react'
 
-import { catecClientesDb } from '@/fake-db/catec/clientes'
-import type { CatecCliente } from '@/types/catec/clienteTypes'
+import {
+  atualizarClienteCatec,
+  criarClienteCatec,
+  excluirClienteCatec,
+  listarClientesCatec,
+  obterClienteCatec
+} from '@/libs/catecClientesApi'
+import type { CatecCliente, CatecClienteRequest } from '@/types/catec/clienteTypes'
 
-const STORAGE_KEY = 'catec-clientes-mock'
+import { clienteToRequest } from './clienteFormHelpers'
 
-function readStorage(): CatecCliente[] {
-  if (typeof window === 'undefined') return [...catecClientesDb]
+type StoreState = {
+  lista: CatecCliente[]
+  carregando: boolean
+  erro: string | null
+  inicializado: boolean
+}
+
+const initialState: StoreState = { lista: [], carregando: false, erro: null, inicializado: false }
+
+let state: StoreState = { ...initialState }
+const listeners = new Set<() => void>()
+let carregarPromise: Promise<void> | null = null
+
+function emit() {
+  for (const listener of listeners) listener()
+}
+
+function setState(patch: Partial<StoreState>) {
+  state = { ...state, ...patch }
+  emit()
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+
+  return () => listeners.delete(listener)
+}
+
+function getSnapshot() {
+  return state
+}
+
+async function carregarStore() {
+  if (carregarPromise) return carregarPromise
+
+  carregarPromise = (async () => {
+    setState({ carregando: true, erro: null })
+
+    try {
+      const lista = await listarClientesCatec()
+
+      setState({ lista, carregando: false, erro: null, inicializado: true })
+    } catch (err) {
+      setState({
+        lista: [],
+        carregando: false,
+        erro: err instanceof Error ? err.message : 'Não foi possível carregar os clientes.',
+        inicializado: true
+      })
+    } finally {
+      carregarPromise = null
+    }
+  })()
+
+  return carregarPromise
+}
+
+async function addClienteStore(body: CatecClienteRequest): Promise<CatecCliente> {
+  const criado = await criarClienteCatec(body)
+
+  setState({ lista: [...state.lista, criado] })
+
+  return criado
+}
+
+async function updateClienteStore(id: number, patch: Partial<CatecCliente>): Promise<CatecCliente> {
+  const atual = state.lista.find(c => c.id === id)
+  const base = atual ?? (await obterClienteCatec(id))
+  const merged = { ...base, ...patch }
+  const atualizado = await atualizarClienteCatec(id, clienteToRequest(merged))
+
+  const exists = state.lista.some(c => c.id === id)
+
+  setState({
+    lista: exists ? state.lista.map(c => (c.id === id ? atualizado : c)) : [...state.lista, atualizado]
+  })
+
+  return atualizado
+}
+
+async function removeClienteStore(id: number): Promise<void> {
+  await excluirClienteCatec(id)
+  setState({ lista: state.lista.filter(c => c.id !== id) })
+}
+
+async function obterClienteStore(id: number): Promise<CatecCliente | null> {
+  const cached = state.lista.find(c => c.id === id)
+
+  if (cached) return cached
 
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY)
+    const cliente = await obterClienteCatec(id)
 
-    if (raw) return JSON.parse(raw) as CatecCliente[]
+    if (!state.lista.some(c => c.id === cliente.id)) {
+      setState({ lista: [...state.lista, cliente] })
+    }
+
+    return cliente
   } catch {
-    /* ignore */
+    return null
   }
-
-  return [...catecClientesDb]
 }
 
 export function useClientesStore() {
-  const [lista, setLista] = useState<CatecCliente[]>(readStorage)
-  const [hydrated, setHydrated] = useState(false)
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 
   useEffect(() => {
-    setLista(readStorage())
-    setHydrated(true)
+    if (!snapshot.inicializado && !snapshot.carregando) {
+      void carregarStore()
+    }
+  }, [snapshot.inicializado, snapshot.carregando])
+
+  const carregar = useCallback(async () => {
+    await carregarStore()
   }, [])
 
-  useEffect(() => {
-    if (!hydrated) return
+  const addCliente = useCallback(async (body: CatecClienteRequest) => addClienteStore(body), [])
+  const updateCliente = useCallback(
+    async (id: number, patch: Partial<CatecCliente>) => updateClienteStore(id, patch),
+    []
+  )
+  const removeCliente = useCallback(async (id: number) => removeClienteStore(id), [])
+  const obterCliente = useCallback(async (id: number) => obterClienteStore(id), [])
 
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(lista))
-  }, [lista, hydrated])
-
-  const updateCliente = useCallback((id: number, patch: Partial<CatecCliente>) => {
-    setLista(prev => prev.map(c => (c.id === id ? { ...c, ...patch } : c)))
-  }, [])
-
-  const addCliente = useCallback((cliente: CatecCliente) => {
-    setLista(prev => [...prev, cliente])
-  }, [])
-
-  const removeCliente = useCallback((id: number) => {
-    setLista(prev => prev.filter(c => c.id !== id))
-  }, [])
-
-  return { lista, setLista, updateCliente, addCliente, removeCliente, hydrated }
+  return {
+    lista: snapshot.lista,
+    carregando: snapshot.carregando,
+    erro: snapshot.erro,
+    carregar,
+    addCliente,
+    updateCliente,
+    removeCliente,
+    obterCliente
+  }
 }

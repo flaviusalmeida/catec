@@ -95,11 +95,16 @@ const ProjetoTabInteracoes = ({ fluxo }: Props) => {
     }
 
     setSalvando(true)
-    await new Promise(r => setTimeout(r, 350))
-    registrarInteracao(tipo, texto)
-    setSalvando(false)
-    setDialogAberto(false)
-    toast.success('Interação registrada (mock).')
+
+    try {
+      await registrarInteracao(tipo, texto)
+      setDialogAberto(false)
+      toast.success('Interação registrada.')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao registrar interação.')
+    } finally {
+      setSalvando(false)
+    }
   }
 
   return (

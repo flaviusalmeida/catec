@@ -12,20 +12,19 @@ import MenuItem from '@mui/material/MenuItem'
 import Typography from '@mui/material/Typography'
 import { toast } from 'react-toastify'
 
-import type { CatecCliente, CatecClienteFormState, TipoPessoa } from '@/types/catec/clienteTypes'
+import type { CatecCliente, CatecClienteFormState, CatecClienteRequest, TipoPessoa } from '@/types/catec/clienteTypes'
 import { EMPTY_CLIENTE_FORM } from '@/types/catec/clienteTypes'
 
 import DialogCloseButton from '@components/dialogs/DialogCloseButton'
 import CustomTextField from '@core/components/mui/TextField'
 import { formatDocumentoByTipo, formatTelefoneBrasil, onlyDigits } from '@/utils/catec/brFormat'
 
-import { formStateToClientePatch, validateClienteForm } from '../clienteFormHelpers'
+import { formStateToClienteRequest, validateClienteForm } from '../clienteFormHelpers'
 
 type Props = {
   open: boolean
   setOpen: (open: boolean) => void
-  onAdd: (cliente: CatecCliente) => void
-  proximoId: number
+  onAdd: (body: CatecClienteRequest) => Promise<CatecCliente>
 }
 
 const emptyForm = (): CatecClienteFormState => ({
@@ -33,8 +32,9 @@ const emptyForm = (): CatecClienteFormState => ({
   responsavel: { ...EMPTY_CLIENTE_FORM.responsavel }
 })
 
-const ClienteAddDialog = ({ open, setOpen, onAdd, proximoId }: Props) => {
+const ClienteAddDialog = ({ open, setOpen, onAdd }: Props) => {
   const [form, setForm] = useState<CatecClienteFormState>(emptyForm)
+  const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
     if (open) setForm(emptyForm())
@@ -45,7 +45,7 @@ const ClienteAddDialog = ({ open, setOpen, onAdd, proximoId }: Props) => {
     setForm(emptyForm())
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     const erro = validateClienteForm(form)
@@ -56,23 +56,17 @@ const ClienteAddDialog = ({ open, setOpen, onAdd, proximoId }: Props) => {
       return
     }
 
-    const patch = formStateToClientePatch(form)
+    setSalvando(true)
 
-    onAdd({
-      id: proximoId,
-      nomeFantasia: null,
-      enderecoLogradouro: null,
-      enderecoNumero: null,
-      enderecoComplemento: null,
-      enderecoCidade: null,
-      enderecoUf: null,
-      enderecoCep: null,
-      observacoes: null,
-      ...patch
-    } as CatecCliente)
-
-    toast.success('Cliente criado (mock).')
-    handleClose()
+    try {
+      await onAdd(formStateToClienteRequest(form))
+      toast.success('Cliente criado.')
+      handleClose()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Não foi possível criar o cliente.')
+    } finally {
+      setSalvando(false)
+    }
   }
 
   return (

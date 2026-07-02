@@ -19,11 +19,11 @@ import UsuarioResetSenhaDialog from '../UsuarioResetSenhaDialog'
 
 type Props = {
   usuario: CatecAdminUsuario
-  onSave: (patch: Pick<CatecAdminUsuario, 'nome' | 'email' | 'telefone'>) => void
-  onUpdate: (patch: Partial<CatecAdminUsuario>) => void
+  onSave: (patch: Pick<CatecAdminUsuario, 'nome' | 'email' | 'telefone' | 'ativo'>) => Promise<void>
+  onResetSenha: () => Promise<void>
 }
 
-const Usuario2DadosTab = ({ usuario, onSave, onUpdate }: Props) => {
+const Usuario2DadosTab = ({ usuario, onSave, onResetSenha }: Props) => {
   const [nome, setNome] = useState(usuario.nome)
   const [email, setEmail] = useState(usuario.email)
   const [telefone, setTelefone] = useState(usuario.telefone ?? '')
@@ -51,27 +51,35 @@ const Usuario2DadosTab = ({ usuario, onSave, onUpdate }: Props) => {
     }
 
     setSalvando(true)
-    await new Promise(r => setTimeout(r, 400))
-    onSave({
-      nome: nome.trim(),
-      email: email.trim(),
-      telefone: telefone.trim() || null
-    })
-    if (!contaPendente) {
-      onUpdate({ ativo })
+
+    try {
+      await onSave({
+        nome: nome.trim(),
+        email: email.trim(),
+        telefone: telefone.trim() || null,
+        ativo: contaPendente ? usuario.ativo : ativo
+      })
+      toast.success('Dados atualizados.')
+    } catch {
+      /* erro exibido pelo pai */
+    } finally {
+      setSalvando(false)
     }
-    setSalvando(false)
-    toast.success('Dados atualizados (mock).')
   }
 
   async function handleResetSenha() {
     setResetando(true)
-    await new Promise(r => setTimeout(r, 400))
-    onUpdate({ ativo: false, requerTrocaSenha: true })
-    setAtivo(false)
-    setResetando(false)
-    setConfirmarReset(false)
-    toast.success('Nova senha provisória enviada por e-mail (mock).')
+
+    try {
+      await onResetSenha()
+      setAtivo(false)
+      setConfirmarReset(false)
+      toast.success('Nova senha provisória enviada por e-mail.')
+    } catch {
+      /* erro exibido pelo pai */
+    } finally {
+      setResetando(false)
+    }
   }
 
   return (

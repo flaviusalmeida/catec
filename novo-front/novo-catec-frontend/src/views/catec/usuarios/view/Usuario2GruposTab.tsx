@@ -17,7 +17,7 @@ import { GRUPOS_OPCOES } from '@/types/catec/usuarioTypes'
 
 type Props = {
   usuario: CatecAdminUsuario
-  onSave: (grupos: CatecGrupoValor[]) => void
+  onSave: (grupos: CatecGrupoValor[]) => Promise<void>
 }
 
 const Usuario2GruposTab = ({ usuario, onSave }: Props) => {
@@ -49,10 +49,15 @@ const Usuario2GruposTab = ({ usuario, onSave }: Props) => {
     }
 
     setSalvando(true)
-    await new Promise(r => setTimeout(r, 400))
-    onSave([...grupos])
-    setSalvando(false)
-    toast.success('Grupos atualizados (mock).')
+
+    try {
+      await onSave([...grupos])
+      toast.success('Grupos atualizados.')
+    } catch {
+      /* erro exibido pelo pai */
+    } finally {
+      setSalvando(false)
+    }
   }
 
   return (

@@ -14,6 +14,45 @@ export type CatecAdminUsuario = {
   ativo: boolean
   requerTrocaSenha: boolean
   grupos: CatecGrupoValor[]
+  criadoEm?: string
+  atualizadoEm?: string
+}
+
+export type CatecUsuarioCreateInput = {
+  nome: string
+  email: string
+  telefone: string | null
+  grupos: CatecGrupoValor[]
+}
+
+export type CatecUsuarioUpdateInput = {
+  nome: string
+  email: string
+  telefone: string | null
+  ativo: boolean
+  grupos: CatecGrupoValor[]
+}
+
+export function parseCatecAdminUsuario(raw: unknown): CatecAdminUsuario {
+  const data = raw as Record<string, unknown>
+
+  return {
+    id: Number(data.id),
+    nome: String(data.nome ?? ''),
+    email: String(data.email ?? ''),
+    telefone: data.telefone == null ? null : String(data.telefone),
+    ativo: data.ativo === true,
+    requerTrocaSenha: data.requerTrocaSenha === true,
+    grupos: Array.isArray(data.grupos) ? (data.grupos as CatecGrupoValor[]) : [],
+    criadoEm: data.criadoEm != null ? String(data.criadoEm) : undefined,
+    atualizadoEm: data.atualizadoEm != null ? String(data.atualizadoEm) : undefined
+  }
+}
+
+export function parseCatecAdminUsuarioList(raw: unknown): CatecAdminUsuario[] {
+  if (!Array.isArray(raw)) return []
+
+  return raw.map(parseCatecAdminUsuario)
 }
 
 export type CatecUsuarioFormState = {

@@ -11,8 +11,8 @@ import MenuItem from '@mui/material/MenuItem'
 import Typography from '@mui/material/Typography'
 import { toast } from 'react-toastify'
 
-import { catecClientesDb } from '@/fake-db/catec/clientes'
-import type { CatecProjeto } from '@/types/catec/projetoTypes'
+import type { CatecCliente } from '@/types/catec/clienteTypes'
+import type { CatecProjeto, CatecProjetoCreateInput } from '@/types/catec/projetoTypes'
 
 import CustomTextField from '@core/components/mui/TextField'
 import { formatTelefoneBrasil } from '@/utils/catec/brFormat'
@@ -20,18 +20,19 @@ import { formatTelefoneBrasil } from '@/utils/catec/brFormat'
 type Props = {
   open: boolean
   onClose: () => void
-  onAdd: (projeto: CatecProjeto) => void
-  proximoId: number
+  clientes: CatecCliente[]
+  onAdd: (input: CatecProjetoCreateInput) => Promise<CatecProjeto>
 }
 
-const ProjetoAddDrawer = ({ open, onClose, onAdd, proximoId }: Props) => {
+const ProjetoAddDrawer = ({ open, onClose, clientes, onAdd }: Props) => {
   const [clienteId, setClienteId] = useState('')
   const [titulo, setTitulo] = useState('')
   const [escopo, setEscopo] = useState('')
+  const [salvando, setSalvando] = useState(false)
 
   const clienteSelecionado = useMemo(
-    () => catecClientesDb.find(c => String(c.id) === clienteId) ?? null,
-    [clienteId]
+    () => clientes.find(c => String(c.id) === clienteId) ?? null,
+    [clienteId, clientes]
   )
 
   const responsavel = clienteSelecionado?.responsaveis[0] ?? null
@@ -43,11 +44,13 @@ const ProjetoAddDrawer = ({ open, onClose, onAdd, proximoId }: Props) => {
   }
 
   function handleClose() {
+    if (salvando) return
+
     reset()
     onClose()
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     const tituloTrim = titulo.trim()
@@ -61,35 +64,32 @@ const ProjetoAddDrawer = ({ open, onClose, onAdd, proximoId }: Props) => {
 
     const temCliente = Boolean(clienteSelecionado)
 
-    if (temCliente && !responsavel?.email?.trim()) {
+    if (temCliente && !responsavel?.email?.trim() && !clienteSelecionado?.email?.trim()) {
       toast.error('O cliente selecionado precisa ter e-mail cadastrado.')
 
       return
     }
 
-    const agora = new Date().toISOString()
+    setSalvando(true)
 
-    onAdd({
-      id: proximoId,
-      clienteId: clienteSelecionado?.id ?? null,
-      clienteNome: clienteSelecionado?.razaoSocialOuNome ?? null,
-      titulo: tituloTrim,
-      escopo: escopoTrim,
-      emailContato: responsavel?.email ?? clienteSelecionado?.email ?? null,
-      telefoneContato: responsavel?.telefone ?? clienteSelecionado?.telefone ?? null,
-      criadoPorId: 1,
-      criadoPorNome: 'Ana Silva',
-      status: temCliente ? 'AGUARDANDO_PROPOSTA_COMERCIAL' : 'PENDENTE_CLIENTE',
-      criadoEm: agora,
-      atualizadoEm: agora
-    })
+    try {
+      await onAdd({
+        clienteId: clienteSelecionado?.id ?? null,
+        titulo: tituloTrim,
+        escopo: escopoTrim
+      })
 
-    toast.success(
-      temCliente
-        ? 'Projeto criado com sucesso (mock).'
-        : 'Demanda registrada. Associe um cliente quando possível (mock).'
-    )
-    handleClose()
+      toast.success(
+        temCliente
+          ? 'Projeto criado com sucesso.'
+          : 'Demanda registrada. Associe um cliente quando possível.'
+      )
+      handleClose()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Não foi possível criar o projeto.')
+    } finally {
+      setSalvando(false)
+    }
   }
 
   return (
@@ -103,22 +103,23 @@ const ProjetoAddDrawer = ({ open, onClose, onAdd, proximoId }: Props) => {
     >
       <div className='flex items-center justify-between plb-5 pli-6'>
         <Typography variant='h5'>Novo projeto</Typography>
-        <IconButton size='small' onClick={handleClose}>
+        <IconButton size='small' onClick={handleClose} disabled={salvando}>
           <i className='tabler-x text-2xl text-textPrimary' />
         </IconButton>
       </div>
       <Divider />
-      <form onSubmit={handleSubmit} className='flex flex-col gap-6 p-6'>
+      <form onSubmit={e => void handleSubmit(e)} className='flex flex-col gap-6 p-6'>
         <CustomTextField
           select
           fullWidth
           label='Cliente'
           value={clienteId}
           onChange={e => setClienteId(e.target.value)}
+          disabled={salvando}
           slotProps={{ select: { displayEmpty: true } }}
         >
           <MenuItem value=''>Sem cliente (demanda pendente)</MenuItem>
-          {catecClientesDb.map(c => (
+          {clientes.map(c => (
             <MenuItem key={c.id} value={String(c.id)}>
               {c.razaoSocialOuNome}
             </MenuItem>
@@ -131,6 +132,7 @@ const ProjetoAddDrawer = ({ open, onClose, onAdd, proximoId }: Props) => {
           value={titulo}
           onChange={e => setTitulo(e.target.value)}
           placeholder='Laudo estrutural — Edifício X'
+          disabled={salvando}
         />
 
         {clienteSelecionado ? (
@@ -166,13 +168,14 @@ const ProjetoAddDrawer = ({ open, onClose, onAdd, proximoId }: Props) => {
           value={escopo}
           onChange={e => setEscopo(e.target.value)}
           placeholder='Descreva o escopo da demanda'
+          disabled={salvando}
         />
 
         <div className='flex items-center gap-4'>
-          <Button variant='contained' type='submit'>
-            Criar
+          <Button variant='contained' type='submit' disabled={salvando}>
+            {salvando ? 'Criando…' : 'Criar'}
           </Button>
-          <Button variant='tonal' color='secondary' type='button' onClick={handleClose}>
+          <Button variant='tonal' color='secondary' type='button' onClick={handleClose} disabled={salvando}>
             Cancelar
           </Button>
         </div>

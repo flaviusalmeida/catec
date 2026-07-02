@@ -16,20 +16,26 @@ type Props = {
   nomeArquivo?: string | null
   meta?: string
   disabled?: boolean
-  onUpload: (nomeArquivo: string) => void
+  onUpload: (file: File) => Promise<void>
+  onDownload?: () => void
 }
 
-const ProjetoUploadCard = ({ titulo, nomeArquivo, meta, disabled, onUpload }: Props) => {
+const ProjetoUploadCard = ({ titulo, nomeArquivo, meta, disabled, onUpload, onDownload }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null)
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
 
     if (!file) return
 
-    onUpload(file.name)
-    toast.success(`Arquivo "${file.name}" anexado (mock).`)
-    e.target.value = ''
+    try {
+      await onUpload(file)
+      toast.success(`Arquivo "${file.name}" anexado.`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro no upload.')
+    } finally {
+      e.target.value = ''
+    }
   }
 
   return (
@@ -37,11 +43,7 @@ const ProjetoUploadCard = ({ titulo, nomeArquivo, meta, disabled, onUpload }: Pr
       <CardHeader title={titulo} />
       <CardContent className='flex flex-col gap-4'>
         {nomeArquivo ? (
-          <ProjetoFileRow
-            nomeArquivo={nomeArquivo}
-            meta={meta}
-            onDownload={() => toast.info('Download simulado (mock).')}
-          />
+          <ProjetoFileRow nomeArquivo={nomeArquivo} meta={meta} onDownload={onDownload} />
         ) : (
           <Typography color='text.secondary'>Nenhum documento anexado.</Typography>
         )}
@@ -51,7 +53,7 @@ const ProjetoUploadCard = ({ titulo, nomeArquivo, meta, disabled, onUpload }: Pr
             type='file'
             accept='.pdf,.doc,.docx'
             className='hidden'
-            onChange={handleFileChange}
+            onChange={e => void handleFileChange(e)}
           />
           <Button
             variant='contained'

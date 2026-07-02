@@ -13,6 +13,8 @@ import { toast } from 'react-toastify'
 import type { CatecProjeto } from '@/types/catec/projetoTypes'
 import { STATUS_CONTRATO_ROTULO, STATUS_CONTRATO_UPLOAD } from '@/types/catec/projetoFluxoTypes'
 
+import { downloadDocumentoCatec } from '@/utils/catec/downloadDocumento'
+
 import { formatarDataCurta, projetoPermiteContrato } from '../projetoFluxoHelpers'
 import type { UseProjetoFluxoStore } from '../useProjetoFluxoStore'
 import ProjetoFileRow from './ProjetoFileRow'
@@ -36,7 +38,7 @@ function InfoField({ label, children }: { label: string; children: ReactNode }) 
 }
 
 const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
-  const { data, uploadContrato, enviarContratoCliente } = fluxo
+  const { data, uploadContrato, enviarContratoCliente, processando } = fluxo
   const contrato = data.contrato
   const documentoAtual = contrato?.documentos[0] ?? null
   const temAnexo = Boolean(documentoAtual)
@@ -93,6 +95,7 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
                 : undefined
             }
             onUpload={uploadContrato}
+            disabled={processando}
           />
         </Grid>
       ) : null}
@@ -107,7 +110,11 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
                   key={doc.id}
                   nomeArquivo={doc.nomeOriginal}
                   meta={`Versão ${doc.versao}${doc.criadoEm ? ` • ${formatarDataCurta(doc.criadoEm)}` : ''}`}
-                  onDownload={() => toast.info('Download simulado (mock).')}
+                  onDownload={() =>
+                    void downloadDocumentoCatec(doc.id, doc.nomeOriginal).catch(err =>
+                      toast.error(err instanceof Error ? err.message : 'Download falhou.')
+                    )
+                  }
                 />
               ))}
             </CardContent>
@@ -121,9 +128,11 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
             variant='contained'
             startIcon={<i className='tabler-send' />}
             onClick={() => {
-              enviarContratoCliente()
-              toast.success('Contrato enviado ao cliente (mock).')
+              void enviarContratoCliente()
+                .then(() => toast.success('Contrato enviado ao cliente.'))
+                .catch(err => toast.error(err instanceof Error ? err.message : 'Envio falhou.'))
             }}
+            disabled={processando}
           >
             Enviar ao cliente
           </Button>

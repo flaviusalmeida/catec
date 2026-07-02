@@ -26,7 +26,7 @@ import {
 } from '@tanstack/react-table'
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 
-import type { CatecGrupo } from '@/types/catec/grupoTypes'
+import type { CatecGrupo, CatecGrupoCreateInput, CatecPermissaoCatalogo } from '@/types/catec/grupoTypes'
 import type { Locale } from '@configs/i18n'
 
 import CustomTextField from '@core/components/mui/TextField'
@@ -82,11 +82,11 @@ const columnHelper = createColumnHelper<GrupoRow>()
 
 type Props = {
   lista: CatecGrupo[]
-  onAdd: (grupo: CatecGrupo) => void
-  proximoId: number
+  catalogo: CatecPermissaoCatalogo[]
+  onAdd: (input: CatecGrupoCreateInput) => Promise<CatecGrupo>
 }
 
-const GrupoListTable = ({ lista, onAdd, proximoId }: Props) => {
+const GrupoListTable = ({ lista, catalogo, onAdd }: Props) => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [filteredData, setFilteredData] = useState(lista)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -97,8 +97,6 @@ const GrupoListTable = ({ lista, onAdd, proximoId }: Props) => {
   useEffect(() => {
     setFilteredData(lista)
   }, [lista])
-
-  const codigosExistentes = useMemo(() => lista.map(g => g.codigo), [lista])
 
   const columns = useMemo<ColumnDef<GrupoRow, any>[]>(
     () => [
@@ -286,13 +284,7 @@ const GrupoListTable = ({ lista, onAdd, proximoId }: Props) => {
         />
       </Card>
 
-      <GrupoAddDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        onAdd={onAdd}
-        proximoId={proximoId}
-        codigosExistentes={codigosExistentes}
-      />
+      <GrupoAddDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} onAdd={onAdd} catalogo={catalogo} />
     </>
   )
 }

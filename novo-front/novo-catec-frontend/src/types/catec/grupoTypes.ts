@@ -10,6 +10,61 @@ export type CatecGrupo = {
   atualizadoEm: string
 }
 
+export type CatecGrupoCreateInput = {
+  nome: string
+  descricao: string | null
+  permissoes: string[]
+}
+
+export type CatecGrupoUpdateInput = {
+  nome: string
+  descricao: string | null
+  ativo: boolean
+  permissoes: string[]
+}
+
+export function parseCatecGrupo(raw: unknown): CatecGrupo {
+  const data = raw as Record<string, unknown>
+
+  return {
+    id: Number(data.id),
+    codigo: String(data.codigo ?? ''),
+    nome: String(data.nome ?? ''),
+    descricao: data.descricao == null ? null : String(data.descricao),
+    ativo: data.ativo === true,
+    sistema: data.sistema === true,
+    permissoes: Array.isArray(data.permissoes) ? data.permissoes.map(String) : [],
+    criadoEm: String(data.criadoEm ?? ''),
+    atualizadoEm: String(data.atualizadoEm ?? '')
+  }
+}
+
+export function parseCatecGrupoList(raw: unknown): CatecGrupo[] {
+  if (!Array.isArray(raw)) return []
+
+  return raw.map(parseCatecGrupo)
+}
+
+export function parseCatecPermissaoCatalogo(raw: unknown): CatecPermissaoCatalogo {
+  const data = raw as Record<string, unknown>
+  const tipo = data.tipo === 'ACAO' ? 'ACAO' : 'TELA'
+
+  return {
+    id: Number(data.id),
+    codigo: String(data.codigo ?? ''),
+    nome: String(data.nome ?? ''),
+    tipo,
+    modulo: String(data.modulo ?? ''),
+    descricao: data.descricao == null ? null : String(data.descricao)
+  }
+}
+
+export function parseCatecPermissaoCatalogoList(raw: unknown): CatecPermissaoCatalogo[] {
+  if (!Array.isArray(raw)) return []
+
+  return raw.map(parseCatecPermissaoCatalogo)
+}
+
 export type CatecPermissaoCatalogo = {
   id: number
   codigo: string

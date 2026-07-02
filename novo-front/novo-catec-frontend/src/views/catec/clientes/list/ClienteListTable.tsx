@@ -28,7 +28,7 @@ import {
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 
 import type { ThemeColor } from '@core/types'
-import type { CatecCliente } from '@/types/catec/clienteTypes'
+import type { CatecCliente, CatecClienteRequest } from '@/types/catec/clienteTypes'
 import { rotuloTipoPessoa } from '@/types/catec/clienteTypes'
 import type { Locale } from '@configs/i18n'
 
@@ -91,11 +91,10 @@ const columnHelper = createColumnHelper<ClienteRow>()
 
 type Props = {
   lista: CatecCliente[]
-  onAdd: (cliente: CatecCliente) => void
-  proximoId: number
+  onAdd: (body: CatecClienteRequest) => Promise<CatecCliente>
 }
 
-const ClienteListTable = ({ lista, onAdd, proximoId }: Props) => {
+const ClienteListTable = ({ lista, onAdd }: Props) => {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [filteredData, setFilteredData] = useState(lista)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -298,7 +297,7 @@ const ClienteListTable = ({ lista, onAdd, proximoId }: Props) => {
         />
       </Card>
 
-      <ClienteAddDialog open={dialogOpen} setOpen={setDialogOpen} onAdd={onAdd} proximoId={proximoId} />
+      <ClienteAddDialog open={dialogOpen} setOpen={setDialogOpen} onAdd={onAdd} />
     </>
   )
 }

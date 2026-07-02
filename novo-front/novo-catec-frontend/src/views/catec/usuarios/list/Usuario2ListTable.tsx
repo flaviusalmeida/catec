@@ -29,7 +29,7 @@ import {
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 
 import type { ThemeColor } from '@core/types'
-import type { CatecAdminUsuario, CatecGrupoValor } from '@/types/catec/usuarioTypes'
+import type { CatecAdminUsuario, CatecGrupoValor, CatecUsuarioCreateInput } from '@/types/catec/usuarioTypes'
 import { rotuloGrupo } from '@/types/catec/usuarioTypes'
 import type { Locale } from '@configs/i18n'
 
@@ -99,11 +99,10 @@ const columnHelper = createColumnHelper<UsuarioRow>()
 
 type Props = {
   lista: CatecAdminUsuario[]
-  onAdd: (usuario: CatecAdminUsuario) => void
-  proximoId: number
+  onAdd: (input: CatecUsuarioCreateInput) => Promise<CatecAdminUsuario>
 }
 
-const Usuario2ListTable = ({ lista, onAdd, proximoId }: Props) => {
+const Usuario2ListTable = ({ lista, onAdd }: Props) => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [filteredData, setFilteredData] = useState(lista)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -308,12 +307,7 @@ const Usuario2ListTable = ({ lista, onAdd, proximoId }: Props) => {
         />
       </Card>
 
-      <Usuario2AddDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        onAdd={onAdd}
-        proximoId={proximoId}
-      />
+      <Usuario2AddDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} onAdd={onAdd} />
     </>
   )
 }

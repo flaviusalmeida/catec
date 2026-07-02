@@ -1,10 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardHeader from '@mui/material/CardHeader'
+import CircularProgress from '@mui/material/CircularProgress'
 import TablePagination from '@mui/material/TablePagination'
 
 import { metaHistoricoItem, rotuloHistoricoItem } from '../projetoFluxoHelpers'
@@ -16,31 +17,36 @@ type Props = {
   fluxo: UseProjetoFluxoStore
 }
 
-const PAGE_SIZE = 5
+const PAGE_SIZE = 20
 
 const ProjetoTabHistorico = ({ fluxo }: Props) => {
-  const { data } = fluxo
+  const { historicoPage, historicoCarregando, carregarHistorico } = fluxo
   const [page, setPage] = useState(0)
 
-  const itensOrdenados = useMemo(
-    () => [...data.historico].sort((a, b) => b.ocorridoEm.localeCompare(a.ocorridoEm)),
-    [data.historico]
+  useEffect(() => {
+    void carregarHistorico(page)
+  }, [page, carregarHistorico])
+
+  const timeline = useMemo(
+    () =>
+      historicoPage.content.map(item => ({
+        key: `${item.origem}-${item.registroId}`,
+        titulo: rotuloHistoricoItem(item),
+        meta: metaHistoricoItem(item),
+        texto: item.texto
+      })),
+    [historicoPage.content]
   )
 
-  const pagina = useMemo(() => {
-    const start = page * PAGE_SIZE
+  if (historicoCarregando && historicoPage.content.length === 0) {
+    return (
+      <div className='flex justify-center p-12'>
+        <CircularProgress />
+      </div>
+    )
+  }
 
-    return itensOrdenados.slice(start, start + PAGE_SIZE)
-  }, [itensOrdenados, page])
-
-  const timeline = pagina.map(item => ({
-    key: `${item.origem}-${item.registroId}`,
-    titulo: rotuloHistoricoItem(item),
-    meta: metaHistoricoItem(item),
-    texto: item.texto
-  }))
-
-  if (itensOrdenados.length === 0) {
+  if (historicoPage.totalElements === 0 && !historicoCarregando) {
     return <ProjetoStateCard titulo='Nenhum histórico disponível.' />
   }
 
@@ -51,7 +57,7 @@ const ProjetoTabHistorico = ({ fluxo }: Props) => {
         <ProjetoTimeline items={timeline} />
         <TablePagination
           component='div'
-          count={itensOrdenados.length}
+          count={historicoPage.totalElements}
           page={page}
           onPageChange={(_e, newPage) => setPage(newPage)}
           rowsPerPage={PAGE_SIZE}

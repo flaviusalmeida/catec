@@ -1,7 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
-
+import Alert from '@mui/material/Alert'
+import CircularProgress from '@mui/material/CircularProgress'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
 
@@ -10,21 +10,36 @@ import ClienteListTable from './ClienteListTable'
 import { useClientesStore } from '../useClientesStore'
 
 const ClienteList = () => {
-  const { lista, addCliente } = useClientesStore()
-
-  const proximoId = useMemo(() => (lista.length ? Math.max(...lista.map(c => c.id)) + 1 : 1), [lista])
+  const { lista, carregando, erro, addCliente } = useClientesStore()
 
   return (
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
         <Typography variant='h4'>Clientes</Typography>
       </Grid>
-      <Grid size={{ xs: 12 }}>
-        <ClienteListCards lista={lista} />
-      </Grid>
-      <Grid size={{ xs: 12 }}>
-        <ClienteListTable lista={lista} onAdd={addCliente} proximoId={proximoId} />
-      </Grid>
+
+      {erro ? (
+        <Grid size={{ xs: 12 }}>
+          <Alert severity='error' variant='outlined'>
+            {erro}
+          </Alert>
+        </Grid>
+      ) : null}
+
+      {carregando ? (
+        <Grid size={{ xs: 12 }} className='flex justify-center p-12'>
+          <CircularProgress />
+        </Grid>
+      ) : (
+        <>
+          <Grid size={{ xs: 12 }}>
+            <ClienteListCards lista={lista} />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <ClienteListTable lista={lista} onAdd={addCliente} />
+          </Grid>
+        </>
+      )}
     </Grid>
   )
 }

@@ -1,4 +1,4 @@
-import type { CatecCliente, CatecClienteFormState } from '@/types/catec/clienteTypes'
+import type { CatecCliente, CatecClienteFormState, CatecClienteRequest } from '@/types/catec/clienteTypes'
 
 import { formatCep, formatDocumentoByTipo, formatTelefoneBrasil, onlyDigits } from '@/utils/catec/brFormat'
 
@@ -62,6 +62,56 @@ export function formStateToClientePatch(
         telefone: onlyDigits(form.responsavel.telefone)
       }
     ]
+  }
+}
+
+export function formStateToClienteRequest(form: CatecClienteFormState): CatecClienteRequest {
+  const patch = formStateToClientePatch(form)
+
+  return {
+    tipoPessoa: patch.tipoPessoa!,
+    razaoSocialOuNome: patch.razaoSocialOuNome!,
+    nomeFantasia: patch.nomeFantasia ?? null,
+    documento: patch.documento ?? '',
+    email: patch.email ?? '',
+    telefone: patch.telefone ?? '',
+    enderecoLogradouro: patch.enderecoLogradouro ?? null,
+    enderecoNumero: patch.enderecoNumero ?? null,
+    enderecoComplemento: patch.enderecoComplemento ?? null,
+    enderecoCidade: patch.enderecoCidade ?? null,
+    enderecoUf: patch.enderecoUf ?? null,
+    enderecoCep: patch.enderecoCep ?? null,
+    periodoFaturamento: patch.periodoFaturamento!,
+    observacoes: patch.observacoes ?? null,
+    responsaveis: (patch.responsaveis ?? []).map(r => ({
+      nome: r.nome,
+      email: r.email,
+      telefone: r.telefone
+    }))
+  }
+}
+
+export function clienteToRequest(cliente: CatecCliente): CatecClienteRequest {
+  return {
+    tipoPessoa: cliente.tipoPessoa,
+    razaoSocialOuNome: cliente.razaoSocialOuNome,
+    nomeFantasia: cliente.nomeFantasia,
+    documento: onlyDigits(cliente.documento ?? '') || '',
+    email: cliente.email ?? '',
+    telefone: onlyDigits(cliente.telefone ?? '') || '',
+    enderecoLogradouro: cliente.enderecoLogradouro,
+    enderecoNumero: cliente.enderecoNumero,
+    enderecoComplemento: cliente.enderecoComplemento,
+    enderecoCidade: cliente.enderecoCidade,
+    enderecoUf: cliente.enderecoUf?.toUpperCase() ?? null,
+    enderecoCep: cliente.enderecoCep,
+    periodoFaturamento: cliente.periodoFaturamento,
+    observacoes: cliente.observacoes,
+    responsaveis: cliente.responsaveis.map(r => ({
+      nome: r.nome,
+      email: r.email,
+      telefone: onlyDigits(r.telefone)
+    }))
   }
 }
 

@@ -8,8 +8,7 @@ import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
 import { toast } from 'react-toastify'
 
-import { catecPermissoesCatalogo } from '@/fake-db/catec/permissoes'
-import type { CatecGrupo } from '@/types/catec/grupoTypes'
+import type { CatecGrupo, CatecPermissaoCatalogo } from '@/types/catec/grupoTypes'
 import { grupoToForm, type CatecGrupoFormState } from '@/types/catec/grupoTypes'
 
 import CustomTextField from '@core/components/mui/TextField'
@@ -18,15 +17,16 @@ import GrupoPermissoesPanel from './GrupoPermissoesPanel'
 
 type Props = {
   grupo: CatecGrupo
-  onSave: (permissoes: string[]) => void
+  catalogo: CatecPermissaoCatalogo[]
+  onSave: (permissoes: string[]) => Promise<void>
 }
 
-const GrupoPermissoesTab = ({ grupo, onSave }: Props) => {
+const GrupoPermissoesTab = ({ grupo, catalogo, onSave }: Props) => {
   const [form, setForm] = useState<CatecGrupoFormState>(() => grupoToForm(grupo))
   const [filtro, setFiltro] = useState('')
   const [salvando, setSalvando] = useState(false)
 
-  const totalCatalogo = catecPermissoesCatalogo.length
+  const totalCatalogo = catalogo.length
 
   useEffect(() => {
     setForm(grupoToForm(grupo))
@@ -66,10 +66,15 @@ const GrupoPermissoesTab = ({ grupo, onSave }: Props) => {
     }
 
     setSalvando(true)
-    await new Promise(r => setTimeout(r, 400))
-    onSave([...form.permissoes])
-    setSalvando(false)
-    toast.success('Permissões atualizadas (mock).')
+
+    try {
+      await onSave([...form.permissoes])
+      toast.success('Permissões atualizadas.')
+    } catch {
+      /* erro exibido pelo pai */
+    } finally {
+      setSalvando(false)
+    }
   }
 
   return (
@@ -91,7 +96,7 @@ const GrupoPermissoesTab = ({ grupo, onSave }: Props) => {
       </Card>
 
       <GrupoPermissoesPanel
-        catalogo={catecPermissoesCatalogo}
+        catalogo={catalogo}
         form={form}
         filtro={filtro}
         disabled={salvando}

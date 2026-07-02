@@ -17,6 +17,8 @@ import {
   STATUS_PROPOSTA_UPLOAD
 } from '@/types/catec/projetoFluxoTypes'
 
+import { downloadDocumentoCatec } from '@/utils/catec/downloadDocumento'
+
 import {
   formatarDataCurta,
   formatarDataHora,
@@ -44,7 +46,7 @@ function InfoField({ label, children }: { label: string; children: ReactNode }) 
 }
 
 const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
-  const { data, propostaAtual, uploadProposta, acaoProposta } = fluxo
+  const { data, propostaAtual, uploadProposta, acaoProposta, processando } = fluxo
   const projetoTemCliente = projeto.clienteId != null
 
   const documentoAtual = propostaAtual?.documentos[0] ?? null
@@ -106,6 +108,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
                 : undefined
             }
             onUpload={uploadProposta}
+            disabled={processando}
           />
         </Grid>
       ) : null}
@@ -140,7 +143,11 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
                   key={doc.id}
                   nomeArquivo={doc.nomeOriginal}
                   meta={`Versão ${propostaAtual.versao}${doc.criadoEm ? ` • ${formatarDataCurta(doc.criadoEm)}` : ''}`}
-                  onDownload={() => toast.info('Download simulado (mock).')}
+                  onDownload={() =>
+                    void downloadDocumentoCatec(doc.id, doc.nomeOriginal).catch(err =>
+                      toast.error(err instanceof Error ? err.message : 'Download falhou.')
+                    )
+                  }
                 />
               ))}
             </CardContent>
@@ -167,7 +174,11 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
                     key={proposta.id}
                     nomeArquivo={doc.nomeOriginal}
                     meta={`Versão ${proposta.versao} • ${titulo}`}
-                    onDownload={() => toast.info('Download simulado (mock).')}
+                    onDownload={() =>
+                    void downloadDocumentoCatec(doc.id, doc.nomeOriginal).catch(err =>
+                      toast.error(err instanceof Error ? err.message : 'Download falhou.')
+                    )
+                  }
                   />
                 )
               })}
@@ -198,9 +209,13 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
                   variant={acao.color === 'primary' ? 'contained' : 'tonal'}
                   color={acao.color === 'error' ? 'error' : acao.color === 'secondary' ? 'secondary' : 'primary'}
                   onClick={() => {
-                    acaoProposta(acao.key as Parameters<typeof acaoProposta>[0])
-                    toast.success(`Ação "${acao.label}" executada (mock).`)
+                    void acaoProposta(acao.key as Parameters<typeof acaoProposta>[0])
+                      .then(() => toast.success(`Ação "${acao.label}" executada.`))
+                      .catch(err =>
+                        toast.error(err instanceof Error ? err.message : 'Ação não concluída.')
+                      )
                   }}
+                  disabled={processando}
                 >
                   {acao.label}
                 </Button>

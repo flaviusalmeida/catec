@@ -19,8 +19,8 @@ import GrupoExcluirDialog from '../GrupoExcluirDialog'
 
 type Props = {
   grupo: CatecGrupo
-  onSave: (patch: Partial<CatecGrupo>) => void
-  onExcluir: () => void
+  onSave: (patch: Partial<CatecGrupo>) => Promise<void>
+  onExcluir: () => Promise<void>
 }
 
 const GrupoGeralTab = ({ grupo, onSave, onExcluir }: Props) => {
@@ -47,22 +47,32 @@ const GrupoGeralTab = ({ grupo, onSave, onExcluir }: Props) => {
     }
 
     setSalvando(true)
-    await new Promise(r => setTimeout(r, 400))
-    onSave({
-      nome: nome.trim(),
-      descricao: descricao.trim() || null,
-      ativo
-    })
-    setSalvando(false)
-    toast.success('Dados do grupo atualizados (mock).')
+
+    try {
+      await onSave({
+        nome: nome.trim(),
+        descricao: descricao.trim() || null,
+        ativo
+      })
+      toast.success('Dados do grupo atualizados.')
+    } catch {
+      /* erro exibido pelo pai */
+    } finally {
+      setSalvando(false)
+    }
   }
 
   async function handleExcluir() {
     setExcluindo(true)
-    await new Promise(r => setTimeout(r, 400))
-    onExcluir()
-    setExcluindo(false)
-    setConfirmarExcluir(false)
+
+    try {
+      await onExcluir()
+      setConfirmarExcluir(false)
+    } catch {
+      /* erro exibido pelo pai */
+    } finally {
+      setExcluindo(false)
+    }
   }
 
   return (

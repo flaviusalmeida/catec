@@ -21,7 +21,7 @@ import ClienteResponsavelTab from './ClienteResponsavelTab'
 
 type Props = {
   cliente: CatecCliente
-  onUpdate: (patch: Partial<CatecCliente>) => void
+  onUpdate: (patch: Partial<CatecCliente>) => Promise<void>
 }
 
 const ClienteRight = ({ cliente, onUpdate }: Props) => {

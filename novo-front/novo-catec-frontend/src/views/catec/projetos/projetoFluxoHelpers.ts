@@ -1,4 +1,10 @@
-import type { CatecHistoricoFluxoItem, CatecTipoInteracaoFluxo } from '@/types/catec/projetoFluxoTypes'
+import type {
+  CatecHistoricoFluxoItem,
+  CatecProjetoFluxoData,
+  CatecProjetoFluxoResumo,
+  CatecProposta,
+  CatecTipoInteracaoFluxo
+} from '@/types/catec/projetoFluxoTypes'
 import {
   TIPO_INTERACAO_ROTULO_CONTRATO,
   TIPO_INTERACAO_ROTULO_PROPOSTA
@@ -50,6 +56,24 @@ export function metaHistoricoItem(item: CatecHistoricoFluxoItem): string {
 
 export function projetoPermiteContrato(status: string): boolean {
   return status === 'AGUARDANDO_CONTRATO' || status === 'AGUARDANDO_EXECUCAO' || status === 'EM_EXECUCAO'
+}
+
+export function propostaMaisRecente(propostas: CatecProposta[]): CatecProposta | null {
+  if (propostas.length === 0) return null
+
+  return [...propostas].sort((a, b) => b.versao - a.versao)[0]
+}
+
+export function computeProjetoFluxoResumo(projetoId: number, data: CatecProjetoFluxoData): CatecProjetoFluxoResumo {
+  const propostaAtual = propostaMaisRecente(data.propostas)
+  const ultimaInteracao = data.interacoes[0]?.criadoEm ?? null
+
+  return {
+    projetoId,
+    propostaStatus: propostaAtual?.status ?? null,
+    contratoStatus: data.contrato?.status ?? null,
+    ultimaInteracaoEm: ultimaInteracao
+  }
 }
 
 export function resolvePropostaWorkflowActions(

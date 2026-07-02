@@ -21,6 +21,51 @@ export type CatecProjeto = {
   status: CatecProjetoStatus
   criadoEm: string
   atualizadoEm: string
+  clienteAssociadoEm?: string | null
+  clienteAssociadoPorId?: number | null
+  clienteAssociadoPorNome?: string | null
+}
+
+export type CatecProjetoCreateInput = {
+  clienteId?: number | null
+  titulo: string
+  escopo: string
+}
+
+export type CatecProjetoUpdateInput = {
+  clienteId?: number | null
+  titulo?: string
+  escopo?: string
+  status?: CatecProjetoStatus
+}
+
+export function parseCatecProjeto(raw: unknown): CatecProjeto {
+  const data = raw as Record<string, unknown>
+
+  return {
+    id: Number(data.id),
+    clienteId: data.clienteId == null ? null : Number(data.clienteId),
+    clienteNome: data.clienteNome == null ? null : String(data.clienteNome),
+    titulo: String(data.titulo ?? ''),
+    escopo: String(data.escopo ?? ''),
+    emailContato: data.emailContato == null ? null : String(data.emailContato),
+    telefoneContato: data.telefoneContato == null ? null : String(data.telefoneContato),
+    criadoPorId: Number(data.criadoPorId ?? 0),
+    criadoPorNome: String(data.criadoPorNome ?? ''),
+    status: String(data.status ?? 'PENDENTE_CLIENTE') as CatecProjetoStatus,
+    criadoEm: String(data.criadoEm ?? ''),
+    atualizadoEm: String(data.atualizadoEm ?? ''),
+    clienteAssociadoEm: data.clienteAssociadoEm == null ? null : String(data.clienteAssociadoEm),
+    clienteAssociadoPorId: data.clienteAssociadoPorId == null ? null : Number(data.clienteAssociadoPorId),
+    clienteAssociadoPorNome:
+      data.clienteAssociadoPorNome == null ? null : String(data.clienteAssociadoPorNome)
+  }
+}
+
+export function parseCatecProjetoList(raw: unknown): CatecProjeto[] {
+  if (!Array.isArray(raw)) return []
+
+  return raw.map(parseCatecProjeto)
 }
 
 export const ORDEM_STATUS_PROJETO: CatecProjetoStatus[] = [

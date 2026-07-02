@@ -1,58 +1,164 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useSyncExternalStore } from 'react'
 
-import { catecProjetosDb } from '@/fake-db/catec/projetos'
-import type { CatecProjeto } from '@/types/catec/projetoTypes'
+import {
+  associarClienteProjetoCatec,
+  atualizarProjetoCatec,
+  criarProjetoCatec,
+  listarProjetosCatec,
+  obterProjetoCatec
+} from '@/libs/catecProjetosApi'
+import type { CatecProjeto, CatecProjetoCreateInput, CatecProjetoUpdateInput } from '@/types/catec/projetoTypes'
 
-const STORAGE_KEY = 'catec-projetos-mock'
+type StoreState = {
+  lista: CatecProjeto[]
+  carregando: boolean
+  erro: string | null
+  inicializado: boolean
+}
 
-function readStorage(): CatecProjeto[] {
-  if (typeof window === 'undefined') return [...catecProjetosDb]
+const initialState: StoreState = { lista: [], carregando: false, erro: null, inicializado: false }
 
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY)
+let state: StoreState = { ...initialState }
+const listeners = new Set<() => void>()
+let carregarPromise: Promise<void> | null = null
 
-    if (raw) return JSON.parse(raw) as CatecProjeto[]
-  } catch {
-    /* ignore */
+function emit() {
+  for (const listener of listeners) listener()
+}
+
+function setState(patch: Partial<StoreState>) {
+  state = { ...state, ...patch }
+  emit()
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+
+  return () => listeners.delete(listener)
+}
+
+function getSnapshot() {
+  return state
+}
+
+async function carregarStore() {
+  if (carregarPromise) return carregarPromise
+
+  carregarPromise = (async () => {
+    setState({ carregando: true, erro: null })
+
+    try {
+      const lista = await listarProjetosCatec()
+
+      setState({ lista, carregando: false, erro: null, inicializado: true })
+    } catch (err) {
+      setState({
+        lista: [],
+        carregando: false,
+        erro: err instanceof Error ? err.message : 'Não foi possível carregar os projetos.',
+        inicializado: true
+      })
+    } finally {
+      carregarPromise = null
+    }
+  })()
+
+  return carregarPromise
+}
+
+async function addProjetoStore(input: CatecProjetoCreateInput): Promise<CatecProjeto> {
+  const criado = await criarProjetoCatec(input)
+
+  setState({ lista: [...state.lista, criado] })
+
+  return criado
+}
+
+async function updateProjetoStore(id: number, patch: Partial<CatecProjeto>): Promise<CatecProjeto> {
+  const atual = state.lista.find(p => p.id === id)
+  const base = atual ?? (await obterProjetoCatec(id))
+  const merged = { ...base, ...patch }
+
+  const body: CatecProjetoUpdateInput = {
+    clienteId: merged.clienteId,
+    titulo: merged.titulo,
+    escopo: merged.escopo,
+    status: merged.status
   }
 
-  return [...catecProjetosDb]
+  const atualizado = await atualizarProjetoCatec(id, body)
+  const exists = state.lista.some(p => p.id === id)
+
+  setState({
+    lista: exists ? state.lista.map(p => (p.id === id ? atualizado : p)) : [...state.lista, atualizado]
+  })
+
+  return atualizado
+}
+
+async function associarClienteStore(id: number, clienteId: number): Promise<CatecProjeto> {
+  const atualizado = await associarClienteProjetoCatec(id, clienteId)
+  const exists = state.lista.some(p => p.id === id)
+
+  setState({
+    lista: exists ? state.lista.map(p => (p.id === id ? atualizado : p)) : [...state.lista, atualizado]
+  })
+
+  return atualizado
+}
+
+async function obterProjetoStore(id: number): Promise<CatecProjeto | null> {
+  const cached = state.lista.find(p => p.id === id)
+
+  if (cached) return cached
+
+  try {
+    const projeto = await obterProjetoCatec(id)
+
+    if (!state.lista.some(p => p.id === projeto.id)) {
+      setState({ lista: [...state.lista, projeto] })
+    }
+
+    return projeto
+  } catch {
+    return null
+  }
 }
 
 export function useProjetosStore() {
-  const [lista, setLista] = useState<CatecProjeto[]>(readStorage)
-  const [hydrated, setHydrated] = useState(false)
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 
   useEffect(() => {
-    setLista(readStorage())
-    setHydrated(true)
+    if (!snapshot.inicializado && !snapshot.carregando) {
+      void carregarStore()
+    }
+  }, [snapshot.inicializado, snapshot.carregando])
+
+  const carregar = useCallback(async () => {
+    await carregarStore()
   }, [])
 
-  useEffect(() => {
-    if (!hydrated) return
+  const addProjeto = useCallback(async (input: CatecProjetoCreateInput) => addProjetoStore(input), [])
+  const updateProjeto = useCallback(
+    async (id: number, patch: Partial<CatecProjeto>) => updateProjetoStore(id, patch),
+    []
+  )
+  const associarCliente = useCallback(
+    async (id: number, clienteId: number) => associarClienteStore(id, clienteId),
+    []
+  )
+  const obterProjeto = useCallback(async (id: number) => obterProjetoStore(id), [])
 
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(lista))
-  }, [lista, hydrated])
-
-  const addProjeto = useCallback((projeto: CatecProjeto) => {
-    setLista(prev => [...prev, projeto])
-  }, [])
-
-  const updateProjeto = useCallback((id: number, patch: Partial<CatecProjeto>) => {
-    setLista(prev =>
-      prev.map(p =>
-        p.id === id
-          ? {
-              ...p,
-              ...patch,
-              atualizadoEm: new Date().toISOString()
-            }
-          : p
-      )
-    )
-  }, [])
-
-  return { lista, addProjeto, updateProjeto, hydrated }
+  return {
+    lista: snapshot.lista,
+    carregando: snapshot.carregando,
+    erro: snapshot.erro,
+    carregar,
+    addProjeto,
+    updateProjeto,
+    associarCliente,
+    obterProjeto
+  }
 }

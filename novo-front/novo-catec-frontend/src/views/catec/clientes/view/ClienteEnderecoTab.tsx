@@ -18,7 +18,7 @@ import { clienteToFormState } from '../clienteFormHelpers'
 
 type Props = {
   cliente: CatecCliente
-  onSave: (patch: Partial<CatecCliente>) => void
+  onSave: (patch: Partial<CatecCliente>) => Promise<void>
 }
 
 const ClienteEnderecoTab = ({ cliente, onSave }: Props) => {
@@ -33,17 +33,22 @@ const ClienteEnderecoTab = ({ cliente, onSave }: Props) => {
     e.preventDefault()
 
     setSalvando(true)
-    await new Promise(r => setTimeout(r, 400))
-    onSave({
-      enderecoCep: onlyDigits(form.enderecoCep) || null,
-      enderecoCidade: form.enderecoCidade.trim() || null,
-      enderecoUf: form.enderecoUf.trim().toUpperCase() || null,
-      enderecoLogradouro: form.enderecoLogradouro.trim() || null,
-      enderecoNumero: form.enderecoNumero.trim() || null,
-      enderecoComplemento: form.enderecoComplemento.trim() || null
-    })
-    setSalvando(false)
-    toast.success('Endereço atualizado (mock).')
+
+    try {
+      await onSave({
+        enderecoCep: onlyDigits(form.enderecoCep) || null,
+        enderecoCidade: form.enderecoCidade.trim() || null,
+        enderecoUf: form.enderecoUf.trim().toUpperCase() || null,
+        enderecoLogradouro: form.enderecoLogradouro.trim() || null,
+        enderecoNumero: form.enderecoNumero.trim() || null,
+        enderecoComplemento: form.enderecoComplemento.trim() || null
+      })
+      toast.success('Endereço atualizado.')
+    } catch {
+      /* erro no pai */
+    } finally {
+      setSalvando(false)
+    }
   }
 
   return (

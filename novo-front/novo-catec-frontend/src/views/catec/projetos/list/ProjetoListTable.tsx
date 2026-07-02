@@ -26,7 +26,8 @@ import {
 } from '@tanstack/react-table'
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 
-import type { CatecProjeto } from '@/types/catec/projetoTypes'
+import type { CatecCliente } from '@/types/catec/clienteTypes'
+import type { CatecProjeto, CatecProjetoCreateInput } from '@/types/catec/projetoTypes'
 import type { Locale } from '@configs/i18n'
 
 import CustomAvatar from '@core/components/mui/Avatar'
@@ -82,11 +83,11 @@ const columnHelper = createColumnHelper<ProjetoRow>()
 
 type Props = {
   lista: CatecProjeto[]
-  onAdd: (projeto: CatecProjeto) => void
-  proximoId: number
+  clientes: CatecCliente[]
+  onAdd: (input: CatecProjetoCreateInput) => Promise<CatecProjeto>
 }
 
-const ProjetoListTable = ({ lista, onAdd, proximoId }: Props) => {
+const ProjetoListTable = ({ lista, clientes, onAdd }: Props) => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [filteredData, setFilteredData] = useState(lista)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -272,12 +273,7 @@ const ProjetoListTable = ({ lista, onAdd, proximoId }: Props) => {
         />
       </Card>
 
-      <ProjetoAddDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        onAdd={onAdd}
-        proximoId={proximoId}
-      />
+      <ProjetoAddDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} clientes={clientes} onAdd={onAdd} />
     </>
   )
 }

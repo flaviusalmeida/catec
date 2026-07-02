@@ -8,7 +8,7 @@ import TabContext from '@mui/lab/TabContext'
 import TabPanel from '@mui/lab/TabPanel'
 import Grid from '@mui/material/Grid'
 
-import type { CatecGrupo } from '@/types/catec/grupoTypes'
+import type { CatecGrupo, CatecPermissaoCatalogo } from '@/types/catec/grupoTypes'
 
 import CustomTabList from '@core/components/mui/TabList'
 
@@ -17,11 +17,12 @@ import GrupoPermissoesTab from './GrupoPermissoesTab'
 
 type Props = {
   grupo: CatecGrupo
-  onUpdate: (patch: Partial<CatecGrupo>) => void
-  onExcluir: () => void
+  catalogo: CatecPermissaoCatalogo[]
+  onUpdate: (patch: Partial<CatecGrupo>) => Promise<void>
+  onExcluir: () => Promise<void>
 }
 
-const GrupoRight = ({ grupo, onUpdate, onExcluir }: Props) => {
+const GrupoRight = ({ grupo, catalogo, onUpdate, onExcluir }: Props) => {
   const [activeTab, setActiveTab] = useState('geral')
 
   const handleChange = (_event: SyntheticEvent, value: string) => {
@@ -43,7 +44,11 @@ const GrupoRight = ({ grupo, onUpdate, onExcluir }: Props) => {
               <GrupoGeralTab grupo={grupo} onSave={onUpdate} onExcluir={onExcluir} />
             ) : null}
             {activeTab === 'permissoes' ? (
-              <GrupoPermissoesTab grupo={grupo} onSave={permissoes => onUpdate({ permissoes })} />
+              <GrupoPermissoesTab
+                grupo={grupo}
+                catalogo={catalogo}
+                onSave={permissoes => onUpdate({ permissoes })}
+              />
             ) : null}
           </TabPanel>
         </Grid>

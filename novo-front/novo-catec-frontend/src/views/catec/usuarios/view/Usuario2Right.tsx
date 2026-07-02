@@ -17,10 +17,11 @@ import Usuario2GruposTab from './Usuario2GruposTab'
 
 type Props = {
   usuario: CatecAdminUsuario
-  onUpdate: (patch: Partial<CatecAdminUsuario>) => void
+  onUpdate: (patch: Partial<CatecAdminUsuario>) => Promise<void>
+  onResetSenha: () => Promise<void>
 }
 
-const Usuario2Right = ({ usuario, onUpdate }: Props) => {
+const Usuario2Right = ({ usuario, onUpdate, onResetSenha }: Props) => {
   const [activeTab, setActiveTab] = useState('dados')
 
   const handleChange = (_event: SyntheticEvent, value: string) => {
@@ -42,7 +43,7 @@ const Usuario2Right = ({ usuario, onUpdate }: Props) => {
               <Usuario2DadosTab
                 usuario={usuario}
                 onSave={patch => onUpdate(patch)}
-                onUpdate={onUpdate}
+                onResetSenha={onResetSenha}
               />
             ) : null}
             {activeTab === 'grupos' ? (

@@ -12,7 +12,7 @@ import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import { toast } from 'react-toastify'
 
-import type { CatecAdminUsuario, CatecGrupoValor } from '@/types/catec/usuarioTypes'
+import type { CatecAdminUsuario, CatecGrupoValor, CatecUsuarioCreateInput } from '@/types/catec/usuarioTypes'
 import { GRUPOS_OPCOES } from '@/types/catec/usuarioTypes'
 
 import CustomTextField from '@core/components/mui/TextField'
@@ -20,15 +20,15 @@ import CustomTextField from '@core/components/mui/TextField'
 type Props = {
   open: boolean
   onClose: () => void
-  onAdd: (usuario: CatecAdminUsuario) => void
-  proximoId: number
+  onAdd: (input: CatecUsuarioCreateInput) => Promise<CatecAdminUsuario>
 }
 
-const Usuario2AddDrawer = ({ open, onClose, onAdd, proximoId }: Props) => {
+const Usuario2AddDrawer = ({ open, onClose, onAdd }: Props) => {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [telefone, setTelefone] = useState('')
   const [grupos, setGrupos] = useState<Set<CatecGrupoValor>>(new Set(['COLABORADOR']))
+  const [salvando, setSalvando] = useState(false)
 
   function reset() {
     setNome('')
@@ -38,6 +38,8 @@ const Usuario2AddDrawer = ({ open, onClose, onAdd, proximoId }: Props) => {
   }
 
   function handleClose() {
+    if (salvando) return
+
     reset()
     onClose()
   }
@@ -53,7 +55,7 @@ const Usuario2AddDrawer = ({ open, onClose, onAdd, proximoId }: Props) => {
     })
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     if (!nome.trim() || !email.trim()) {
@@ -68,18 +70,23 @@ const Usuario2AddDrawer = ({ open, onClose, onAdd, proximoId }: Props) => {
       return
     }
 
-    onAdd({
-      id: proximoId,
-      nome: nome.trim(),
-      email: email.trim(),
-      telefone: telefone.trim() || null,
-      ativo: false,
-      requerTrocaSenha: true,
-      grupos: [...grupos]
-    })
+    setSalvando(true)
 
-    toast.success('Conta criada como inativa (mock). Senha provisória simulada por e-mail.')
-    handleClose()
+    try {
+      await onAdd({
+        nome: nome.trim(),
+        email: email.trim(),
+        telefone: telefone.trim() || null,
+        grupos: [...grupos]
+      })
+
+      toast.success('Usuário criado. Senha provisória enviada por e-mail.')
+      handleClose()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Não foi possível criar o usuário.')
+    } finally {
+      setSalvando(false)
+    }
   }
 
   return (
@@ -141,14 +148,14 @@ const Usuario2AddDrawer = ({ open, onClose, onAdd, proximoId }: Props) => {
         </div>
 
         <Typography variant='body2' color='text.secondary'>
-          A conta é criada inativa. O sistema envia senha provisória por e-mail (mock).
+          A conta é criada inativa. O sistema envia senha provisória por e-mail.
         </Typography>
 
         <div className='flex items-center gap-4'>
-          <Button variant='contained' type='submit'>
-            Criar
+          <Button variant='contained' type='submit' disabled={salvando}>
+            {salvando ? 'Criando…' : 'Criar'}
           </Button>
-          <Button variant='tonal' color='secondary' type='button' onClick={handleClose}>
+          <Button variant='tonal' color='secondary' type='button' onClick={handleClose} disabled={salvando}>
             Cancelar
           </Button>
         </div>

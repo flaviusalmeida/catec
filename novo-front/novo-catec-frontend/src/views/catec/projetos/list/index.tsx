@@ -1,30 +1,47 @@
 'use client'
 
-import { useMemo } from 'react'
-
+import Alert from '@mui/material/Alert'
+import CircularProgress from '@mui/material/CircularProgress'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
 
 import ProjetoListCards from './ProjetoListCards'
 import ProjetoListTable from './ProjetoListTable'
+import { useClientesStore } from '@/views/catec/clientes/useClientesStore'
 import { useProjetosStore } from '../useProjetosStore'
 
 const ProjetoList = () => {
-  const { lista, addProjeto } = useProjetosStore()
-
-  const proximoId = useMemo(() => (lista.length ? Math.max(...lista.map(p => p.id)) + 1 : 1), [lista])
+  const { lista, carregando, erro, addProjeto } = useProjetosStore()
+  const { lista: clientes } = useClientesStore()
 
   return (
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
         <Typography variant='h4'>Projetos</Typography>
       </Grid>
-      <Grid size={{ xs: 12 }}>
-        <ProjetoListCards lista={lista} />
-      </Grid>
-      <Grid size={{ xs: 12 }}>
-        <ProjetoListTable lista={lista} onAdd={addProjeto} proximoId={proximoId} />
-      </Grid>
+
+      {erro ? (
+        <Grid size={{ xs: 12 }}>
+          <Alert severity='error' variant='outlined'>
+            {erro}
+          </Alert>
+        </Grid>
+      ) : null}
+
+      {carregando ? (
+        <Grid size={{ xs: 12 }} className='flex justify-center p-12'>
+          <CircularProgress />
+        </Grid>
+      ) : (
+        <>
+          <Grid size={{ xs: 12 }}>
+            <ProjetoListCards lista={lista} />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <ProjetoListTable lista={lista} clientes={clientes} onAdd={addProjeto} />
+          </Grid>
+        </>
+      )}
     </Grid>
   )
 }

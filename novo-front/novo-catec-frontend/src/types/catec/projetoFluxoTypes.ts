@@ -46,7 +46,7 @@ export const TIPO_INTERACAO_ROTULO_CONTRATO: Record<CatecTipoInteracaoFluxo, str
   CONSIDERACOES_CLIENTE: 'Ajustar contrato'
 }
 
-export const STATUS_PROPOSTA_UPLOAD: CatecPropostaStatus[] = ['RASCUNHO', 'AGUARDANDO_AJUSTE']
+export const STATUS_PROPOSTA_UPLOAD: CatecPropostaStatus[] = ['RASCUNHO', 'PENDENTE_AVALIACAO']
 export const STATUS_PROPOSTA_ENVIADA: CatecPropostaStatus[] = [
   'ENVIADA_AO_CLIENTE',
   'EM_AVALIACAO_CLIENTE',
@@ -144,3 +144,85 @@ export type CatecPropostaWorkflowActionKey =
   | 'aprovar-socio'
   | 'reprovar-socio'
   | 'enviar-cliente'
+
+export function parseCatecDocumentoAnexo(raw: unknown): CatecDocumentoAnexo {
+  const data = raw as Record<string, unknown>
+
+  return {
+    id: Number(data.id),
+    nomeOriginal: String(data.nomeOriginal ?? ''),
+    versao: Number(data.versao ?? 1),
+    uploadedPorNome: String(data.uploadedPorNome ?? ''),
+    criadoEm: String(data.criadoEm ?? '')
+  }
+}
+
+export function parseCatecProposta(raw: unknown): CatecProposta {
+  const data = raw as Record<string, unknown>
+
+  return {
+    id: Number(data.id),
+    projetoId: Number(data.projetoId),
+    status: String(data.status ?? 'RASCUNHO') as CatecPropostaStatus,
+    versao: Number(data.versao ?? 1),
+    requerAvaliacaoSocio: data.requerAvaliacaoSocio === true,
+    elaboradoPorId: Number(data.elaboradoPorId ?? 0),
+    elaboradoPorNome: String(data.elaboradoPorNome ?? ''),
+    enviadaClienteEm: data.enviadaClienteEm == null ? null : String(data.enviadaClienteEm),
+    avaliadaSocioEm: data.avaliadaSocioEm == null ? null : String(data.avaliadaSocioEm),
+    consideracoesPendentes: data.consideracoesPendentes === true,
+    criadoEm: String(data.criadoEm ?? ''),
+    atualizadoEm: String(data.atualizadoEm ?? ''),
+    documentos: []
+  }
+}
+
+export function parseCatecPropostaList(raw: unknown): CatecProposta[] {
+  if (!Array.isArray(raw)) return []
+
+  return raw.map(parseCatecProposta)
+}
+
+export function parseCatecContrato(raw: unknown): CatecContrato {
+  const data = raw as Record<string, unknown>
+
+  return {
+    id: Number(data.id),
+    projetoId: Number(data.projetoId),
+    status: String(data.status ?? 'RASCUNHO') as CatecContratoStatus,
+    elaboradoPorId: Number(data.elaboradoPorId ?? 0),
+    elaboradoPorNome: String(data.elaboradoPorNome ?? ''),
+    enviadoClienteEm: data.enviadoClienteEm == null ? null : String(data.enviadoClienteEm),
+    criadoEm: String(data.criadoEm ?? ''),
+    atualizadoEm: String(data.atualizadoEm ?? ''),
+    documentos: []
+  }
+}
+
+export function parseCatecHistoricoFluxoItem(raw: unknown): CatecHistoricoFluxoItem {
+  const data = raw as Record<string, unknown>
+  const origem = data.origem === 'INTERACAO' ? 'INTERACAO' : 'AUDITORIA'
+
+  return {
+    origem,
+    registroId: Number(data.registroId ?? 0),
+    tipoEntidade: String(data.tipoEntidade ?? ''),
+    entidadeId: Number(data.entidadeId ?? 0),
+    acao: data.acao == null ? null : String(data.acao),
+    statusAnterior: data.statusAnterior == null ? null : String(data.statusAnterior),
+    statusNovo: data.statusNovo == null ? null : String(data.statusNovo),
+    tipoInteracao:
+      data.tipoInteracao == null ? null : (String(data.tipoInteracao) as CatecTipoInteracaoFluxo),
+    texto: data.texto == null ? null : String(data.texto),
+    usuarioNome: String(data.usuarioNome ?? ''),
+    ocorridoEm: String(data.ocorridoEm ?? '')
+  }
+}
+
+export type CatecHistoricoPage = {
+  content: CatecHistoricoFluxoItem[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
