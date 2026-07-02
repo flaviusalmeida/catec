@@ -88,7 +88,6 @@ class SocioPropostaControllerMockMvcTest {
                 10L,
                 PropostaStatus.RASCUNHO,
                 1,
-                true,
                 1L,
                 "Admin",
                 null,

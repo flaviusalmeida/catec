@@ -80,31 +80,33 @@ export function resolvePropostaWorkflowActions(
   status: string,
   opts: {
     hasAttachment: boolean
-    requerAvaliacaoSocio: boolean
     avaliadaSocioEm: string | null
+    podeAprovarSocio?: boolean
+    podeDevolverSocio?: boolean
   }
 ): Array<{ key: string; label: string; color: 'primary' | 'secondary' | 'error' }> {
-  const { hasAttachment, requerAvaliacaoSocio, avaliadaSocioEm } = opts
+  const { hasAttachment, avaliadaSocioEm, podeAprovarSocio = false, podeDevolverSocio = false } = opts
 
   if (status === 'RASCUNHO' && hasAttachment) {
-    const actions: Array<{ key: string; label: string; color: 'primary' | 'secondary' | 'error' }> = []
-
-    if (!requerAvaliacaoSocio || avaliadaSocioEm) {
-      actions.push({ key: 'enviar-cliente', label: 'Enviar ao cliente', color: 'primary' })
+    if (!avaliadaSocioEm) {
+      return [{ key: 'solicitar-revisao', label: 'Enviar para revisão do sócio', color: 'secondary' }]
     }
 
-    if (requerAvaliacaoSocio && !avaliadaSocioEm) {
-      actions.push({ key: 'solicitar-revisao', label: 'Solicitar revisão', color: 'secondary' })
-    }
-
-    return actions
+    return [{ key: 'enviar-cliente', label: 'Enviar ao cliente', color: 'primary' }]
   }
 
   if (status === 'PENDENTE_AVALIACAO') {
-    return [
-      { key: 'aprovar-socio', label: 'Aprovar', color: 'primary' },
-      { key: 'reprovar-socio', label: 'Reprovar', color: 'error' }
-    ]
+    const actions: Array<{ key: string; label: string; color: 'primary' | 'secondary' | 'error' }> = []
+
+    if (podeAprovarSocio) {
+      actions.push({ key: 'aprovar-socio', label: 'Aprovar', color: 'primary' })
+    }
+
+    if (podeDevolverSocio) {
+      actions.push({ key: 'reprovar-socio', label: 'Reprovar', color: 'error' })
+    }
+
+    return actions
   }
 
   return []

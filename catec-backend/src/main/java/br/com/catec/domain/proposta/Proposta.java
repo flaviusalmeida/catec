@@ -34,9 +34,6 @@ public class Proposta {
     @Column(nullable = false)
     private int versao = 1;
 
-    @Column(name = "requer_avaliacao_socio", nullable = false)
-    private boolean requerAvaliacaoSocio;
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "elaborado_por_id", nullable = false)
     private Usuario elaboradoPor;
@@ -98,14 +95,6 @@ public class Proposta {
 
     public void setVersao(int versao) {
         this.versao = versao;
-    }
-
-    public boolean isRequerAvaliacaoSocio() {
-        return requerAvaliacaoSocio;
-    }
-
-    public void setRequerAvaliacaoSocio(boolean requerAvaliacaoSocio) {
-        this.requerAvaliacaoSocio = requerAvaliacaoSocio;
     }
 
     public Usuario getElaboradoPor() {

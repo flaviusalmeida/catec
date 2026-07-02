@@ -360,7 +360,6 @@ public class InteracaoFluxoService {
                 p.getProjeto().getId(),
                 p.getStatus(),
                 p.getVersao(),
-                p.isRequerAvaliacaoSocio(),
                 p.getElaboradoPor().getId(),
                 p.getElaboradoPor().getNome(),
                 p.getEnviadaClienteEm(),

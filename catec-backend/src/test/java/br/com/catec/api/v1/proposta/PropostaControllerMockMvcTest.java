@@ -58,18 +58,16 @@ class PropostaControllerMockMvcTest {
     @Test
     void criar_quandoAdministrativo_deveRetornar201() throws Exception {
         var res = propostaResposta(1L);
-        when(propostaService.criar(eq(10L), eq(true), eq(admin()))).thenReturn(res);
+        when(propostaService.criar(eq(10L), eq(admin()))).thenReturn(res);
 
         mockMvc.perform(post("/api/v1/projetos/10/propostas")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"requerAvaliacaoSocio\":true}")
                         .with(user(admin()))
                         .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.status").value("RASCUNHO"));
 
-        verify(propostaService).criar(eq(10L), eq(true), eq(admin()));
+        verify(propostaService).criar(eq(10L), eq(admin()));
     }
 
     @Test
@@ -124,7 +122,6 @@ class PropostaControllerMockMvcTest {
                 10L,
                 PropostaStatus.RASCUNHO,
                 1,
-                true,
                 1L,
                 "Admin",
                 null,

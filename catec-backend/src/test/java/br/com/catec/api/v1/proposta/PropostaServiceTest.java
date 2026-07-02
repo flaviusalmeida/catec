@@ -89,7 +89,7 @@ class PropostaServiceTest {
         });
         when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        PropostaResponse res = service.criar(10L, true, admin);
+        PropostaResponse res = service.criar(10L, admin);
 
         assertEquals(PropostaStatus.RASCUNHO, res.status());
         assertEquals(1, res.versao());
@@ -122,9 +122,7 @@ class PropostaServiceTest {
         });
         when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        PropostaResponse res = service.criar(10L, false, admin);
-
-        assertEquals(2, res.versao());
+        PropostaResponse res = service.criar(10L, admin);
         assertEquals(PropostaStatus.RASCUNHO, res.status());
         verify(auditoriaService)
                 .registrarTransicaoStatus(
@@ -145,45 +143,27 @@ class PropostaServiceTest {
         when(propostaRepository.existsByProjetoIdAndConsideracoesPendentesTrue(10L)).thenReturn(false);
 
         ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> service.criar(10L, false, admin));
+                assertThrows(ResponseStatusException.class, () -> service.criar(10L, admin));
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
         verify(propostaRepository, never()).save(any());
     }
 
     @Test
-    void enviarAoCliente_fluxoSemSocio_deveChegarEnviada() {
-        Proposta proposta = proposta(50L, PropostaStatus.RASCUNHO, false);
+    void enviarAoCliente_semParecerSocio_deveRetornar400() {
+        Proposta proposta = proposta(50L, PropostaStatus.RASCUNHO);
         when(propostaRepository.findById(50L)).thenReturn(Optional.of(proposta));
-        when(propostaRepository.save(any(Proposta.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
-        projeto.setStatus(ProjetoStatus.ELABORANDO_PROPOSTA);
 
-        PropostaResponse res = service.enviarAoCliente(10L, 50L, admin);
+        ResponseStatusException ex =
+                assertThrows(ResponseStatusException.class, () -> service.enviarAoCliente(10L, 50L, admin));
 
-        assertEquals(PropostaStatus.ENVIADA_AO_CLIENTE, res.status());
-        verify(auditoriaService)
-                .registrar(
-                        TipoEntidadeAuditoria.PROPOSTA,
-                        50L,
-                        "ENVIAR_CLIENTE",
-                        "RASCUNHO",
-                        "ENVIADA_AO_CLIENTE",
-                        1L,
-                        null);
-        verify(auditoriaService)
-                .registrarTransicaoStatus(
-                        TipoEntidadeAuditoria.PROJETO,
-                        10L,
-                        "SINCRONIZAR_PROPOSTA",
-                        "ELABORANDO_PROPOSTA",
-                        "AGUARDANDO_ACEITE_PROPOSTA",
-                        1L);
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        verify(propostaRepository, never()).save(any());
     }
 
     @Test
     void enviarAoCliente_transicaoIlegal_deveRetornar400() {
-        Proposta proposta = proposta(51L, PropostaStatus.ENVIADA_AO_CLIENTE, false);
+        Proposta proposta = proposta(51L, PropostaStatus.ENVIADA_AO_CLIENTE);
         when(propostaRepository.findById(51L)).thenReturn(Optional.of(proposta));
 
         ResponseStatusException ex =
@@ -195,7 +175,7 @@ class PropostaServiceTest {
 
     @Test
     void obter_quandoPropostaDeOutroProjeto_deveRetornar404() {
-        Proposta proposta = proposta(70L, PropostaStatus.RASCUNHO, false);
+        Proposta proposta = proposta(70L, PropostaStatus.RASCUNHO);
         when(propostaRepository.findById(70L)).thenReturn(Optional.of(proposta));
 
         ResponseStatusException ex =
@@ -226,7 +206,7 @@ class PropostaServiceTest {
         });
         when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
         when(propostaRepository.findById(200L)).thenAnswer(inv -> {
-            Proposta p = proposta(200L, PropostaStatus.RASCUNHO, false);
+            Proposta p = proposta(200L, PropostaStatus.RASCUNHO);
             return Optional.of(p);
         });
         when(documentoService.uploadPropostaSubstituindo(eq(200L), eq("PROPOSTA_PDF"), any(), eq(admin)))
@@ -250,7 +230,7 @@ class PropostaServiceTest {
 
     @Test
     void uploadDocumento_quandoEnviadaAoCliente_deveRetornar400() {
-        Proposta proposta = proposta(71L, PropostaStatus.ENVIADA_AO_CLIENTE, false);
+        Proposta proposta = proposta(71L, PropostaStatus.ENVIADA_AO_CLIENTE);
         when(propostaRepository.findById(71L)).thenReturn(Optional.of(proposta));
 
         ResponseStatusException ex = assertThrows(
@@ -262,7 +242,7 @@ class PropostaServiceTest {
 
     @Test
     void aprovarPeloSocio_quandoNaoPendente_deveRetornar400() {
-        Proposta proposta = proposta(52L, PropostaStatus.RASCUNHO, true);
+        Proposta proposta = proposta(52L, PropostaStatus.RASCUNHO);
         when(propostaRepository.findById(52L)).thenReturn(Optional.of(proposta));
 
         ResponseStatusException ex =
@@ -281,7 +261,7 @@ class PropostaServiceTest {
 
     @Test
     void enviarAoCliente_quandoPendenteSocio_deveRetornar400() {
-        Proposta proposta = proposta(54L, PropostaStatus.PENDENTE_AVALIACAO, true);
+        Proposta proposta = proposta(54L, PropostaStatus.PENDENTE_AVALIACAO);
         when(propostaRepository.findById(54L)).thenReturn(Optional.of(proposta));
 
         ResponseStatusException ex =
@@ -291,19 +271,8 @@ class PropostaServiceTest {
     }
 
     @Test
-    void enviarAoCliente_quandoRequerSocioSemParecer_deveRetornar400() {
-        Proposta proposta = proposta(55L, PropostaStatus.RASCUNHO, true);
-        when(propostaRepository.findById(55L)).thenReturn(Optional.of(proposta));
-
-        ResponseStatusException ex =
-                assertThrows(ResponseStatusException.class, () -> service.enviarAoCliente(10L, 55L, admin));
-
-        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
-    }
-
-    @Test
     void fluxoComSocio_submeterAprovarEnviar() {
-        Proposta proposta = proposta(60L, PropostaStatus.RASCUNHO, true);
+        Proposta proposta = proposta(60L, PropostaStatus.RASCUNHO);
         when(propostaRepository.findById(60L)).thenReturn(Optional.of(proposta));
         when(propostaRepository.save(any(Proposta.class))).thenAnswer(inv -> inv.getArgument(0));
         when(usuarioRepository.getReferenceById(3L)).thenReturn(new Usuario());
@@ -333,7 +302,7 @@ class PropostaServiceTest {
                         any());
     }
 
-    private static Proposta proposta(long id, PropostaStatus status, boolean requerSocio) {
+    private static Proposta proposta(long id, PropostaStatus status) {
         Proposta p = new Proposta();
         org.springframework.test.util.ReflectionTestUtils.setField(p, "id", id);
         Projeto proj = new Projeto();
@@ -346,7 +315,6 @@ class PropostaServiceTest {
         p.setProjeto(proj);
         p.setStatus(status);
         p.setVersao(1);
-        p.setRequerAvaliacaoSocio(requerSocio);
         Usuario elab = new Usuario();
         org.springframework.test.util.ReflectionTestUtils.setField(elab, "id", 1L);
         elab.setNome("Admin");

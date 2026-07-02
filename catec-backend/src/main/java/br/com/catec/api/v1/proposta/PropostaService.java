@@ -61,7 +61,7 @@ public class PropostaService {
     }
 
     @Transactional
-    public PropostaResponse criar(Long projetoId, boolean requerAvaliacaoSocio, UsuarioAutenticado principal) {
+    public PropostaResponse criar(Long projetoId, UsuarioAutenticado principal) {
         authz.require(principal, PermissaoCodigo.ACAO_PROPOSTA_CRIAR);
         Projeto projeto = loadProjeto(projetoId);
         validarProjetoParaNovaProposta(projetoId, projeto);
@@ -77,7 +77,6 @@ public class PropostaService {
         proposta.setProjeto(projeto);
         proposta.setStatus(PropostaStatus.RASCUNHO);
         proposta.setVersao(propostaRepository.findMaxVersaoByProjetoId(projetoId) + 1);
-        proposta.setRequerAvaliacaoSocio(requerAvaliacaoSocio);
         proposta.setElaboradoPor(elaborador);
         proposta.setConsideracoesPendentes(false);
         proposta.setCriadoEm(agora);
@@ -100,20 +99,6 @@ public class PropostaService {
         return toResponse(salva);
     }
 
-    /** Atualiza flag de avaliação do sócio enquanto a proposta está em rascunho (após anexo, antes de submeter). */
-    @Transactional
-    public PropostaResponse atualizarConfiguracaoRascunho(
-            Long projetoId, Long propostaId, boolean requerAvaliacaoSocio, UsuarioAutenticado principal) {
-        authz.require(principal, PermissaoCodigo.ACAO_PROPOSTA_EDITAR);
-        Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
-        if (proposta.getStatus() != PropostaStatus.RASCUNHO) {
-            throw badRequest("Só é possível alterar a configuração em proposta em rascunho.");
-        }
-        proposta.setRequerAvaliacaoSocio(requerAvaliacaoSocio);
-        proposta.setAtualizadoEm(Instant.now());
-        return toResponse(propostaRepository.save(proposta));
-    }
-
     @Transactional(readOnly = true)
     public PropostaResponse obter(Long projetoId, Long propostaId, UsuarioAutenticado principal) {
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
@@ -125,7 +110,7 @@ public class PropostaService {
     public List<PropostaPendenteSocioResponse> listarPendentesSocio(UsuarioAutenticado principal) {
         authz.require(principal, PermissaoCodigo.TELA_SOCIO_PROPOSTAS);
         return propostaRepository
-                .findByStatusAndRequerAvaliacaoSocioTrueOrderByCriadoEmAsc(PropostaStatus.PENDENTE_AVALIACAO)
+                .findByStatusOrderByCriadoEmAsc(PropostaStatus.PENDENTE_AVALIACAO)
                 .stream()
                 .map(p -> new PropostaPendenteSocioResponse(
                         p.getId(),
@@ -184,9 +169,6 @@ public class PropostaService {
             Long projetoId, Long propostaId, UsuarioAutenticado principal) {
         authz.require(principal, PermissaoCodigo.ACAO_PROPOSTA_EDITAR);
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
-        if (!proposta.isRequerAvaliacaoSocio()) {
-            throw badRequest("Esta proposta não requer avaliação do sócio.");
-        }
         proposta.setAvaliadaSocioEm(null);
         proposta.setAvaliadaPorSocio(null);
         Proposta salva =
@@ -232,7 +214,7 @@ public class PropostaService {
             Long projetoId, Long propostaId, String observacao, UsuarioAutenticado principal) {
         authz.require(principal, PermissaoCodigo.ACAO_SOCIO_PROPOSTA_DEVOLVER);
         if (!StringUtils.hasText(observacao)) {
-            throw badRequest("Informe o parecer ao devolver a proposta para rascunho.");
+            throw badRequest("Informe o parecer ao devolver a proposta para elaboração.");
         }
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
         validarPendenteAvaliacaoSocio(proposta);
@@ -297,9 +279,6 @@ public class PropostaService {
     }
 
     private void validarPendenteAvaliacaoSocio(Proposta proposta) {
-        if (!proposta.isRequerAvaliacaoSocio()) {
-            throw badRequest("Esta proposta não está no fluxo de avaliação do sócio.");
-        }
         if (proposta.getStatus() != PropostaStatus.PENDENTE_AVALIACAO) {
             throw badRequest("Avaliação do sócio só é permitida com proposta pendente de parecer.");
         }
@@ -322,7 +301,7 @@ public class PropostaService {
         if (proposta.getStatus() != PropostaStatus.RASCUNHO) {
             throw badRequest("Só é possível enviar ao cliente uma proposta em rascunho.");
         }
-        if (proposta.isRequerAvaliacaoSocio() && proposta.getAvaliadaSocioEm() == null) {
+        if (proposta.getAvaliadaSocioEm() == null) {
             throw badRequest("Aguarde o parecer do sócio antes de enviar ao cliente.");
         }
     }
@@ -330,8 +309,10 @@ public class PropostaService {
     private void validarTransicao(PropostaStatus atual, PropostaStatus novo, Proposta proposta) {
         boolean ok =
                 switch (atual) {
-                    case RASCUNHO -> (novo == PropostaStatus.PENDENTE_AVALIACAO && proposta.isRequerAvaliacaoSocio())
-                            || novo == PropostaStatus.ENVIADA_AO_CLIENTE;
+                    case RASCUNHO ->
+                            novo == PropostaStatus.PENDENTE_AVALIACAO
+                                    || (novo == PropostaStatus.ENVIADA_AO_CLIENTE
+                                            && proposta.getAvaliadaSocioEm() != null);
                     case PENDENTE_AVALIACAO -> novo == PropostaStatus.RASCUNHO;
                     case ENVIADA_AO_CLIENTE,
                             EM_AVALIACAO_CLIENTE,
@@ -421,7 +402,7 @@ public class PropostaService {
             throw badRequest("Não é possível anexar documentos no estado atual da proposta.");
         }
 
-        return loadProposta(criar(projetoId, false, principal).id());
+        return loadProposta(criar(projetoId, principal).id());
     }
 
     private void garantirUploadDocumento(Proposta proposta) {
@@ -460,7 +441,6 @@ public class PropostaService {
                 p.getProjeto().getId(),
                 p.getStatus(),
                 p.getVersao(),
-                p.isRequerAvaliacaoSocio(),
                 p.getElaboradoPor().getId(),
                 p.getElaboradoPor().getNome(),
                 p.getEnviadaClienteEm(),

@@ -79,7 +79,6 @@ export type CatecProposta = {
   projetoId: number
   status: CatecPropostaStatus
   versao: number
-  requerAvaliacaoSocio: boolean
   elaboradoPorId: number
   elaboradoPorNome: string
   enviadaClienteEm: string | null
@@ -165,7 +164,6 @@ export function parseCatecProposta(raw: unknown): CatecProposta {
     projetoId: Number(data.projetoId),
     status: String(data.status ?? 'RASCUNHO') as CatecPropostaStatus,
     versao: Number(data.versao ?? 1),
-    requerAvaliacaoSocio: data.requerAvaliacaoSocio === true,
     elaboradoPorId: Number(data.elaboradoPorId ?? 0),
     elaboradoPorNome: String(data.elaboradoPorNome ?? ''),
     enviadaClienteEm: data.enviadaClienteEm == null ? null : String(data.enviadaClienteEm),

@@ -2,6 +2,7 @@
 
 import { catecApiFetch } from '@/libs/catecApi'
 import { assertCatecOk, readCatecJsonBody } from '@/libs/catecApiHelpers'
+import { aprovarPropostaSocioCatec, devolverPropostaSocioCatec } from '@/libs/catecSocioPropostasApi'
 import type {
   CatecContrato,
   CatecDocumentoAnexo,
@@ -155,21 +156,10 @@ export async function uploadDocumentoPropostaCatec(
 export async function acaoPropostaCatec(
   projetoId: number,
   propostaId: number,
-  acao: CatecPropostaWorkflowActionKey
+  acao: CatecPropostaWorkflowActionKey,
+  opts?: { observacao?: string }
 ): Promise<void> {
   if (acao === 'solicitar-revisao') {
-    const patchRes = await catecApiFetch(
-      `/api/v1/projetos/${projetoId}/propostas/${propostaId}/configuracao-rascunho`,
-      {
-        method: 'PATCH',
-        body: JSON.stringify({ requerAvaliacaoSocio: true })
-      }
-    )
-
-    const patchData = await readCatecJsonBody(patchRes)
-
-    assertCatecOk(patchRes, patchData, 'Erro ao atualizar configuração.')
-
     const res = await catecApiFetch(
       `/api/v1/projetos/${projetoId}/propostas/${propostaId}/submeter-avaliacao-socio`,
       { method: 'POST' }
@@ -182,16 +172,31 @@ export async function acaoPropostaCatec(
     return
   }
 
-  const pathMap: Record<Exclude<CatecPropostaWorkflowActionKey, 'solicitar-revisao'>, string> = {
-    'aprovar-socio': '/aprovar-socio',
-    'reprovar-socio': '/devolver-rascunho',
+  if (acao === 'aprovar-socio') {
+    await aprovarPropostaSocioCatec(propostaId, {
+      projetoId,
+      observacao: opts?.observacao
+    })
+
+    return
+  }
+
+  if (acao === 'reprovar-socio') {
+    await devolverPropostaSocioCatec(propostaId, {
+      projetoId,
+      observacao: opts?.observacao ?? ''
+    })
+
+    return
+  }
+
+  const pathMap: Record<Exclude<CatecPropostaWorkflowActionKey, 'solicitar-revisao' | 'aprovar-socio' | 'reprovar-socio'>, string> = {
     'enviar-cliente': '/enviar-cliente'
   }
 
-  const res = await catecApiFetch(
-    `/api/v1/projetos/${projetoId}/propostas/${propostaId}${pathMap[acao as Exclude<CatecPropostaWorkflowActionKey, 'solicitar-revisao'>]}`,
-    { method: 'POST' }
-  )
+  const res = await catecApiFetch(`/api/v1/projetos/${projetoId}/propostas/${propostaId}${pathMap[acao as 'enviar-cliente']}`, {
+    method: 'POST'
+  })
 
   const data = await readCatecJsonBody(res)
 

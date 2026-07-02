@@ -11,6 +11,13 @@ import { toast } from 'react-toastify'
 
 import ProjetoFileRow from './ProjetoFileRow'
 
+type AcaoUpload = {
+  key: string
+  label: string
+  color: 'primary' | 'secondary' | 'error'
+  onClick: () => void
+}
+
 type Props = {
   titulo: string
   nomeArquivo?: string | null
@@ -18,9 +25,10 @@ type Props = {
   disabled?: boolean
   onUpload: (file: File) => Promise<void>
   onDownload?: () => void
+  acoes?: AcaoUpload[]
 }
 
-const ProjetoUploadCard = ({ titulo, nomeArquivo, meta, disabled, onUpload, onDownload }: Props) => {
+const ProjetoUploadCard = ({ titulo, nomeArquivo, meta, disabled, onUpload, onDownload, acoes }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -64,6 +72,21 @@ const ProjetoUploadCard = ({ titulo, nomeArquivo, meta, disabled, onUpload, onDo
             {nomeArquivo ? 'Substituir arquivo' : 'Selecionar arquivo'}
           </Button>
         </div>
+        {nomeArquivo && acoes && acoes.length > 0 ? (
+          <div className='flex flex-wrap gap-3 pt-2 border-t'>
+            {acoes.map(acao => (
+              <Button
+                key={acao.key}
+                variant={acao.color === 'primary' ? 'contained' : 'tonal'}
+                color={acao.color === 'error' ? 'error' : acao.color === 'secondary' ? 'secondary' : 'primary'}
+                disabled={disabled}
+                onClick={acao.onClick}
+              >
+                {acao.label}
+              </Button>
+            ))}
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   )

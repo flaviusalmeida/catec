@@ -14,7 +14,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,28 +55,15 @@ public class PropostaController {
         return propostaService.obter(projetoId, propostaId, principal);
     }
 
-    @Operation(summary = "Criar proposta", description = "Só ADMINISTRATIVO. Body: requerAvaliacaoSocio (boolean).")
+    @Operation(summary = "Criar proposta", description = "Só ADMINISTRATIVO.")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PropostaResponse criar(
-            @PathVariable Long projetoId,
-            @Valid @RequestBody PropostaCreateRequest body,
-            @AuthenticationPrincipal UsuarioAutenticado principal) {
-        return propostaService.criar(projetoId, body.requerAvaliacaoSocio(), principal);
+            @PathVariable Long projetoId, @AuthenticationPrincipal UsuarioAutenticado principal) {
+        return propostaService.criar(projetoId, principal);
     }
 
-    @Operation(summary = "Atualizar configuração em rascunho", description = "Altera requerAvaliacaoSocio enquanto status RASCUNHO.")
-    @PatchMapping("/{propostaId}/configuracao-rascunho")
-    public PropostaResponse atualizarConfiguracaoRascunho(
-            @PathVariable Long projetoId,
-            @PathVariable Long propostaId,
-            @Valid @RequestBody PropostaConfiguracaoRequest body,
-            @AuthenticationPrincipal UsuarioAutenticado principal) {
-        return propostaService.atualizarConfiguracaoRascunho(
-                projetoId, propostaId, body.requerAvaliacaoSocio(), principal);
-    }
-
-    @Operation(summary = "Submeter para avaliação do sócio", description = "RASCUNHO → PENDENTE_AVALIACAO quando requerAvaliacaoSocio=true.")
+    @Operation(summary = "Submeter para avaliação do sócio", description = "RASCUNHO → PENDENTE_AVALIACAO.")
     @PostMapping("/{propostaId}/submeter-avaliacao-socio")
     public PropostaResponse submeterParaAvaliacaoSocio(
             @PathVariable Long projetoId,
@@ -91,20 +77,23 @@ public class PropostaController {
     public PropostaResponse aprovarPeloSocio(
             @PathVariable Long projetoId,
             @PathVariable Long propostaId,
+            @RequestBody(required = false) PropostaParecerRequest body,
             @AuthenticationPrincipal UsuarioAutenticado principal) {
-        return propostaService.aprovarPeloSocio(projetoId, propostaId, principal);
+        String observacao = body != null ? body.observacao() : null;
+        return propostaService.aprovarPeloSocio(projetoId, propostaId, observacao, principal);
     }
 
-    @Operation(summary = "Devolver ao rascunho (via projeto)")
+    @Operation(summary = "Devolver para elaboração (via projeto)", description = "Parecer (observacao) obrigatório no corpo.")
     @PostMapping("/{propostaId}/devolver-rascunho")
     public PropostaResponse devolverParaRascunho(
             @PathVariable Long projetoId,
             @PathVariable Long propostaId,
+            @Valid @RequestBody PropostaParecerRequest body,
             @AuthenticationPrincipal UsuarioAutenticado principal) {
-        return propostaService.devolverParaRascunho(projetoId, propostaId, principal);
+        return propostaService.devolverParaRascunho(projetoId, propostaId, body.observacao(), principal);
     }
 
-    @Operation(summary = "Enviar proposta ao cliente", description = "ADM. Exige proposta em RASCUNHO (com parecer do sócio, se aplicável).")
+    @Operation(summary = "Enviar proposta ao cliente", description = "ADM. Exige proposta em RASCUNHO com parecer do sócio.")
     @PostMapping("/{propostaId}/enviar-cliente")
     public PropostaResponse enviarAoCliente(
             @PathVariable Long projetoId,

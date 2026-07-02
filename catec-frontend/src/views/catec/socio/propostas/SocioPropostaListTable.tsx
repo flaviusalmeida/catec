@@ -140,7 +140,7 @@ const SocioPropostaListTable = ({ lista, onRecarregar }: Props) => {
     if (!dialogItem || !dialogMode) return
 
     if (dialogMode === 'devolver' && !observacao.trim()) {
-      toast.error('Informe o parecer ao devolver a proposta.')
+      toast.error('Informe o parecer ao devolver a proposta para elaboração.')
 
       return
     }

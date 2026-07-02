@@ -29,9 +29,6 @@ public interface PropostaRepository extends JpaRepository<Proposta, Long> {
     @EntityGraph(attributePaths = {"projeto", "projeto.cliente", "elaboradoPor"})
     List<Proposta> findByStatusOrderByCriadoEmAsc(PropostaStatus status);
 
-    @EntityGraph(attributePaths = {"projeto", "projeto.cliente", "elaboradoPor"})
-    List<Proposta> findByStatusAndRequerAvaliacaoSocioTrueOrderByCriadoEmAsc(PropostaStatus status);
-
     @EntityGraph(attributePaths = {"projeto", "projeto.criadoPor", "elaboradoPor"})
     Optional<Proposta> findFirstByProjetoIdAndStatusInOrderByVersaoDesc(
             Long projetoId, Collection<PropostaStatus> statuses);
@@ -63,7 +60,6 @@ public interface PropostaRepository extends JpaRepository<Proposta, Long> {
             """
             SELECT COUNT(pr) FROM Proposta pr
             WHERE pr.status = :status
-            AND pr.requerAvaliacaoSocio = TRUE
             AND (:criadoPorId IS NULL OR pr.projeto.criadoPor.id = :criadoPorId)
             """)
     long countAguardandoSocio(

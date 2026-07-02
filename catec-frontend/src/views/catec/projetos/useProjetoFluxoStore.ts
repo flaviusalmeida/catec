@@ -137,13 +137,13 @@ export function useProjetoFluxoStore(projetoId: number) {
   )
 
   const acaoProposta = useCallback(
-    async (acao: CatecPropostaWorkflowActionKey) => {
+    async (acao: CatecPropostaWorkflowActionKey, observacao?: string) => {
       if (!propostaAtual) return
 
       setProcessando(true)
 
       try {
-        await acaoPropostaCatec(projetoId, propostaAtual.id, acao)
+        await acaoPropostaCatec(projetoId, propostaAtual.id, acao, { observacao })
         await recarregar()
       } finally {
         setProcessando(false)

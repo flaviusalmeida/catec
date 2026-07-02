@@ -8,7 +8,6 @@ public record PropostaResponse(
         Long projetoId,
         PropostaStatus status,
         int versao,
-        boolean requerAvaliacaoSocio,
         Long elaboradoPorId,
         String elaboradoPorNome,
         Instant enviadaClienteEm,
