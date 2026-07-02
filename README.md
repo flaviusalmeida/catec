@@ -90,7 +90,7 @@ A UI e o spec ficam **desabilitados** fora do perfil `dev` (`application.yml`). 
 - **Segredo e duração:** variáveis `JWT_SECRET` (mínimo **32 caracteres** para HS256) e opcional `JWT_EXPIRATION_MINUTES` (ver `application.yml`).
 - **Usuários de desenvolvimento** (migração `V2__seed_usuarios_dev.sql`): `admin@catec.local` / senha **`password`** (perfil `ADMINISTRATIVO`); `inativo@catec.local` / **`password`** — conta **inativa** (não deve autenticar).
 - **Grupos de acesso** (migrações `V27__grupos_acesso.sql`, `V28__drop_usuario_perfil.sql`): catálogo de permissões (telas/ações), grupos padrão e API `GET/POST/PUT/DELETE /api/v1/admin/grupos` (requer permissão `acao.grupo.gerir`). `GET /api/v1/me` retorna `grupos` e `permissoes`. A tabela legada `usuario_perfil` foi removida — vínculos ficam em `usuario_grupo`.
-- **CORS:** em `dev`, origens `http://localhost:5173` e `http://127.0.0.1:5173` para o React.
+- **CORS:** em `dev`, origens `http://localhost:5173`, `http://127.0.0.1:5173` (React/Vite) e `http://localhost:3000`, `http://127.0.0.1:3000` (Next.js).
 
 Erros tratados pelo handler global devolvem JSON com `status`, `mensagem`, `timestamp` e `path`.
 

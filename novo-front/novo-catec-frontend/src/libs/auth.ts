@@ -68,11 +68,31 @@ export const authOptions: NextAuthOptions = {
   },
 
   pages: {
-    signIn: '/pt/catec/login'
+    signIn: '/pt/login'
   },
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      if (trigger === 'update' && session) {
+        const patch = session as {
+          accessToken?: string
+          requerTrocaSenha?: boolean
+          trocaSenhaObrigatoria?: boolean
+        }
+
+        if (patch.accessToken) {
+          token.accessToken = patch.accessToken
+        }
+
+        if (patch.requerTrocaSenha !== undefined) {
+          token.requerTrocaSenha = patch.requerTrocaSenha
+        }
+
+        if (patch.trocaSenhaObrigatoria !== undefined) {
+          token.trocaSenhaObrigatoria = patch.trocaSenhaObrigatoria
+        }
+      }
+
       if (user) {
         token.id = user.id
         token.name = user.name

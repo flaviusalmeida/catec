@@ -5,20 +5,17 @@ import { redirect } from 'next/navigation'
 import type { ChildrenType } from '@core/types'
 import type { Locale } from '@configs/i18n'
 
-// Config Imports
-import themeConfig from '@configs/themeConfig'
-
 // Lib Imports
 import { getAuthSession } from '@/libs/auth'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getPostAuthDestination } from '@/utils/catec/authPaths'
 
 const GuestOnlyRoute = async ({ children, lang }: ChildrenType & { lang: Locale }) => {
   const session = await getAuthSession()
 
   if (session) {
-    redirect(getLocalizedUrl(themeConfig.homePageUrl, lang))
+    redirect(getPostAuthDestination(session, lang))
   }
 
   return <>{children}</>

@@ -17,7 +17,7 @@ import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
 
 // Third-party Imports
-import { signIn } from 'next-auth/react'
+import { getSession, signIn } from 'next-auth/react'
 
 // Type Imports
 import type { Locale } from '@configs/i18n'
@@ -26,6 +26,7 @@ import type { Locale } from '@configs/i18n'
 import CustomTextField from '@core/components/mui/TextField'
 
 // Util Imports
+import { getPostAuthDestination } from '@/utils/catec/authPaths'
 import { getLocalizedUrl } from '@/utils/i18n'
 
 // Styled Component Imports
@@ -73,7 +74,14 @@ const CatecLogin = () => {
     setLoading(false)
 
     if (res?.ok && !res.error) {
+      const session = await getSession()
       const redirectURL = searchParams.get('redirectTo') ?? '/catec/projetos'
+
+      if (session) {
+        router.replace(getPostAuthDestination(session, locale as Locale, redirectURL))
+
+        return
+      }
 
       router.replace(getLocalizedUrl(redirectURL, locale as Locale))
 

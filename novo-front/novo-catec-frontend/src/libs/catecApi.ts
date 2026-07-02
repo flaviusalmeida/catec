@@ -57,7 +57,7 @@ export async function catecApiFetch(path: string, init: RequestInit = {}): Promi
     unauthorizedHandler?.()
 
     if (!unauthorizedHandler) {
-      await signOut({ callbackUrl: '/pt/catec/login' })
+      await signOut({ callbackUrl: '/pt/login' })
     }
   }
 
