@@ -10,6 +10,7 @@ import type { VerticalMenuContextProps } from '@menu/components/vertical-menu/Me
 
 // Component Imports
 import HorizontalNav, { Menu, SubMenu, MenuItem } from '@menu/horizontal-menu'
+import CatecNavMenuItems from '@/components/catec/CatecNavMenuItems'
 import VerticalNavContent from './VerticalNavContent'
 import CustomChip from '@core/components/mui/Chip'
 
@@ -108,18 +109,7 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
           </MenuItem>
         </SubMenu>
         <SubMenu label={dictionary['navigation'].catec} icon={<i className='tabler-building' />}>
-          <MenuItem href={`/${locale}/catec/projetos`} icon={<i className='tabler-briefcase' />}>
-            {dictionary['navigation'].projetos}
-          </MenuItem>
-          <MenuItem href={`/${locale}/catec/clientes`} icon={<i className='tabler-user' />}>
-            {dictionary['navigation'].clientes}
-          </MenuItem>
-          <MenuItem href={`/${locale}/catec/usuarios`} icon={<i className='tabler-user' />}>
-            {dictionary['navigation'].usuarios}
-          </MenuItem>
-          <MenuItem href={`/${locale}/catec/grupos`} icon={<i className='tabler-lock' />}>
-            {dictionary['navigation'].grupos}
-          </MenuItem>
+          <CatecNavMenuItems dictionary={dictionary} withIcons />
         </SubMenu>
         <SubMenu label={dictionary['navigation'].apps} icon={<i className='tabler-mail' />}>
           <SubMenu label={dictionary['navigation'].eCommerce} icon={<i className='tabler-shopping-cart' />}>

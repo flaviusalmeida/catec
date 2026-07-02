@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 
+import RequireCatecPermission from '@/components/catec/RequireCatecPermission'
+import { PermissaoCodigo } from '@/types/catec/permissao'
 import ClienteList from '@views/catec/clientes/list'
 
 export const metadata: Metadata = {
@@ -8,7 +10,11 @@ export const metadata: Metadata = {
 }
 
 const CatecClientesPage = () => {
-  return <ClienteList />
+  return (
+    <RequireCatecPermission code={PermissaoCodigo.TELA_CLIENTES} title='Clientes'>
+      <ClienteList />
+    </RequireCatecPermission>
+  )
 }
 
 export default CatecClientesPage

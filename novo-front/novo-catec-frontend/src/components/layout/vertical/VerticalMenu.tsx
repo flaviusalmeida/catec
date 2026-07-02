@@ -13,6 +13,7 @@ import type { VerticalMenuContextProps } from '@menu/components/vertical-menu/Me
 
 // Component Imports
 import { Menu, SubMenu, MenuItem, MenuSection } from '@menu/vertical-menu'
+import CatecNavMenuItems from '@/components/catec/CatecNavMenuItems'
 import CustomChip from '@core/components/mui/Chip'
 
 // import { GenerateVerticalMenu } from '@components/GenerateMenu'
@@ -93,18 +94,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           <MenuItem href={`/${locale}/dashboards/logistics`}>{dictionary['navigation'].logistics}</MenuItem>
         </SubMenu>
         <SubMenu label={dictionary['navigation'].catec} icon={<i className='tabler-building' />}>
-          <MenuItem href={`/${locale}/catec/projetos`} icon={<i className='tabler-briefcase' />}>
-            {dictionary['navigation'].projetos}
-          </MenuItem>
-          <MenuItem href={`/${locale}/catec/clientes`} icon={<i className='tabler-user' />}>
-            {dictionary['navigation'].clientes}
-          </MenuItem>
-          <MenuItem href={`/${locale}/catec/usuarios`} icon={<i className='tabler-user' />}>
-            {dictionary['navigation'].usuarios}
-          </MenuItem>
-          <MenuItem href={`/${locale}/catec/grupos`} icon={<i className='tabler-lock' />}>
-            {dictionary['navigation'].grupos}
-          </MenuItem>
+          <CatecNavMenuItems dictionary={dictionary} withIcons />
         </SubMenu>
         <SubMenu label={dictionary['navigation'].frontPages} icon={<i className='tabler-files' />}>
           <MenuItem href='/front-pages/landing-page' target='_blank'>

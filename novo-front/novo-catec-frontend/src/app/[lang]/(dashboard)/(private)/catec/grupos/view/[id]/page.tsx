@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 
+import RequireCatecPermission from '@/components/catec/RequireCatecPermission'
+import { PermissaoCodigo } from '@/types/catec/permissao'
 import GrupoView from '@views/catec/grupos/view'
 
 export const metadata: Metadata = {
@@ -14,7 +16,11 @@ type Props = {
 const CatecGrupoViewPage = async ({ params }: Props) => {
   const { id } = await params
 
-  return <GrupoView id={id} />
+  return (
+    <RequireCatecPermission code={PermissaoCodigo.TELA_GRUPOS}>
+      <GrupoView id={id} />
+    </RequireCatecPermission>
+  )
 }
 
 export default CatecGrupoViewPage
