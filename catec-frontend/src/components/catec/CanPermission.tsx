@@ -7,10 +7,13 @@ import { isPermissionAllowed } from '@/utils/catec/hasPermission'
 
 export type CanPermissionProps = {
   children: ReactNode
+
   /** Exibe `children` se o usuário tiver pelo menos uma destas permissões. */
   anyOf?: readonly string[]
+
   /** Exibe `children` se o usuário tiver todas estas permissões. */
   allOf?: readonly string[]
+
   /** Uma única permissão (atalho). */
   code?: string
   fallback?: ReactNode

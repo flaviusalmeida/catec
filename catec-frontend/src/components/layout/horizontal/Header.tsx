@@ -1,7 +1,6 @@
 'use client'
 
 // Type Imports
-import type { getDictionary } from '@/utils/getDictionary'
 
 // Component Imports
 import Navigation from './Navigation'
@@ -12,7 +11,7 @@ import LayoutHeader from '@layouts/components/horizontal/Header'
 // Hook Imports
 import useHorizontalNav from '@menu/hooks/useHorizontalNav'
 
-const Header = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof getDictionary>> }) => {
+const Header = () => {
   // Hooks
   const { isBreakpointReached } = useHorizontalNav()
 
@@ -22,9 +21,9 @@ const Header = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof getDicti
         <Navbar>
           <NavbarContent />
         </Navbar>
-        {!isBreakpointReached && <Navigation dictionary={dictionary} />}
+        {!isBreakpointReached && <Navigation  />}
       </LayoutHeader>
-      {isBreakpointReached && <Navigation dictionary={dictionary} />}
+      {isBreakpointReached && <Navigation  />}
     </>
   )
 }

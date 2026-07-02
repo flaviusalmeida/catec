@@ -8,8 +8,8 @@ import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
 import { toast } from 'react-toastify'
 
-import type { CatecGrupo, CatecPermissaoCatalogo } from '@/types/catec/grupoTypes'
-import { grupoToForm, type CatecGrupoFormState } from '@/types/catec/grupoTypes'
+import { grupoToForm, type CatecGrupo, type CatecGrupoFormState, type CatecPermissaoCatalogo } from '@/types/catec/grupoTypes'
+
 
 import CustomTextField from '@core/components/mui/TextField'
 

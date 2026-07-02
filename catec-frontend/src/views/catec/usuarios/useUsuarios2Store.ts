@@ -136,10 +136,12 @@ export function useUsuarios2Store() {
   }, [])
 
   const addUsuario = useCallback(async (input: CatecUsuarioCreateInput) => addUsuarioStore(input), [])
+
   const updateUsuario = useCallback(
     async (id: number, patch: Partial<CatecAdminUsuario>) => updateUsuarioStore(id, patch),
     []
   )
+
   const resetarSenha = useCallback(async (id: number) => resetarSenhaStore(id), [])
   const obterUsuario = useCallback(async (id: number) => obterUsuarioStore(id), [])
 

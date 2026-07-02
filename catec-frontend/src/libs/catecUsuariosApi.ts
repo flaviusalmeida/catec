@@ -32,6 +32,7 @@ export async function criarUsuarioCatec(body: CatecUsuarioCreateInput): Promise<
     method: 'POST',
     body: JSON.stringify(body)
   })
+
   const data = await readCatecJsonBody(res)
 
   assertCatecOk(res, data, 'Não foi possível criar o usuário.')
@@ -44,6 +45,7 @@ export async function atualizarUsuarioCatec(id: number, body: CatecUsuarioUpdate
     method: 'PUT',
     body: JSON.stringify(body)
   })
+
   const data = await readCatecJsonBody(res)
 
   assertCatecOk(res, data, 'Não foi possível atualizar o usuário.')

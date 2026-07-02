@@ -3,7 +3,6 @@ import Button from '@mui/material/Button'
 
 // Type Imports
 import type { ChildrenType } from '@core/types'
-import type { Locale } from '@configs/i18n'
 
 // Layout Imports
 import LayoutWrapper from '@layouts/LayoutWrapper'
@@ -22,34 +21,31 @@ import ScrollToTop from '@core/components/scroll-to-top'
 import AuthGuard from '@/hocs/AuthGuard'
 
 // Config Imports
-import { i18n } from '@configs/i18n'
 
 // Util Imports
-import { getDictionary } from '@/utils/getDictionary'
 import { getMode, getSystemMode } from '@core/utils/serverHelpers'
 
-const Layout = async (props: ChildrenType & { params: Promise<{ lang: string }> }) => {
-  const params = await props.params
+const Layout = async (props: ChildrenType ) => {
+  
 
   const { children } = props
 
   // Type guard to ensure lang is a valid Locale
-  const lang: Locale = i18n.locales.includes(params.lang as Locale) ? (params.lang as Locale) : i18n.defaultLocale
+  
 
   // Vars
-  const direction = i18n.langDirection[lang]
-  const dictionary = await getDictionary(lang)
+  const direction = 'ltr'
   const mode = await getMode()
   const systemMode = await getSystemMode()
 
   return (
     <Providers direction={direction}>
-      <AuthGuard locale={lang}>
+      <AuthGuard >
         <LayoutWrapper
           systemMode={systemMode}
           verticalLayout={
             <VerticalLayout
-              navigation={<Navigation dictionary={dictionary} mode={mode} />}
+              navigation={<Navigation  mode={mode} />}
               navbar={<Navbar />}
               footer={<VerticalFooter />}
             >
@@ -57,7 +53,7 @@ const Layout = async (props: ChildrenType & { params: Promise<{ lang: string }> 
             </VerticalLayout>
           }
           horizontalLayout={
-            <HorizontalLayout header={<Header dictionary={dictionary} />} footer={<HorizontalFooter />}>
+            <HorizontalLayout header={<Header  />} footer={<HorizontalFooter />}>
               {children}
             </HorizontalLayout>
           }
@@ -70,7 +66,7 @@ const Layout = async (props: ChildrenType & { params: Promise<{ lang: string }> 
             <i className='tabler-arrow-up' />
           </Button>
         </ScrollToTop>
-        <Customizer dir={direction} />
+        <Customizer dir={direction}  disableDirection />
       </AuthGuard>
     </Providers>
   )

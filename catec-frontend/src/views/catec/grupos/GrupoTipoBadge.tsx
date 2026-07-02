@@ -1,6 +1,7 @@
 'use client'
 
 import Chip from '@mui/material/Chip'
+
 import type { ThemeColor } from '@core/types'
 
 type Props = {

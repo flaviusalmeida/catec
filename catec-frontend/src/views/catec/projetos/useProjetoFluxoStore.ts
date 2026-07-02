@@ -46,6 +46,7 @@ export function useProjetoFluxoStore(projetoId: number) {
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
   const [processando, setProcessando] = useState(false)
+
   const [historicoPage, setHistoricoPage] = useState<CatecHistoricoPage>({
     content: [],
     page: 0,
@@ -53,6 +54,7 @@ export function useProjetoFluxoStore(projetoId: number) {
     totalElements: 0,
     totalPages: 0
   })
+
   const [historicoCarregando, setHistoricoCarregando] = useState(false)
 
   const recarregar = useCallback(async () => {
@@ -182,6 +184,7 @@ export function useProjetoFluxoStore(projetoId: number) {
       const cont = data.contrato && STATUS_CONTRATO_INTERACAO_CLIENTE.includes(data.contrato.status)
         ? data.contrato
         : null
+
       const prop = data.propostas.find(p => STATUS_PROPOSTA_RESPOSTA_CLIENTE.includes(p.status)) ?? null
 
       if (!cont && !prop) return

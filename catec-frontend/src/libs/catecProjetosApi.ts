@@ -15,7 +15,6 @@ import {
   parseCatecContrato,
   parseCatecDocumentoAnexo,
   parseCatecHistoricoFluxoItem,
-  parseCatecProposta,
   parseCatecPropostaList,
   STATUS_PROPOSTA_RESPOSTA_CLIENTE,
   TIPO_INTERACAO_ROTULO_CONTRATO,
@@ -65,6 +64,7 @@ export async function criarProjetoCatec(body: CatecProjetoCreateInput): Promise<
     method: 'POST',
     body: JSON.stringify(body)
   })
+
   const data = await readCatecJsonBody(res)
 
   assertCatecOk(res, data, 'Não foi possível criar o projeto.')
@@ -77,6 +77,7 @@ export async function atualizarProjetoCatec(id: number, body: CatecProjetoUpdate
     method: 'PUT',
     body: JSON.stringify(body)
   })
+
   const data = await readCatecJsonBody(res)
 
   assertCatecOk(res, data, 'Não foi possível atualizar o projeto.')
@@ -89,6 +90,7 @@ export async function associarClienteProjetoCatec(id: number, clienteId: number)
     method: 'PUT',
     body: JSON.stringify({ clienteId })
   })
+
   const data = await readCatecJsonBody(res)
 
   assertCatecOk(res, data, 'Não foi possível associar o cliente.')
@@ -153,6 +155,7 @@ export async function acaoPropostaCatec(
         body: JSON.stringify({ requerAvaliacaoSocio: true })
       }
     )
+
     const patchData = await readCatecJsonBody(patchRes)
 
     assertCatecOk(patchRes, patchData, 'Erro ao atualizar configuração.')
@@ -161,6 +164,7 @@ export async function acaoPropostaCatec(
       `/api/v1/projetos/${projetoId}/propostas/${propostaId}/submeter-avaliacao-socio`,
       { method: 'POST' }
     )
+
     const data = await readCatecJsonBody(res)
 
     assertCatecOk(res, data, 'Não foi possível enviar para avaliação.')
@@ -178,6 +182,7 @@ export async function acaoPropostaCatec(
     `/api/v1/projetos/${projetoId}/propostas/${propostaId}${pathMap[acao as Exclude<CatecPropostaWorkflowActionKey, 'solicitar-revisao'>]}`,
     { method: 'POST' }
   )
+
   const data = await readCatecJsonBody(res)
 
   assertCatecOk(res, data, 'Ação não concluída.')
@@ -234,6 +239,7 @@ export async function enviarContratoClienteCatec(projetoId: number, contratoId: 
     `/api/v1/projetos/${projetoId}/contratos/${contratoId}/enviar-cliente`,
     { method: 'POST' }
   )
+
   const data = await readCatecJsonBody(res)
 
   assertCatecOk(res, data, 'Não foi possível enviar o contrato.')
@@ -307,6 +313,7 @@ export async function registrarInteracaoPropostaCatec(
     method: 'POST',
     body: JSON.stringify({ tipoInteracao, texto })
   })
+
   const data = await readCatecJsonBody(res)
 
   assertCatecOk(res, data, 'Erro ao registrar interação.')
@@ -322,6 +329,7 @@ export async function registrarInteracaoContratoCatec(
     method: 'POST',
     body: JSON.stringify({ tipoInteracao, texto })
   })
+
   const data = await readCatecJsonBody(res)
 
   assertCatecOk(res, data, 'Erro ao registrar interação.')

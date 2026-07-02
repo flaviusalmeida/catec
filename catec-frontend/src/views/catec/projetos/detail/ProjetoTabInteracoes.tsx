@@ -48,6 +48,7 @@ const ProjetoTabInteracoes = ({ fluxo }: Props) => {
 
   const alvo = useMemo(() => {
     const prop = data.propostas.find(p => STATUS_PROPOSTA_RESPOSTA_CLIENTE.includes(p.status)) ?? null
+
     const cont =
       data.contrato && STATUS_CONTRATO_INTERACAO_CLIENTE.includes(data.contrato.status)
         ? data.contrato

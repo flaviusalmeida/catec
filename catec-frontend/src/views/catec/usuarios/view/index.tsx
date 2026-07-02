@@ -2,17 +2,16 @@
 
 import { useEffect, useState } from 'react'
 
+import Link from 'next/link'
+
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
+
 import { toast } from 'react-toastify'
 
 import type { CatecAdminUsuario } from '@/types/catec/usuarioTypes'
-import type { Locale } from '@configs/i18n'
-import { getLocalizedUrl } from '@/utils/i18n'
 
 import { useUsuarios2Store } from '../useUsuarios2Store'
 import Usuario2LeftOverview from './Usuario2LeftOverview'
@@ -24,7 +23,7 @@ type Props = {
 
 const Usuario2View = ({ id }: Props) => {
   const { lista, carregando: storeCarregando, updateUsuario, resetarSenha, obterUsuario } = useUsuarios2Store()
-  const { lang: locale } = useParams()
+  
 
   const [usuario, setUsuario] = useState<CatecAdminUsuario | null>(null)
   const [carregando, setCarregando] = useState(true)
@@ -93,7 +92,7 @@ const Usuario2View = ({ id }: Props) => {
         <Button
           variant='contained'
           component={Link}
-          href={getLocalizedUrl('/catec/usuarios', locale as Locale)}
+          href={'/catec/usuarios'}
         >
           Voltar à lista
         </Button>

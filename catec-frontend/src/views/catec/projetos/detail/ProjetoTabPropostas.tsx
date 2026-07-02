@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, type ReactNode } from 'react'
 
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -52,6 +52,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
   const documentoAtual = propostaAtual?.documentos[0] ?? null
   const temAnexo = Boolean(documentoAtual)
   const temPropostaAtiva = data.propostas.some(p => p.status === 'RASCUNHO' || p.status === 'PENDENTE_AVALIACAO')
+
   const aguardandoAjuste = data.propostas.some(
     p => p.status === 'AGUARDANDO_AJUSTE' || p.consideracoesPendentes
   )
@@ -63,6 +64,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
 
   const podeUploadExistente =
     propostaAtual != null && STATUS_PROPOSTA_UPLOAD.includes(propostaAtual.status)
+
   const mostrarUpload = projetoTemCliente && (podeUploadExistente || podeIniciarProposta)
   const mostrarUploadCard = mostrarUpload && (propostaAtual == null || propostaAtual.status === 'RASCUNHO')
 

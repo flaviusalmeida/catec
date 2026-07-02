@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from 'react'
 
+import Link from 'next/link'
+
+import { useRouter } from 'next/navigation'
+
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
-import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+
 import { toast } from 'react-toastify'
 
 import type { CatecGrupo } from '@/types/catec/grupoTypes'
-import type { Locale } from '@configs/i18n'
-import { getLocalizedUrl } from '@/utils/i18n'
 
 import { useGruposStore } from '../useGruposStore'
 import GrupoLeftOverview from './GrupoLeftOverview'
@@ -24,7 +25,7 @@ type Props = {
 
 const GrupoView = ({ id }: Props) => {
   const { lista, catalogo, carregando: storeCarregando, updateGrupo, removeGrupo, obterGrupo } = useGruposStore()
-  const { lang: locale } = useParams()
+  
   const router = useRouter()
 
   const [grupo, setGrupo] = useState<CatecGrupo | null>(null)
@@ -96,7 +97,7 @@ const GrupoView = ({ id }: Props) => {
         <Button
           variant='contained'
           component={Link}
-          href={getLocalizedUrl('/catec/grupos', locale as Locale)}
+          href={'/catec/grupos'}
         >
           Voltar à lista
         </Button>
@@ -119,7 +120,7 @@ const GrupoView = ({ id }: Props) => {
     try {
       await removeGrupo(grupo.id)
       toast.success('Grupo excluído.')
-      router.push(getLocalizedUrl('/catec/grupos', locale as Locale))
+      router.push('/catec/grupos')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Não foi possível excluir o grupo.')
       throw err

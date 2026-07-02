@@ -1,5 +1,4 @@
 // Next Imports
-import { headers } from 'next/headers'
 
 // MUI Imports
 import InitColorSchemeScript from '@mui/material/InitColorSchemeScript'
@@ -9,15 +8,12 @@ import 'react-perfect-scrollbar/dist/css/styles.css'
 
 // Type Imports
 import type { ChildrenType } from '@core/types'
-import type { Locale } from '@configs/i18n'
 
 // Component Imports
 
 // HOC Imports
-import TranslationWrapper from '@/hocs/TranslationWrapper'
 
 // Config Imports
-import { i18n } from '@configs/i18n'
 
 // Util Imports
 import { getSystemMode } from '@core/utils/serverHelpers'
@@ -33,28 +29,28 @@ export const metadata = {
   description: 'CATEC — Assessoria em engenharia'
 }
 
-const RootLayout = async (props: ChildrenType & { params: Promise<{ lang: string }> }) => {
-  const params = await props.params
+const RootLayout = async (props: ChildrenType ) => {
+  
 
   const { children } = props
 
   // Type guard to ensure lang is a valid Locale
-  const lang: Locale = i18n.locales.includes(params.lang as Locale) ? (params.lang as Locale) : i18n.defaultLocale
+  
 
   // Vars
-  const headersList = await headers()
+  
   const systemMode = await getSystemMode()
-  const direction = i18n.langDirection[lang]
+  const direction = 'ltr'
 
   return (
-    <TranslationWrapper headersList={headersList} lang={lang}>
-      <html id='__next' lang={lang} dir={direction} suppressHydrationWarning>
+    
+      <html id='__next' lang='pt' dir={direction} suppressHydrationWarning>
         <body className='flex is-full min-bs-full flex-auto flex-col'>
           <InitColorSchemeScript attribute='data' defaultMode={systemMode} />
           {children}
         </body>
       </html>
-    </TranslationWrapper>
+    
   )
 }
 

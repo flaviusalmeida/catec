@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
@@ -12,11 +12,9 @@ import Typography from '@mui/material/Typography'
 import { toast } from 'react-toastify'
 
 import type { CatecGrupo, CatecGrupoCreateInput, CatecPermissaoCatalogo } from '@/types/catec/grupoTypes'
-import type { Locale } from '@configs/i18n'
 
 import CustomTextField from '@core/components/mui/TextField'
 
-import { getLocalizedUrl } from '@/utils/i18n'
 
 type Props = {
   open: boolean
@@ -41,7 +39,7 @@ const GrupoAddDrawer = ({ open, onClose, onAdd, catalogo }: Props) => {
   const [salvando, setSalvando] = useState(false)
 
   const router = useRouter()
-  const { lang: locale } = useParams()
+  
 
   function reset() {
     setNome('')
@@ -83,7 +81,7 @@ const GrupoAddDrawer = ({ open, onClose, onAdd, catalogo }: Props) => {
 
       toast.success('Grupo criado. Configure as permissões na edição.')
       handleClose()
-      router.push(getLocalizedUrl(`/catec/grupos/view/${criado.id}`, locale as Locale))
+      router.push(`/catec/grupos/view/${criado.id}`)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Não foi possível criar o grupo.')
     } finally {

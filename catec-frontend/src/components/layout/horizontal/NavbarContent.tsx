@@ -1,12 +1,10 @@
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 // Third-party Imports
 import classnames from 'classnames'
 
 // Type Imports
-import type { Locale } from '@configs/i18n'
 import type { ShortcutsType } from '@components/layout/shared/ShortcutsDropdown'
 import type { NotificationsType } from '@components/layout/shared/NotificationsDropdown'
 
@@ -14,7 +12,7 @@ import type { NotificationsType } from '@components/layout/shared/NotificationsD
 import NavToggle from './NavToggle'
 import Logo from '@components/layout/shared/Logo'
 import NavSearch from '@components/layout/shared/search'
-import LanguageDropdown from '@components/layout/shared/LanguageDropdown'
+
 import ModeDropdown from '@components/layout/shared/ModeDropdown'
 import ShortcutsDropdown from '@components/layout/shared/ShortcutsDropdown'
 import NotificationsDropdown from '@components/layout/shared/NotificationsDropdown'
@@ -28,7 +26,6 @@ import useHorizontalNav from '@menu/hooks/useHorizontalNav'
 
 // Util Imports
 import { horizontalLayoutClasses } from '@layouts/utils/layoutClasses'
-import { getLocalizedUrl } from '@/utils/i18n'
 
 // Vars
 const shortcuts: ShortcutsType[] = [
@@ -121,7 +118,7 @@ const notifications: NotificationsType[] = [
 const NavbarContent = () => {
   // Hooks
   const { isBreakpointReached } = useHorizontalNav()
-  const { lang: locale } = useParams()
+  
 
   return (
     <div
@@ -131,7 +128,7 @@ const NavbarContent = () => {
         <NavToggle />
         {/* Hide Logo on Smaller screens */}
         {!isBreakpointReached && (
-          <Link href={getLocalizedUrl(themeConfig.homePageUrl, locale as Locale)}>
+          <Link href={themeConfig.homePageUrl}>
             <Logo />
           </Link>
         )}
@@ -139,7 +136,6 @@ const NavbarContent = () => {
 
       <div className='flex items-center'>
         <NavSearch />
-        <LanguageDropdown />
         <ModeDropdown />
         <ShortcutsDropdown shortcuts={shortcuts} />
         <NotificationsDropdown notifications={notifications} />

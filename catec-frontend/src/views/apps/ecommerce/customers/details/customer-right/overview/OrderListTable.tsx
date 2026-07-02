@@ -5,7 +5,6 @@ import { useState, useEffect, useMemo } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -36,7 +35,6 @@ import type { RankingInfo } from '@tanstack/match-sorter-utils'
 // Type Imports
 import type { ThemeColor } from '@core/types'
 import type { OrderType } from '@/types/apps/ecommerceTypes'
-import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import OptionMenu from '@core/components/option-menu'
@@ -44,7 +42,6 @@ import TablePaginationComponent from '@components/TablePaginationComponent'
 import CustomTextField from '@core/components/mui/TextField'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -137,7 +134,7 @@ const OrderListTable = ({ orderData }: { orderData?: OrderType[] }) => {
   const [globalFilter, setGlobalFilter] = useState('')
 
   // Hooks
-  const { lang: locale } = useParams()
+  
 
   const columns = useMemo<ColumnDef<ECommerceOrderTypeWithAction, any>[]>(
     () => [
@@ -146,7 +143,7 @@ const OrderListTable = ({ orderData }: { orderData?: OrderType[] }) => {
         cell: ({ row }) => (
           <Typography
             component={Link}
-            href={getLocalizedUrl(`/apps/ecommerce/orders/details/${row.original.order}`, locale as Locale)}
+            href={`/apps/ecommerce/orders/details/${row.original.order}`}
             color='primary.main'
           >{`#${row.original.order}`}</Typography>
         )
@@ -181,7 +178,7 @@ const OrderListTable = ({ orderData }: { orderData?: OrderType[] }) => {
                 {
                   text: 'View',
                   icon: 'tabler-eye',
-                  href: getLocalizedUrl(`/apps/ecommerce/orders/details/${row.original.order}`, locale as Locale),
+                  href: `/apps/ecommerce/orders/details/${row.original.order}`,
                   linkProps: { className: 'flex items-center is-full plb-1.5 pli-4' }
                 },
                 {

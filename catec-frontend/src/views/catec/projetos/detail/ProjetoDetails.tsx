@@ -1,21 +1,19 @@
 'use client'
 
+import Link from 'next/link'
+
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Divider from '@mui/material/Divider'
 import Typography from '@mui/material/Typography'
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 import type { CatecProjeto } from '@/types/catec/projetoTypes'
 import { STATUS_PROJETO_ROTULO } from '@/types/catec/projetoTypes'
-import type { Locale } from '@configs/i18n'
 
 import CustomAvatar from '@core/components/mui/Avatar'
 import { formatTelefoneBrasil } from '@/utils/catec/brFormat'
 import { getInitials } from '@/utils/getInitials'
-import { getLocalizedUrl } from '@/utils/i18n'
 
 import ProjetoStatusBadge from '../ProjetoStatusBadge'
 
@@ -24,7 +22,7 @@ type Props = {
 }
 
 const ProjetoDetails = ({ projeto }: Props) => {
-  const { lang: locale } = useParams()
+  
 
   return (
     <Card>
@@ -53,7 +51,7 @@ const ProjetoDetails = ({ projeto }: Props) => {
               {projeto.clienteId && projeto.clienteNome ? (
                 <Typography
                   component={Link}
-                  href={getLocalizedUrl(`/catec/clientes/view/${projeto.clienteId}`, locale as Locale)}
+                  href={`/catec/clientes/view/${projeto.clienteId}`}
                   color='primary.main'
                 >
                   {projeto.clienteNome}
@@ -96,7 +94,7 @@ const ProjetoDetails = ({ projeto }: Props) => {
             variant='tonal'
             color='secondary'
             component={Link}
-            href={getLocalizedUrl('/catec/projetos', locale as Locale)}
+            href={'/catec/projetos'}
             startIcon={<i className='tabler-arrow-left' />}
           >
             Voltar à lista

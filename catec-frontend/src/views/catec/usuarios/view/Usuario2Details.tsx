@@ -1,20 +1,18 @@
 'use client'
 
+import Link from 'next/link'
+
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Divider from '@mui/material/Divider'
 import Typography from '@mui/material/Typography'
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 import type { CatecAdminUsuario } from '@/types/catec/usuarioTypes'
 import { rotuloGrupo } from '@/types/catec/usuarioTypes'
-import type { Locale } from '@configs/i18n'
 
 import CustomAvatar from '@core/components/mui/Avatar'
 import { getInitials } from '@/utils/getInitials'
-import { getLocalizedUrl } from '@/utils/i18n'
 
 import UsuarioStatusBadge from '@views/catec/usuarios/UsuarioStatusBadge'
 
@@ -23,7 +21,7 @@ type Props = {
 }
 
 const Usuario2Details = ({ usuario }: Props) => {
-  const { lang: locale } = useParams()
+  
 
   return (
     <Card>
@@ -75,7 +73,7 @@ const Usuario2Details = ({ usuario }: Props) => {
             variant='tonal'
             color='secondary'
             component={Link}
-            href={getLocalizedUrl('/catec/usuarios', locale as Locale)}
+            href={'/catec/usuarios'}
             startIcon={<i className='tabler-arrow-left' />}
           >
             Voltar à lista

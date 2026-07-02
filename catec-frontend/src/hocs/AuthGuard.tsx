@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 
 // Third-party Imports
 import type { ChildrenType } from '@core/types'
-import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import AuthRedirect from '@/components/AuthRedirect'
@@ -14,15 +13,15 @@ import { getAuthSession } from '@/libs/auth'
 // Util Imports
 import { getCatecDefinirSenhaUrl, needsTrocaSenha } from '@/utils/catec/authPaths'
 
-export default async function AuthGuard({ children, locale }: ChildrenType & { locale: Locale }) {
+export default async function AuthGuard({ children }: ChildrenType) {
   const session = await getAuthSession()
 
   if (!session) {
-    return <AuthRedirect lang={locale} />
+    return <AuthRedirect />
   }
 
   if (needsTrocaSenha(session)) {
-    redirect(getCatecDefinirSenhaUrl(locale))
+    redirect(getCatecDefinirSenhaUrl())
   }
 
   return <>{children}</>

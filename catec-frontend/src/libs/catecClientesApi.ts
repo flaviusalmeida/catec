@@ -28,6 +28,7 @@ export async function criarClienteCatec(body: CatecClienteRequest): Promise<Cate
     method: 'POST',
     body: JSON.stringify(body)
   })
+
   const data = await readCatecJsonBody(res)
 
   assertCatecOk(res, data, 'Não foi possível criar o cliente.')
@@ -40,6 +41,7 @@ export async function atualizarClienteCatec(id: number, body: CatecClienteReques
     method: 'PUT',
     body: JSON.stringify(body)
   })
+
   const data = await readCatecJsonBody(res)
 
   assertCatecOk(res, data, 'Não foi possível atualizar o cliente.')

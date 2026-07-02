@@ -6,7 +6,7 @@ import type { FormEvent } from 'react'
 
 // Next Imports
 import Image from 'next/image'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 // MUI Imports
 import Alert from '@mui/material/Alert'
@@ -19,15 +19,11 @@ import InputAdornment from '@mui/material/InputAdornment'
 // Third-party Imports
 import { getSession, signIn } from 'next-auth/react'
 
-// Type Imports
-import type { Locale } from '@configs/i18n'
-
 // Component Imports
 import CustomTextField from '@core/components/mui/TextField'
 
 // Util Imports
 import { getPostAuthDestination } from '@/utils/catec/authPaths'
-import { getLocalizedUrl } from '@/utils/i18n'
 
 // Styled Component Imports
 import AuthIllustrationWrapper from '@views/pages/auth/AuthIllustrationWrapper'
@@ -41,7 +37,7 @@ const CatecLogin = () => {
 
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { lang: locale } = useParams()
+  
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
@@ -78,12 +74,12 @@ const CatecLogin = () => {
       const redirectURL = searchParams.get('redirectTo') ?? '/catec/projetos'
 
       if (session) {
-        router.replace(getPostAuthDestination(session, locale as Locale, redirectURL))
+        router.replace(getPostAuthDestination(session, redirectURL))
 
         return
       }
 
-      router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+      router.replace(redirectURL)
 
       return
     }

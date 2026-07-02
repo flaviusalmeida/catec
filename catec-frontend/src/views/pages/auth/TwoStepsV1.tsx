@@ -4,7 +4,6 @@
 import { useState } from 'react'
 
 // Next Imports
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -18,14 +17,12 @@ import type { SlotProps } from 'input-otp'
 import classnames from 'classnames'
 
 // Type Imports
-import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import Link from '@components/Link'
 import Logo from '@components/layout/shared/Logo'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
 
 // Styled Component Imports
 import AuthIllustrationWrapper from './AuthIllustrationWrapper'
@@ -55,13 +52,13 @@ const TwoStepsV1 = () => {
   const [otp, setOtp] = useState<string | null>(null)
 
   // Hooks
-  const { lang: locale } = useParams()
+  
 
   return (
     <AuthIllustrationWrapper>
       <Card className='flex flex-col sm:is-[450px]'>
         <CardContent className='sm:!p-12'>
-          <Link href={getLocalizedUrl('/', locale as Locale)} className='flex justify-center mbe-6'>
+          <Link href={'/'} className='flex justify-center mbe-6'>
             <Logo />
           </Link>
           <div className='flex flex-col gap-1 mbe-6'>

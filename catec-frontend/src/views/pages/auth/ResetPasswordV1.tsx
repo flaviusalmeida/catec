@@ -5,7 +5,6 @@ import { useState } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -16,7 +15,6 @@ import InputAdornment from '@mui/material/InputAdornment'
 import Button from '@mui/material/Button'
 
 // Type Imports
-import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import DirectionalIcon from '@components/DirectionalIcon'
@@ -24,7 +22,6 @@ import Logo from '@components/layout/shared/Logo'
 import CustomTextField from '@core/components/mui/TextField'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
 
 // Styled Component Imports
 import AuthIllustrationWrapper from './AuthIllustrationWrapper'
@@ -35,7 +32,7 @@ const ResetPasswordV1 = () => {
   const [isConfirmPasswordShown, setIsConfirmPasswordShown] = useState(false)
 
   // Hooks
-  const { lang: locale } = useParams()
+  
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
@@ -45,7 +42,7 @@ const ResetPasswordV1 = () => {
     <AuthIllustrationWrapper>
       <Card className='flex flex-col sm:is-[450px]'>
         <CardContent className='sm:!p-12'>
-          <Link href={getLocalizedUrl('/', locale as Locale)} className='flex justify-center mbe-6'>
+          <Link href={'/'} className='flex justify-center mbe-6'>
             <Logo />
           </Link>
           <div className='flex flex-col gap-1 mbe-6'>
@@ -97,7 +94,7 @@ const ResetPasswordV1 = () => {
             </Button>
             <Typography className='flex justify-center items-center' color='primary.main'>
               <Link
-                href={getLocalizedUrl('/pages/auth/login-v1', locale as Locale)}
+                href={'/pages/auth/login-v1'}
                 className='flex items-center gap-1.5'
               >
                 <DirectionalIcon

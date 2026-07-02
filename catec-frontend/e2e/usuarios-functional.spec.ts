@@ -22,7 +22,7 @@ test('crud funcional básico na tela de usuários', async ({ page }) => {
   await setCatecSession(page)
   await mockUsuariosApi(page, { usuarios })
 
-  await page.goto('/pt/catec/usuarios')
+  await page.goto('/catec/usuarios')
 
   await expect(page.getByRole('heading', { name: 'Usuários' })).toBeVisible()
 
@@ -38,7 +38,7 @@ test('crud funcional básico na tela de usuários', async ({ page }) => {
   await expect(page.getByText('Usuário E2E')).toBeVisible()
 
   await page.getByRole('row', { name: /Usuário E2E/ }).click()
-  await expect(page).toHaveURL(/\/pt\/catec\/usuarios\/view\/2/)
+  await expect(page).toHaveURL(/\/catec\/usuarios\/view\/2/)
 
   await page.getByLabel('Nome').fill('Usuário E2E Editado')
   await page.getByRole('button', { name: 'Salvar alterações' }).click()

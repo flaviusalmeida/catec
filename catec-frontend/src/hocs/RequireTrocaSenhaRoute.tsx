@@ -1,9 +1,7 @@
 // Next Imports
 import { redirect } from 'next/navigation'
 
-// Type Imports
 import type { ChildrenType } from '@core/types'
-import type { Locale } from '@configs/i18n'
 
 // Lib Imports
 import { getAuthSession } from '@/libs/auth'
@@ -16,15 +14,15 @@ import {
   needsTrocaSenha
 } from '@/utils/catec/authPaths'
 
-const RequireTrocaSenhaRoute = async ({ children, lang }: ChildrenType & { lang: Locale }) => {
+const RequireTrocaSenhaRoute = async ({ children }: ChildrenType) => {
   const session = await getAuthSession()
 
   if (!session) {
-    redirect(getCatecLoginUrl(lang, getCatecDefinirSenhaUrl(lang)))
+    redirect(getCatecLoginUrl(getCatecDefinirSenhaUrl()))
   }
 
   if (!needsTrocaSenha(session)) {
-    redirect(getCatecHomeUrl(lang))
+    redirect(getCatecHomeUrl())
   }
 
   return <>{children}</>

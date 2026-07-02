@@ -72,6 +72,7 @@ export async function criarGrupoCatec(body: CatecGrupoCreateInput): Promise<Cate
       permissoes: body.permissoes
     })
   })
+
   const data = await readJsonBody(res)
 
   assertOk(res, data, 'Não foi possível criar o grupo.')
@@ -89,6 +90,7 @@ export async function atualizarGrupoCatec(id: number, body: CatecGrupoUpdateInpu
       permissoes: body.permissoes
     })
   })
+
   const data = await readJsonBody(res)
 
   assertOk(res, data, 'Não foi possível atualizar o grupo.')

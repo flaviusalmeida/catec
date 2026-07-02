@@ -2,17 +2,15 @@
 
 import { useEffect, useState } from 'react'
 
+import Link from 'next/link'
+
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 import type { CatecProjeto } from '@/types/catec/projetoTypes'
-import type { Locale } from '@configs/i18n'
-import { getLocalizedUrl } from '@/utils/i18n'
 
 import { useProjetosStore } from '../useProjetosStore'
 import { useProjetoFluxoStore } from '../useProjetoFluxoStore'
@@ -25,7 +23,7 @@ type Props = {
 
 const ProjetoDetalhe = ({ id }: Props) => {
   const { lista, carregando: storeCarregando, obterProjeto } = useProjetosStore()
-  const { lang: locale } = useParams()
+  
   const projetoId = Number(id)
   const fluxo = useProjetoFluxoStore(projetoId)
 
@@ -94,7 +92,7 @@ const ProjetoDetalhe = ({ id }: Props) => {
         <Button
           variant='contained'
           component={Link}
-          href={getLocalizedUrl('/catec/projetos', locale as Locale)}
+          href={'/catec/projetos'}
         >
           Voltar à lista
         </Button>

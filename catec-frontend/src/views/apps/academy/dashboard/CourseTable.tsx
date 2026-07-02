@@ -5,7 +5,6 @@ import { useState, useEffect, useMemo } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -36,7 +35,6 @@ import type { RankingInfo } from '@tanstack/match-sorter-utils'
 
 // Type Imports
 import type { Course } from '@/types/apps/academyTypes'
-import type { Locale } from '@configs/i18n'
 
 // Components Imports
 import CustomAvatar from '@core/components/mui/Avatar'
@@ -44,7 +42,6 @@ import TablePaginationComponent from '@components/TablePaginationComponent'
 import CustomTextField from '@core/components/mui/TextField'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -115,7 +112,7 @@ const CourseTable = ({ courseData }: { courseData?: Course[] }) => {
   const [globalFilter, setGlobalFilter] = useState('')
 
   // Hooks
-  const { lang: locale } = useParams()
+  
 
   const columns = useMemo<ColumnDef<CourseWithProgress, any>[]>(
     () => [
@@ -151,7 +148,7 @@ const CourseTable = ({ courseData }: { courseData?: Course[] }) => {
             <div className='flex flex-col'>
               <Typography
                 component={Link}
-                href={getLocalizedUrl('/apps/academy/course-details', locale as Locale)}
+                href={'/apps/academy/course-details'}
                 className='font-medium hover:text-primary'
                 color='text.primary'
               >

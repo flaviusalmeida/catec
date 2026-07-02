@@ -140,13 +140,13 @@ Regra de fase macro documentada em `FaseMacro` / `FaseMacroResolver` no backend.
 
 ### Frontend — fluxo comercial (UI oficial)
 
-Rotas no **`catec-frontend`** (prefixo `/pt`):
+Rotas no **`catec-frontend`**:
 
-- Login: `/pt/login` — troca de senha obrigatória: `/pt/catec/definir-senha`
-- Projetos: `/pt/catec/projetos`, detalhe `/pt/catec/projetos/{id}` (proposta, contrato, interações, histórico)
-- Clientes: `/pt/catec/clientes`
-- Usuários: `/pt/catec/usuarios`
-- Grupos: `/pt/catec/grupos`
+- Login: `/login` — troca de senha obrigatória: `/catec/definir-senha`
+- Projetos: `/catec/projetos`, detalhe `/catec/projetos/{id}` (proposta, contrato, interações, histórico)
+- Clientes: `/catec/clientes`
+- Usuários: `/catec/usuarios`
+- Grupos: `/catec/grupos`
 
 Fila do sócio (`/app/socio/propostas` no legado) **fora de escopo** desta migração.
 
@@ -168,8 +168,8 @@ pnpm install
 pnpm dev
 ```
 
-- **URL:** http://localhost:3000 (redirect `/` → `/pt/catec/projetos`)
-- **Login:** http://localhost:3000/pt/login
+- **URL:** http://localhost:3000 (redirect `/` → `/catec/projetos`)
+- **Login:** http://localhost:3000/login
 - **Credenciais dev:** `admin@catec.local` / `password`
 - **Menu:** itens CATEC conforme permissões `tela.*` em `GET /api/v1/me`
 - **Logo:** `catec-frontend/public/images/logo-catec.png`

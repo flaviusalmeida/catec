@@ -6,7 +6,7 @@ import type { FormEvent } from 'react'
 
 // Next Imports
 import Image from 'next/image'
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 // MUI Imports
 import Alert from '@mui/material/Alert'
@@ -17,9 +17,6 @@ import Typography from '@mui/material/Typography'
 
 // Third-party Imports
 import { useSession } from 'next-auth/react'
-
-// Type Imports
-import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import CustomTextField from '@core/components/mui/TextField'
@@ -40,7 +37,6 @@ const DefinirSenha = () => {
   const [error, setError] = useState<string | null>(null)
 
   const router = useRouter()
-  const { lang: locale } = useParams()
   const { update } = useSession()
 
   async function handleSubmit(e: FormEvent) {
@@ -60,7 +56,7 @@ const DefinirSenha = () => {
 
       await update({ accessToken: login.accessToken })
 
-      router.replace(getCatecHomeUrl(locale as Locale))
+      router.replace(getCatecHomeUrl())
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível contatar o servidor.')
     } finally {

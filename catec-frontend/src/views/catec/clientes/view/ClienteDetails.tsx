@@ -1,29 +1,27 @@
 'use client'
 
+import Link from 'next/link'
+
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Chip from '@mui/material/Chip'
 import Divider from '@mui/material/Divider'
 import Typography from '@mui/material/Typography'
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 import type { CatecCliente } from '@/types/catec/clienteTypes'
 import { rotuloTipoPessoa } from '@/types/catec/clienteTypes'
-import type { Locale } from '@configs/i18n'
 
 import CustomAvatar from '@core/components/mui/Avatar'
 import { documentoParaExibicao, formatTelefoneBrasil } from '@/utils/catec/brFormat'
 import { getInitials } from '@/utils/getInitials'
-import { getLocalizedUrl } from '@/utils/i18n'
 
 type Props = {
   cliente: CatecCliente
 }
 
 const ClienteDetails = ({ cliente }: Props) => {
-  const { lang: locale } = useParams()
+  
   const responsavel = cliente.responsaveis[0]
 
   return (
@@ -94,7 +92,7 @@ const ClienteDetails = ({ cliente }: Props) => {
             variant='tonal'
             color='secondary'
             component={Link}
-            href={getLocalizedUrl('/catec/clientes', locale as Locale)}
+            href={'/catec/clientes'}
             startIcon={<i className='tabler-arrow-left' />}
           >
             Voltar à lista

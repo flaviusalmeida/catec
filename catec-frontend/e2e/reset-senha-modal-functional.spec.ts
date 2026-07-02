@@ -40,7 +40,7 @@ test('modal de reset: cancelar não chama endpoint e confirmar chama', async ({ 
     }
   })
 
-  await page.goto('/pt/catec/usuarios/view/2')
+  await page.goto('/catec/usuarios/view/2')
   await expect(page.getByText('Usuario Reset')).toBeVisible()
 
   await page.getByRole('button', { name: 'Redefinir senha' }).click()

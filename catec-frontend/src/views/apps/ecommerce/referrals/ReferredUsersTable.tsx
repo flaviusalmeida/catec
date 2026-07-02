@@ -5,7 +5,6 @@ import { useMemo, useState } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -36,7 +35,6 @@ import type { RankingInfo } from '@tanstack/match-sorter-utils'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
-import type { Locale } from '@configs/i18n'
 import type { ReferralsType } from '@/types/apps/ecommerceTypes'
 
 // Component Imports
@@ -45,7 +43,6 @@ import CustomTextField from '@core/components/mui/TextField'
 import TablePaginationComponent from '@components/TablePaginationComponent'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -93,7 +90,7 @@ const ReferredUsersTable = ({ referralsData }: { referralsData?: ReferralsType[]
   const [data, setData] = useState(...[referralsData])
 
   // Hooks
-  const { lang: locale } = useParams()
+  
 
   const columns = useMemo<ColumnDef<ReferralsType, any>[]>(
     () => [
@@ -127,7 +124,7 @@ const ReferredUsersTable = ({ referralsData }: { referralsData?: ReferralsType[]
             <div className='flex flex-col items-start'>
               <Typography
                 component={Link}
-                href={getLocalizedUrl('/apps/ecommerce/customers/details/879861', locale as Locale)}
+                href={'/apps/ecommerce/customers/details/879861'}
                 color='text.primary'
                 className='font-medium hover:text-primary'
               >

@@ -130,10 +130,12 @@ export function useClientesStore() {
   }, [])
 
   const addCliente = useCallback(async (body: CatecClienteRequest) => addClienteStore(body), [])
+
   const updateCliente = useCallback(
     async (id: number, patch: Partial<CatecCliente>) => updateClienteStore(id, patch),
     []
   )
+
   const removeCliente = useCallback(async (id: number) => removeClienteStore(id), [])
   const obterCliente = useCallback(async (id: number) => obterClienteStore(id), [])
 

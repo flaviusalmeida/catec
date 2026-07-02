@@ -2,17 +2,16 @@
 
 import { useEffect, useState } from 'react'
 
+import Link from 'next/link'
+
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
+
 import { toast } from 'react-toastify'
 
 import type { CatecCliente } from '@/types/catec/clienteTypes'
-import type { Locale } from '@configs/i18n'
-import { getLocalizedUrl } from '@/utils/i18n'
 
 import { useClientesStore } from '../useClientesStore'
 import ClienteLeftOverview from './ClienteLeftOverview'
@@ -24,7 +23,7 @@ type Props = {
 
 const ClienteView = ({ id }: Props) => {
   const { lista, carregando: storeCarregando, updateCliente, obterCliente } = useClientesStore()
-  const { lang: locale } = useParams()
+  
 
   const [cliente, setCliente] = useState<CatecCliente | null>(null)
   const [carregando, setCarregando] = useState(true)
@@ -93,7 +92,7 @@ const ClienteView = ({ id }: Props) => {
         <Button
           variant='contained'
           component={Link}
-          href={getLocalizedUrl('/catec/clientes', locale as Locale)}
+          href={'/catec/clientes'}
         >
           Voltar à lista
         </Button>

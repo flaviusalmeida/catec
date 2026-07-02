@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -31,14 +31,12 @@ import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 import type { ThemeColor } from '@core/types'
 import type { CatecAdminUsuario, CatecGrupoValor, CatecUsuarioCreateInput } from '@/types/catec/usuarioTypes'
 import { rotuloGrupo } from '@/types/catec/usuarioTypes'
-import type { Locale } from '@configs/i18n'
 
 import CustomAvatar from '@core/components/mui/Avatar'
 import CustomTextField from '@core/components/mui/TextField'
 import TablePaginationComponent from '@components/TablePaginationComponent'
 
 import { getInitials } from '@/utils/getInitials'
-import { getLocalizedUrl } from '@/utils/i18n'
 
 import tableStyles from '@core/styles/table.module.css'
 
@@ -107,7 +105,7 @@ const Usuario2ListTable = ({ lista, onAdd }: Props) => {
   const [filteredData, setFilteredData] = useState(lista)
   const [globalFilter, setGlobalFilter] = useState('')
 
-  const { lang: locale } = useParams()
+  
   const router = useRouter()
 
   useEffect(() => {
@@ -168,7 +166,7 @@ const Usuario2ListTable = ({ lista, onAdd }: Props) => {
           <div className='flex items-center'>
             <IconButton aria-label='Abrir usuário'>
               <Link
-                href={getLocalizedUrl(`/catec/usuarios/view/${row.original.id}`, locale as Locale)}
+                href={`/catec/usuarios/view/${row.original.id}`}
                 className='flex'
               >
                 <i className='tabler-eye text-textSecondary' />
@@ -179,7 +177,7 @@ const Usuario2ListTable = ({ lista, onAdd }: Props) => {
         enableSorting: false
       })
     ],
-    [locale]
+    []
   )
 
   const table = useReactTable({
@@ -279,7 +277,7 @@ const Usuario2ListTable = ({ lista, onAdd }: Props) => {
                     key={row.id}
                     className='cursor-pointer'
                     onClick={() =>
-                      router.push(getLocalizedUrl(`/catec/usuarios/view/${row.original.id}`, locale as Locale))
+                      router.push(`/catec/usuarios/view/${row.original.id}`)
                     }
                   >
                     {row.getVisibleCells().map(cell => (

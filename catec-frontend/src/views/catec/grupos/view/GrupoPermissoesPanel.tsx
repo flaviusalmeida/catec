@@ -31,6 +31,7 @@ const GrupoPermissoesPanel = ({
   onToggleModulo
 }: Props) => {
   const termo = filtro.trim().toLowerCase()
+
   const catalogoFiltrado = termo
     ? catalogo.filter(
         p =>

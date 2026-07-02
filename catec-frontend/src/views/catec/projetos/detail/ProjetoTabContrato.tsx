@@ -57,6 +57,7 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
 
   const podeIniciarContrato = !contrato
   const podeUploadExistente = contrato != null && STATUS_CONTRATO_UPLOAD.includes(contrato.status)
+
   const mostrarUploadCard = Boolean(
     podeIniciarContrato ||
       (podeUploadExistente && (contrato?.status === 'RASCUNHO' || contrato?.status === 'AGUARDANDO_AJUSTE' || !temAnexo))

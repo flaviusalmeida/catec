@@ -4,8 +4,8 @@ import { permissoesAdministrativo } from './fixtures/me'
 import { setCatecSession } from './helpers/session'
 
 test('redireciona para login quando não autenticado', async ({ page }) => {
-  await page.goto('/pt/catec/usuarios')
-  await expect(page).toHaveURL(/\/pt\/login/)
+  await page.goto('/catec/usuarios')
+  await expect(page).toHaveURL(/\/login/)
 })
 
 test('redireciona para login quando a API retorna 401', async ({ page }) => {
@@ -19,8 +19,8 @@ test('redireciona para login quando a API retorna 401', async ({ page }) => {
     })
   })
 
-  await page.goto('/pt/catec/usuarios')
-  await expect(page).toHaveURL(/\/pt\/login/, { timeout: 15_000 })
+  await page.goto('/catec/usuarios')
+  await expect(page).toHaveURL(/\/login/, { timeout: 15_000 })
 })
 
 test('mostra erro de permissão quando listagem retorna 403', async ({ page }) => {
@@ -43,6 +43,6 @@ test('mostra erro de permissão quando listagem retorna 403', async ({ page }) =
     })
   })
 
-  await page.goto('/pt/catec/usuarios')
+  await page.goto('/catec/usuarios')
   await expect(page.getByText('Você não tem permissão para gerenciar usuários.')).toBeVisible()
 })

@@ -2,19 +2,17 @@
 
 import type { ReactNode } from 'react'
 
+import Link from 'next/link'
+
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardHeader from '@mui/material/CardHeader'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 import type { CatecProjeto } from '@/types/catec/projetoTypes'
-import type { Locale } from '@configs/i18n'
 
 import { formatTelefoneBrasil } from '@/utils/catec/brFormat'
-import { getLocalizedUrl } from '@/utils/i18n'
 
 import ProjetoStatusBadge from '../ProjetoStatusBadge'
 import CollapsibleText from './CollapsibleText'
@@ -35,7 +33,7 @@ function InfoField({ label, children }: { label: string; children: ReactNode }) 
 }
 
 const ProjetoTabGeral = ({ projeto }: Props) => {
-  const { lang: locale } = useParams()
+  
 
   return (
     <Grid container spacing={6}>
@@ -47,7 +45,7 @@ const ProjetoTabGeral = ({ projeto }: Props) => {
               <InfoField label='Cliente'>
                 {projeto.clienteId && projeto.clienteNome ? (
                   <Link
-                    href={getLocalizedUrl(`/catec/clientes/view/${projeto.clienteId}`, locale as Locale)}
+                    href={`/catec/clientes/view/${projeto.clienteId}`}
                     className='text-primary hover:underline'
                   >
                     {projeto.clienteNome}

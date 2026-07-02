@@ -141,14 +141,17 @@ export function useProjetosStore() {
   }, [])
 
   const addProjeto = useCallback(async (input: CatecProjetoCreateInput) => addProjetoStore(input), [])
+
   const updateProjeto = useCallback(
     async (id: number, patch: Partial<CatecProjeto>) => updateProjetoStore(id, patch),
     []
   )
+
   const associarCliente = useCallback(
     async (id: number, clienteId: number) => associarClienteStore(id, clienteId),
     []
   )
+
   const obterProjeto = useCallback(async (id: number) => obterProjetoStore(id), [])
 
   return {

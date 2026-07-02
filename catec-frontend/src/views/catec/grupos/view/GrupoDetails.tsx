@@ -1,19 +1,17 @@
 'use client'
 
+import Link from 'next/link'
+
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Divider from '@mui/material/Divider'
 import Typography from '@mui/material/Typography'
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 import { catecPermissoesCatalogo } from '@/fake-db/catec/permissoes'
 import type { CatecGrupo } from '@/types/catec/grupoTypes'
-import type { Locale } from '@configs/i18n'
 
 import CustomAvatar from '@core/components/mui/Avatar'
-import { getLocalizedUrl } from '@/utils/i18n'
 
 import GrupoStatusBadge from '../GrupoStatusBadge'
 import GrupoTipoBadge from '../GrupoTipoBadge'
@@ -23,7 +21,7 @@ type Props = {
 }
 
 const GrupoDetails = ({ grupo }: Props) => {
-  const { lang: locale } = useParams()
+  
   const totalCatalogo = catecPermissoesCatalogo.length
 
   return (
@@ -94,7 +92,7 @@ const GrupoDetails = ({ grupo }: Props) => {
             variant='tonal'
             color='secondary'
             component={Link}
-            href={getLocalizedUrl('/catec/grupos', locale as Locale)}
+            href={'/catec/grupos'}
             startIcon={<i className='tabler-arrow-left' />}
           >
             Voltar à lista

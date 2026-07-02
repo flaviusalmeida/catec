@@ -2,13 +2,11 @@
 import type { ReactNode } from 'react'
 
 // Next Imports
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import type { ChipProps } from '@mui/material/Chip'
 
 // Type Imports
-import type { Locale } from '@configs/i18n'
 import type {
   VerticalMenuDataType,
   VerticalSectionDataType,
@@ -25,12 +23,11 @@ import { SubMenu as VerticalSubMenu, MenuItem as VerticalMenuItem, MenuSection }
 import CustomChip from '@core/components/mui/Chip'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
 
 // Generate a menu from the menu data array
 export const GenerateVerticalMenu = ({ menuData }: { menuData: VerticalMenuDataType[] }) => {
   // Hooks
-  const { lang: locale } = useParams()
+  
 
   const renderMenuItems = (data: VerticalMenuDataType[]) => {
     // Use the map method to iterate through the array of menu data
@@ -87,13 +84,10 @@ export const GenerateVerticalMenu = ({ menuData }: { menuData: VerticalMenuDataT
       }
 
       // If the current item is neither a section nor a sub menu, return a MenuItem component
-      const { label, excludeLang, icon, prefix, suffix, ...rest } = menuItem
+      const { label,  icon, prefix, suffix, ...rest } = menuItem
 
       // Localize the href
-      const href = rest.href?.startsWith('http')
-        ? rest.href
-        : rest.href && (excludeLang ? rest.href : getLocalizedUrl(rest.href, locale as Locale))
-
+      
       const Icon = icon ? <i className={icon} /> : null
 
       const menuItemPrefix: ReactNode =
@@ -116,7 +110,7 @@ export const GenerateVerticalMenu = ({ menuData }: { menuData: VerticalMenuDataT
           prefix={menuItemPrefix}
           suffix={menuItemSuffix}
           {...rest}
-          href={href}
+          href={menuItem.href}
           {...(Icon && { icon: Icon })}
         >
           {label}
@@ -131,7 +125,7 @@ export const GenerateVerticalMenu = ({ menuData }: { menuData: VerticalMenuDataT
 // Generate a menu from the menu data array
 export const GenerateHorizontalMenu = ({ menuData }: { menuData: HorizontalMenuDataType[] }) => {
   // Hooks
-  const { lang: locale } = useParams()
+  
 
   const renderMenuItems = (data: HorizontalMenuDataType[]) => {
     // Use the map method to iterate through the array of menu data
@@ -174,13 +168,10 @@ export const GenerateHorizontalMenu = ({ menuData }: { menuData: HorizontalMenuD
       }
 
       // If the current item is not a sub menu, return a MenuItem component
-      const { label, excludeLang, icon, prefix, suffix, ...rest } = menuItem
+      const { label,  icon, prefix, suffix, ...rest } = menuItem
 
       // Localize the href
-      const href = rest.href?.startsWith('http')
-        ? rest.href
-        : rest.href && (excludeLang ? rest.href : getLocalizedUrl(rest.href, locale as Locale))
-
+      
       const Icon = icon ? <i className={icon} /> : null
 
       const menuItemPrefix: ReactNode =
@@ -203,7 +194,7 @@ export const GenerateHorizontalMenu = ({ menuData }: { menuData: HorizontalMenuD
           prefix={menuItemPrefix}
           suffix={menuItemSuffix}
           {...rest}
-          href={href}
+          href={menuItem.href}
           {...(Icon && { icon: Icon })}
         >
           {label}
