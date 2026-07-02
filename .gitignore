@@ -18,10 +18,18 @@ catec-backend/storage/
 hs_err_pid*
 replay_pid*
 
-# Node / frontend
+# Node / frontend legado (descontinuado)
 catec-frontend/node_modules/
 catec-frontend/dist/
 catec-frontend/.vite/
+
+# Frontend oficial (Next.js)
+novo-front/novo-catec-frontend/node_modules/
+novo-front/novo-catec-frontend/.next/
+novo-front/novo-catec-frontend/test-results/
+novo-front/novo-catec-frontend/playwright-report/
+novo-front/novo-catec-frontend/blob-report/
+novo-front/novo-catec-frontend/playwright/.cache/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

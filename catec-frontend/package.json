@@ -4,9 +4,9 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
+    "dev": "node ./scripts/deprecated.mjs dev",
+    "build": "node ./scripts/deprecated.mjs build",
+    "preview": "node ./scripts/deprecated.mjs preview",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",

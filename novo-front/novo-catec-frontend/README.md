@@ -1,34 +1,51 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# CATEC — frontend (Next.js / Vuexy)
 
-## Getting Started
+Frontend oficial do sistema CATEC. Consome a API Spring Boot em `catec-backend` (`NEXT_PUBLIC_API_BASE_URL`, padrão `http://localhost:8080`).
 
-First, run the development server:
+Documentação completa do monorepo: [docs/FRONTEND.md](../../docs/FRONTEND.md).
+
+## Início rápido
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+cp .env.example .env
+# Preencha NEXTAUTH_SECRET (openssl rand -base64 32)
+
+pnpm install
+pnpm dev --webpack
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Login:** http://localhost:3000/pt/login  
+- **Área autenticada:** http://localhost:3000/pt/catec/projetos  
+- **Credenciais dev:** `admin@catec.local` / `password`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts úteis
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+| Comando | Descrição |
+|---------|-----------|
+| `pnpm dev --webpack` | Servidor de desenvolvimento |
+| `pnpm build` | Build de produção |
+| `pnpm start` | Servir build |
+| `pnpm test:e2e` | Smoke tests Playwright |
+| `pnpm lint` | ESLint |
 
-## Learn More
+## Variáveis de ambiente
 
-To learn more about Next.js, take a look at the following resources:
+Ver [.env.example](./.env.example). As essenciais para CATEC:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `NEXT_PUBLIC_API_BASE_URL` — backend Spring Boot
+- `NEXTAUTH_SECRET` — obrigatório (sessão JWT NextAuth)
+- `NEXTAUTH_URL` — `http://localhost:3000/api/auth` em dev
+- `NEXT_PUBLIC_SHOW_VUEXY_DEMOS` — `true` só para explorar demos do template
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Estrutura CATEC
 
-## Deploy on Vercel
+```
+src/
+  app/[lang]/(dashboard)/(private)/catec/   # rotas App Router
+  views/catec/                              # telas
+  libs/catec*Api.ts                          # cliente HTTP
+  components/catec/                         # guards, menu, permissões
+  e2e/                                      # smoke Playwright
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+O template Vuexy (dashboards, apps demo) permanece no código mas fica oculto no menu por padrão.

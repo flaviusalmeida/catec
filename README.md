@@ -1,6 +1,8 @@
 # CATEC — sistema de gestão de fluxo
 
-Repositório com **`catec-backend`** (Java / Spring Boot), **`catec-frontend`** (React) e **PostgreSQL** para desenvolvimento local via Docker Compose.
+Repositório com **`catec-backend`** (Java / Spring Boot), **`novo-front/novo-catec-frontend`** (Next.js — frontend oficial) e **PostgreSQL** para desenvolvimento local via Docker Compose.
+
+O frontend legado **`catec-frontend`** (React/Vite) está **descontinuado**; ver [docs/FRONTEND.md](docs/FRONTEND.md).
 
 Pastas de análise, planos, tarefas e documentação comercial/técnica detalhada ficam em **`Analise Projeto/`** no seu computador e **não entram no Git** (ver `.gitignore`).
 
@@ -9,7 +11,7 @@ Pastas de análise, planos, tarefas e documentação comercial/técnica detalhad
 - [Docker](https://docs.docker.com/get-docker/) (Compose v2)
 - [Java 17+](https://adoptium.net/) (JDK na variável `JAVA_HOME`; obrigatório para o Maven Wrapper)
 - Opcional: Maven instalado globalmente — o projeto inclui **`mvnw` / `mvnw.cmd`**, que baixam o Maven 3.9.x e evitam conflito com instalações antigas
-- [Node.js 20+](https://nodejs.org/) (frontend)
+- [Node.js 20+](https://nodejs.org/) e [pnpm](https://pnpm.io/) (frontend oficial)
 
 ## Variáveis de ambiente
 
@@ -90,7 +92,7 @@ A UI e o spec ficam **desabilitados** fora do perfil `dev` (`application.yml`). 
 - **Segredo e duração:** variáveis `JWT_SECRET` (mínimo **32 caracteres** para HS256) e opcional `JWT_EXPIRATION_MINUTES` (ver `application.yml`).
 - **Usuários de desenvolvimento** (migração `V2__seed_usuarios_dev.sql`): `admin@catec.local` / senha **`password`** (perfil `ADMINISTRATIVO`); `inativo@catec.local` / **`password`** — conta **inativa** (não deve autenticar).
 - **Grupos de acesso** (migrações `V27__grupos_acesso.sql`, `V28__drop_usuario_perfil.sql`): catálogo de permissões (telas/ações), grupos padrão e API `GET/POST/PUT/DELETE /api/v1/admin/grupos` (requer permissão `acao.grupo.gerir`). `GET /api/v1/me` retorna `grupos` e `permissoes`. A tabela legada `usuario_perfil` foi removida — vínculos ficam em `usuario_grupo`.
-- **CORS:** em `dev`, origens `http://localhost:5173`, `http://127.0.0.1:5173` (React/Vite) e `http://localhost:3000`, `http://127.0.0.1:3000` (Next.js).
+- **CORS:** em `dev`, origens `http://localhost:3000` e `http://127.0.0.1:3000` (Next.js). O frontend legado Vite (`:5173`) foi descontinuado.
 
 Erros tratados pelo handler global devolvem JSON com `status`, `mensagem`, `timestamp` e `path`.
 
@@ -133,27 +135,54 @@ Somente leitura; perfis `COLABORADOR`, `ADMINISTRATIVO`, `SOCIO` (colaborador v�
 
 Regra de fase macro documentada em `FaseMacro` / `FaseMacroResolver` no backend.
 
-### Painel de visibilidade (frontend — task_019)
+### Painel de visibilidade (frontend)
 
-- Rota **`/app/painel`**: indicadores, filtros (cliente, fase macro, atualizado até), tabela paginada de projetos com **fase macro**, histórico do projeto selecionado (paginação).
+- A **API** do painel (`GET /api/v1/painel/*`) está documentada acima.
+- A **UI do painel** (`/app/painel` no legado) ainda não foi portada para o novo frontend; use a API ou o código em `catec-frontend/` apenas como referência.
 
-### Frontend — fluxo comercial Fase 1
+### Frontend — fluxo comercial (UI oficial)
 
-- Detalhe do projeto: `/app/projetos/:id` (proposta, anexos, transições, registro da resposta do cliente).
-- Fila do sócio: `/app/socio/propostas`.
-- Limites em `application.yml` (`app.documento.max-size-bytes`, `app.documento.allowed-mime-types`); variáveis opcionais: `APP_DOCUMENTO_MAX_BYTES`, `APP_DOCUMENTO_STORAGE_DIR`, `APP_DOCUMENTO_STORAGE_TYPE`.
+Rotas no **`novo-front/novo-catec-frontend`** (prefixo `/pt`):
+
+- Login: `/pt/login` — troca de senha obrigatória: `/pt/catec/definir-senha`
+- Projetos: `/pt/catec/projetos`, detalhe `/pt/catec/projetos/{id}` (proposta, contrato, interações, histórico)
+- Clientes: `/pt/catec/clientes`
+- Usuários: `/pt/catec/usuarios`
+- Grupos: `/pt/catec/grupos`
+
+Fila do sócio (`/app/socio/propostas` no legado) **fora de escopo** desta migração.
+
+Limites em `application.yml` (`app.documento.max-size-bytes`, `app.documento.allowed-mime-types`); variáveis opcionais: `APP_DOCUMENTO_MAX_BYTES`, `APP_DOCUMENTO_STORAGE_DIR`, `APP_DOCUMENTO_STORAGE_TYPE`.
 
 ## Executar o frontend
 
+Documentação detalhada: **[docs/FRONTEND.md](docs/FRONTEND.md)**.
+
 ```bash
-cd catec-frontend
-npm install
-npm run dev
+cd novo-front/novo-catec-frontend
+cp .env.example .env
 ```
 
-Por padrão o Vite serve em **http://localhost:5173** (porta indicada no terminal após `npm run dev`). Após o login, o app redireciona para **`/app/painel`** (área autenticada com menu lateral no mesmo estilo visual da tela de login). Itens do menu (Painel, Projetos, Clientes, Usuários, Grupos, etc.) aparecem conforme as **permissões** do usuário (`tela.*`). A **página de login** usa a paleta da marca e a logo PNG transparente em `catec-frontend/public/logo-catec.png` (cópia de `Analise Projeto/logotipos/Logo principal azul-8.png`). A API por padrão é `http://localhost:8080`; para outro host, crie `catec-frontend/.env` com `VITE_API_BASE_URL=https://...`.
+Preencha pelo menos `NEXTAUTH_SECRET` (ex.: `openssl rand -base64 32`) e confirme `NEXT_PUBLIC_API_BASE_URL=http://localhost:8080`.
 
-**Autenticação no browser (task_017):** `AuthContext` carrega `/api/v1/me` e expõe `hasPermission` / `hasAnyPermission`. O menu usa `CanPermission`; rotas sensíveis usam `RequireAuth` + `RequirePermission`. **Importante:** ocultar botões ou rotas no React não substitui a segurança da API — o backend continua a validar JWT e permissões em cada operação.
+```bash
+pnpm install
+pnpm dev --webpack
+```
+
+- **URL:** http://localhost:3000 (redirect `/` → `/pt/catec/projetos`)
+- **Login:** http://localhost:3000/pt/login
+- **Credenciais dev:** `admin@catec.local` / `password`
+- **Menu:** itens CATEC conforme permissões `tela.*` em `GET /api/v1/me`
+- **Logo:** `novo-front/novo-catec-frontend/public/images/logo-catec.png`
+
+**Autenticação:** NextAuth (credenciais) + JWT da API CATEC na sessão. Guards `AuthGuard`, `RequireCatecPermission` e `CanPermission` no React; a API continua a validar JWT e permissões em cada operação.
+
+**Testes smoke (Playwright):** `pnpm test:e2e` na pasta do frontend (requer `NEXTAUTH_SECRET` no `.env`).
+
+### Frontend legado (`catec-frontend/`)
+
+Descontinuado — scripts `dev`/`build`/`preview` bloqueados. Ver [catec-frontend/README.md](catec-frontend/README.md).
 
 ## Parar o banco
 
@@ -170,3 +199,5 @@ Se você tiver a pasta **`Analise Projeto/`** ao lado do código (cópia interna
 - Especificação técnica: `Analise Projeto/docs/ESPECIFICACAO_TECNICA_CATEC.md`
 - Plano de desenvolvimento: `Analise Projeto/planos/PLANO_DESENVOLVIMENTO_OFICIAL.md`
 - Lista de tarefas: `Analise Projeto/tasks/`
+
+**Frontend (versionado no Git):** [docs/FRONTEND.md](docs/FRONTEND.md)
