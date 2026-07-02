@@ -11,7 +11,7 @@ import { useClientesStore } from '@/views/catec/clientes/useClientesStore'
 import { useProjetosStore } from '../useProjetosStore'
 
 const ProjetoList = () => {
-  const { lista, carregando, erro, addProjeto } = useProjetosStore()
+  const { lista, resumo, carregando, erro, addProjeto } = useProjetosStore()
   const { lista: clientes } = useClientesStore()
 
   return (
@@ -35,7 +35,7 @@ const ProjetoList = () => {
       ) : (
         <>
           <Grid size={{ xs: 12 }}>
-            <ProjetoListCards lista={lista} />
+            <ProjetoListCards lista={lista} resumo={resumo} />
           </Grid>
           <Grid size={{ xs: 12 }}>
             <ProjetoListTable lista={lista} clientes={clientes} onAdd={addProjeto} />

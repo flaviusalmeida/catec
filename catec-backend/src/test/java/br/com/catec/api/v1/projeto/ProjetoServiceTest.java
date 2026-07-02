@@ -10,6 +10,8 @@ import static org.mockito.Mockito.when;
 import br.com.catec.domain.cliente.Cliente;
 import br.com.catec.domain.cliente.ClienteRepository;
 import br.com.catec.domain.cliente.TipoPessoa;
+import br.com.catec.domain.auditoria.AuditoriaService;
+import br.com.catec.domain.auditoria.TipoEntidadeAuditoria;
 import br.com.catec.domain.projeto.Projeto;
 import br.com.catec.domain.projeto.ProjetoRepository;
 import br.com.catec.domain.projeto.ProjetoStatus;
@@ -47,6 +49,9 @@ class ProjetoServiceTest {
     @Spy
     private AuthorizationService authz = new AuthorizationService();
 
+    @Mock
+    private AuditoriaService auditoriaService;
+
     @InjectMocks
     private ProjetoService service;
 
@@ -76,6 +81,14 @@ class ProjetoServiceTest {
 
         assertEquals(ProjetoStatus.ELABORANDO_PROPOSTA, out.status());
         verify(projetoRepository).save(p);
+        verify(auditoriaService)
+                .registrarTransicaoStatus(
+                        TipoEntidadeAuditoria.PROJETO,
+                        1L,
+                        "ATUALIZACAO_MANUAL_STATUS",
+                        ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL.name(),
+                        ProjetoStatus.ELABORANDO_PROPOSTA.name(),
+                        1L);
     }
 
     @Test

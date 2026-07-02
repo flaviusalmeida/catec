@@ -26,10 +26,15 @@ public class ProjetoController {
 
     private final ProjetoService projetoService;
     private final ProjetoHistoricoService projetoHistoricoService;
+    private final ProjetoResumoService projetoResumoService;
 
-    public ProjetoController(ProjetoService projetoService, ProjetoHistoricoService projetoHistoricoService) {
+    public ProjetoController(
+            ProjetoService projetoService,
+            ProjetoHistoricoService projetoHistoricoService,
+            ProjetoResumoService projetoResumoService) {
         this.projetoService = projetoService;
         this.projetoHistoricoService = projetoHistoricoService;
+        this.projetoResumoService = projetoResumoService;
     }
 
     @Operation(summary = "Listar projetos", description = "Colaborador vê só os que criou; ADM e Sócio veem todos.")
@@ -37,6 +42,15 @@ public class ProjetoController {
     @PreAuthorize("@authz.has('tela.projetos')")
     public List<ProjetoResponse> listar(@AuthenticationPrincipal UsuarioAutenticado principal) {
         return projetoService.listar(principal);
+    }
+
+    @Operation(
+            summary = "Resumo dos cards de projetos",
+            description = "Totais e variação percentual (30 dias) por status dos cards da listagem.")
+    @GetMapping("/resumo")
+    @PreAuthorize("@authz.has('tela.projetos')")
+    public ProjetoResumoResponse resumo(@AuthenticationPrincipal UsuarioAutenticado principal) {
+        return projetoResumoService.resumo(principal);
     }
 
     @Operation(summary = "Detalhe do projeto")

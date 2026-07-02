@@ -7,58 +7,75 @@ import Grid from '@mui/material/Grid'
 import type { UserDataType } from '@components/card-statistics/HorizontalWithSubtitle'
 import HorizontalWithSubtitle from '@components/card-statistics/HorizontalWithSubtitle'
 
-import type { CatecProjeto } from '@/types/catec/projetoTypes'
+import type { CatecProjeto, CatecProjetoResumo, CatecProjetoResumoCardStatus } from '@/types/catec/projetoTypes'
+
+import { formatVariacaoPercentual, trendFromVariacao } from './projetoResumoHelpers'
 
 type Props = {
   lista: CatecProjeto[]
+  resumo: CatecProjetoResumo | null
 }
 
-const ProjetoListCards = ({ lista }: Props) => {
-  const data = useMemo<UserDataType[]>(() => {
-    const emRevisaoProposta = lista.filter(p => p.status === 'ELABORANDO_PROPOSTA').length
-    const aguardandoCliente = lista.filter(p => p.status === 'AGUARDANDO_ACEITE_PROPOSTA').length
-    const aguardandoExecucao = lista.filter(p => p.status === 'AGUARDANDO_EXECUCAO').length
-    const emExecucao = lista.filter(p => p.status === 'EM_EXECUCAO').length
+type CardDef = {
+  status: CatecProjetoResumoCardStatus
+  title: string
+  avatarIcon: string
+  avatarColor: UserDataType['avatarColor']
+  subtitle: string
+}
 
-    return [
-      {
-        title: 'Rev. proposta',
-        stats: String(emRevisaoProposta),
-        avatarIcon: 'tabler-file-pencil',
-        avatarColor: 'info',
-        trend: 'positive',
-        trendNumber: '—',
-        subtitle: 'Em revisão da proposta'
-      },
-      {
-        title: 'Aguard. cliente',
-        stats: String(aguardandoCliente),
-        avatarIcon: 'tabler-user-check',
-        avatarColor: 'warning',
-        trend: 'negative',
-        trendNumber: '—',
-        subtitle: 'Aceite da proposta'
-      },
-      {
-        title: 'Aguard. execução',
-        stats: String(aguardandoExecucao),
-        avatarIcon: 'tabler-hourglass',
-        avatarColor: 'primary',
-        trend: 'positive',
-        trendNumber: '—',
-        subtitle: 'Aguardando execução'
-      },
-      {
-        title: 'Em execução',
-        stats: String(emExecucao),
-        avatarIcon: 'tabler-player-play',
-        avatarColor: 'success',
-        trend: 'positive',
-        trendNumber: '—',
-        subtitle: 'Projetos ativos'
+const CARD_DEFS: CardDef[] = [
+  {
+    status: 'ELABORANDO_PROPOSTA',
+    title: 'Rev. proposta',
+    avatarIcon: 'tabler-file-pencil',
+    avatarColor: 'info',
+    subtitle: 'Em revisão da proposta'
+  },
+  {
+    status: 'AGUARDANDO_ACEITE_PROPOSTA',
+    title: 'Aguard. cliente',
+    avatarIcon: 'tabler-user-check',
+    avatarColor: 'warning',
+    subtitle: 'Aceite da proposta'
+  },
+  {
+    status: 'AGUARDANDO_EXECUCAO',
+    title: 'Aguard. execução',
+    avatarIcon: 'tabler-hourglass',
+    avatarColor: 'primary',
+    subtitle: 'Aguardando execução'
+  },
+  {
+    status: 'EM_EXECUCAO',
+    title: 'Em execução',
+    avatarIcon: 'tabler-player-play',
+    avatarColor: 'success',
+    subtitle: 'Projetos ativos'
+  }
+]
+
+const ProjetoListCards = ({ lista, resumo }: Props) => {
+  const data = useMemo<UserDataType[]>(() => {
+    const periodo = resumo?.periodoDias ?? 30
+
+    return CARD_DEFS.map(def => {
+      const cardResumo = resumo?.cards.find(c => c.status === def.status)
+      const totalFallback = lista.filter(p => p.status === def.status).length
+      const total = cardResumo?.total ?? totalFallback
+      const variacao = cardResumo?.variacaoPercentual
+
+      return {
+        title: def.title,
+        stats: String(total),
+        avatarIcon: def.avatarIcon,
+        avatarColor: def.avatarColor,
+        trend: variacao == null ? 'positive' : trendFromVariacao(variacao),
+        trendNumber: variacao == null ? '—' : formatVariacaoPercentual(variacao),
+        subtitle: `${def.subtitle} • vs. há ${periodo} dias`
       }
-    ]
-  }, [lista])
+    })
+  }, [lista, resumo])
 
   return (
     <Grid container spacing={6}>

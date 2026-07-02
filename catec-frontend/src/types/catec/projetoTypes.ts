@@ -68,6 +68,43 @@ export function parseCatecProjetoList(raw: unknown): CatecProjeto[] {
   return raw.map(parseCatecProjeto)
 }
 
+export type CatecProjetoResumoCardStatus =
+  | 'ELABORANDO_PROPOSTA'
+  | 'AGUARDANDO_ACEITE_PROPOSTA'
+  | 'AGUARDANDO_EXECUCAO'
+  | 'EM_EXECUCAO'
+
+export type CatecProjetoResumoCard = {
+  status: CatecProjetoResumoCardStatus
+  total: number
+  totalHa30Dias: number
+  variacaoPercentual: number
+}
+
+export type CatecProjetoResumo = {
+  periodoDias: number
+  cards: CatecProjetoResumoCard[]
+}
+
+export function parseCatecProjetoResumo(raw: unknown): CatecProjetoResumo {
+  const data = raw as Record<string, unknown>
+  const cardsRaw = Array.isArray(data.cards) ? data.cards : []
+
+  return {
+    periodoDias: Number(data.periodoDias ?? 30),
+    cards: cardsRaw.map(card => {
+      const item = card as Record<string, unknown>
+
+      return {
+        status: String(item.status ?? 'ELABORANDO_PROPOSTA') as CatecProjetoResumoCardStatus,
+        total: Number(item.total ?? 0),
+        totalHa30Dias: Number(item.totalHa30Dias ?? 0),
+        variacaoPercentual: Number(item.variacaoPercentual ?? 0)
+      }
+    })
+  }
+}
+
 export const ORDEM_STATUS_PROJETO: CatecProjetoStatus[] = [
   'PENDENTE_CLIENTE',
   'AGUARDANDO_PROPOSTA_COMERCIAL',

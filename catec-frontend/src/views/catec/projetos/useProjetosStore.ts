@@ -7,18 +7,20 @@ import {
   atualizarProjetoCatec,
   criarProjetoCatec,
   listarProjetosCatec,
-  obterProjetoCatec
+  obterProjetoCatec,
+  obterProjetosResumoCatec
 } from '@/libs/catecProjetosApi'
-import type { CatecProjeto, CatecProjetoCreateInput, CatecProjetoUpdateInput } from '@/types/catec/projetoTypes'
+import type { CatecProjeto, CatecProjetoCreateInput, CatecProjetoResumo, CatecProjetoUpdateInput } from '@/types/catec/projetoTypes'
 
 type StoreState = {
   lista: CatecProjeto[]
+  resumo: CatecProjetoResumo | null
   carregando: boolean
   erro: string | null
   inicializado: boolean
 }
 
-const initialState: StoreState = { lista: [], carregando: false, erro: null, inicializado: false }
+const initialState: StoreState = { lista: [], resumo: null, carregando: false, erro: null, inicializado: false }
 
 let state: StoreState = { ...initialState }
 const listeners = new Set<() => void>()
@@ -50,12 +52,13 @@ async function carregarStore() {
     setState({ carregando: true, erro: null })
 
     try {
-      const lista = await listarProjetosCatec()
+      const [lista, resumo] = await Promise.all([listarProjetosCatec(), obterProjetosResumoCatec()])
 
-      setState({ lista, carregando: false, erro: null, inicializado: true })
+      setState({ lista, resumo, carregando: false, erro: null, inicializado: true })
     } catch (err) {
       setState({
         lista: [],
+        resumo: null,
         carregando: false,
         erro: err instanceof Error ? err.message : 'Não foi possível carregar os projetos.',
         inicializado: true
@@ -71,7 +74,7 @@ async function carregarStore() {
 async function addProjetoStore(input: CatecProjetoCreateInput): Promise<CatecProjeto> {
   const criado = await criarProjetoCatec(input)
 
-  setState({ lista: [...state.lista, criado] })
+  await carregarStore()
 
   return criado
 }
@@ -95,6 +98,8 @@ async function updateProjetoStore(id: number, patch: Partial<CatecProjeto>): Pro
     lista: exists ? state.lista.map(p => (p.id === id ? atualizado : p)) : [...state.lista, atualizado]
   })
 
+  void carregarStore()
+
   return atualizado
 }
 
@@ -105,6 +110,8 @@ async function associarClienteStore(id: number, clienteId: number): Promise<Cate
   setState({
     lista: exists ? state.lista.map(p => (p.id === id ? atualizado : p)) : [...state.lista, atualizado]
   })
+
+  void carregarStore()
 
   return atualizado
 }
@@ -156,6 +163,7 @@ export function useProjetosStore() {
 
   return {
     lista: snapshot.lista,
+    resumo: snapshot.resumo,
     carregando: snapshot.carregando,
     erro: snapshot.erro,
     carregar,

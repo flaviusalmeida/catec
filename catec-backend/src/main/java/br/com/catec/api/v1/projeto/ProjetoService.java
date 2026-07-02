@@ -1,5 +1,7 @@
 package br.com.catec.api.v1.projeto;
 
+import br.com.catec.domain.auditoria.AuditoriaService;
+import br.com.catec.domain.auditoria.TipoEntidadeAuditoria;
 import br.com.catec.domain.cliente.Cliente;
 import br.com.catec.domain.cliente.ClienteRepository;
 import br.com.catec.domain.projeto.Projeto;
@@ -25,16 +27,19 @@ public class ProjetoService {
     private final ClienteRepository clienteRepository;
     private final UsuarioRepository usuarioRepository;
     private final AuthorizationService authz;
+    private final AuditoriaService auditoriaService;
 
     public ProjetoService(
             ProjetoRepository projetoRepository,
             ClienteRepository clienteRepository,
             UsuarioRepository usuarioRepository,
-            AuthorizationService authz) {
+            AuthorizationService authz,
+            AuditoriaService auditoriaService) {
         this.projetoRepository = projetoRepository;
         this.clienteRepository = clienteRepository;
         this.usuarioRepository = usuarioRepository;
         this.authz = authz;
+        this.auditoriaService = auditoriaService;
     }
 
     @Transactional(readOnly = true)
@@ -169,7 +174,15 @@ public class ProjetoService {
 
         if (admin && req.status() != null && req.status() != p.getStatus()) {
             validarTransicao(p.getStatus(), req.status());
+            ProjetoStatus statusAnterior = p.getStatus();
             p.setStatus(req.status());
+            auditoriaService.registrarTransicaoStatus(
+                    TipoEntidadeAuditoria.PROJETO,
+                    p.getId(),
+                    "ATUALIZACAO_MANUAL_STATUS",
+                    statusAnterior.name(),
+                    req.status().name(),
+                    principal.id());
         }
 
         aplicarContatoDoCliente(p.getCliente(), p);
