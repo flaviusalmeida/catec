@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
 // Next Imports
@@ -24,8 +24,10 @@ import NoResult from './NoResult'
 // Hook Imports
 import useVerticalNav from '@menu/hooks/useVerticalNav'
 import { useSettings } from '@core/hooks/useSettings'
+import { useCatecPermission } from '@/hooks/useCatecPermission'
 
 // Util Imports
+import { hasPermission } from '@/utils/catec/hasPermission'
 
 // Style Imports
 import './styles.css'
@@ -57,26 +59,26 @@ type SearchItemProps = {
 }
 
 // Transform the data to group items by their sections
-const transformedData = data.reduce((acc: Section[], item) => {
-  const existingSection = acc.find(section => section.title === item.section)
+const groupSearchData = (items: typeof data): Section[] =>
+  items.reduce((acc: Section[], item) => {
+    const existingSection = acc.find(section => section.title === item.section)
 
-  const newItem = {
-    id: item.id,
-    name: item.name,
-    url: item.url,
-    
-    icon: item.icon,
-    shortcut: item.shortcut
-  }
+    const newItem = {
+      id: item.id,
+      name: item.name,
+      url: item.url,
+      icon: item.icon,
+      shortcut: item.shortcut
+    }
 
-  if (existingSection) {
-    existingSection.items.push(newItem)
-  } else {
-    acc.push({ title: item.section, items: [newItem] })
-  }
+    if (existingSection) {
+      existingSection.items.push(newItem)
+    } else {
+      acc.push({ title: item.section, items: [newItem] })
+    }
 
-  return acc
-}, [])
+    return acc
+  }, [])
 
 // SearchItem Component for introduce the shortcut keys
 const SearchItem = ({ children, shortcut, value, currentPath, url, onSelect = () => {} }: SearchItemProps) => {
@@ -121,17 +123,17 @@ const CommandFooter = () => {
         <kbd>
           <i className='tabler-arrow-down text-base' />
         </kbd>
-        <span>to navigate</span>
+        <span>para navegar</span>
       </div>
       <div className='flex items-center gap-1'>
         <kbd>
           <i className='tabler-corner-down-left text-base' />
         </kbd>
-        <span>to open</span>
+        <span>para abrir</span>
       </div>
       <div className='flex items-center gap-1'>
         <kbd>esc</kbd>
-        <span>to close</span>
+        <span>para fechar</span>
       </div>
     </div>
   )
@@ -146,8 +148,15 @@ const NavSearch = () => {
   const router = useRouter()
   const pathName = usePathname()
   const { settings } = useSettings()
-  
+  const { permissoes } = useCatecPermission()
   const { isBreakpointReached } = useVerticalNav()
+
+  const visibleData = useMemo(
+    () => data.filter(item => !item.permission || hasPermission(permissoes, item.permission)),
+    [permissoes]
+  )
+
+  const transformedData = useMemo(() => groupSearchData(visibleData), [visibleData])
 
   // When an item is selected from the search results
   const onSearchItemSelect = (item: Item) => {
@@ -219,7 +228,7 @@ const NavSearch = () => {
           <IconButton className='text-textPrimary' onClick={() => setOpen(true)}>
             <i className='tabler-search text-2xl' />
           </IconButton>
-          <div className='whitespace-nowrap select-none text-textDisabled'>Search ⌘K</div>
+          <div className='whitespace-nowrap select-none text-textDisabled'>Pesquisar ⌘K</div>
         </div>
       )}
       <CommandDialog open={open} onOpenChange={setOpen}>
@@ -227,7 +236,7 @@ const NavSearch = () => {
           <Title hidden />
           <Description hidden />
           <i className='tabler-search' />
-          <CommandInput value={searchValue} onValueChange={setSearchValue} />
+          <CommandInput value={searchValue} onValueChange={setSearchValue} placeholder='Pesquisar...' />
           <span className='text-textDisabled'>[esc]</span>
           <i className='tabler-x cursor-pointer' onClick={() => setOpen(false)} />
         </div>

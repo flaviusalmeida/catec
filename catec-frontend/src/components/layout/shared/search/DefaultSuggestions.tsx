@@ -1,132 +1,56 @@
+'use client'
+
 // Next Imports
 import Link from 'next/link'
+import { useMemo } from 'react'
 
 // Third-party Imports
 import classnames from 'classnames'
 
-// Type Imports
+// Data Imports
+import searchData from '@/data/searchData'
+
+// Hook Imports
+import { useCatecPermission } from '@/hooks/useCatecPermission'
 
 // Util Imports
-
-type DefaultSuggestionsType = {
-  sectionLabel: string
-  items: {
-    label: string
-    href: string
-    icon?: string
-  }[]
-}
-
-const defaultSuggestions: DefaultSuggestionsType[] = [
-  {
-    sectionLabel: 'Popular Searches',
-    items: [
-      {
-        label: 'Analytics',
-        href: '/dashboards/analytics',
-        icon: 'tabler-trending-up'
-      },
-      {
-        label: 'CRM',
-        href: '/dashboards/crm',
-        icon: 'tabler-chart-pie-2'
-      },
-      {
-        label: 'eCommerce',
-        href: '/dashboards/ecommerce',
-        icon: 'tabler-shopping-cart'
-      },
-      {
-        label: 'User List',
-        href: '/apps/user/list',
-        icon: 'tabler-file-description'
-      }
-    ]
-  },
-  {
-    sectionLabel: 'Apps',
-    items: [
-      {
-        label: 'Calendar',
-        href: '/apps/calendar',
-        icon: 'tabler-calendar'
-      },
-      {
-        label: 'Invoice List',
-        href: '/apps/invoice/list',
-        icon: 'tabler-file-info'
-      },
-      {
-        label: 'User List',
-        href: '/apps/user/list',
-        icon: 'tabler-file-invoice'
-      },
-      {
-        label: 'Roles & Permissions',
-        href: '/apps/roles',
-        icon: 'tabler-lock'
-      }
-    ]
-  },
-  {
-    sectionLabel: 'Pages',
-    items: [
-      {
-        label: 'User Profile',
-        href: '/pages/user-profile',
-        icon: 'tabler-user'
-      },
-      {
-        label: 'Account Settings',
-        href: '/pages/account-settings',
-        icon: 'tabler-settings'
-      },
-      {
-        label: 'Pricing',
-        href: '/pages/pricing',
-        icon: 'tabler-currency-dollar'
-      },
-      {
-        label: 'FAQ',
-        href: '/pages/faq',
-        icon: 'tabler-help-circle'
-      }
-    ]
-  },
-  {
-    sectionLabel: 'Forms & Charts',
-    items: [
-      {
-        label: 'Form Layouts',
-        href: '/forms/form-layouts',
-        icon: 'tabler-layout'
-      },
-      {
-        label: 'Form Validation',
-        href: '/forms/form-validation',
-        icon: 'tabler-checkup-list'
-      },
-      {
-        label: 'Form Wizard',
-        href: '/forms/form-wizard',
-        icon: 'tabler-git-merge'
-      },
-      {
-        label: 'Apex Charts',
-        href: '/charts/apex-charts',
-        icon: 'tabler-chart-ppf'
-      }
-    ]
-  }
-]
+import { hasPermission } from '@/utils/catec/hasPermission'
 
 const DefaultSuggestions = ({ setOpen }: { setOpen: (value: boolean) => void }) => {
-  // Hooks
-  
+  const { permissoes } = useCatecPermission()
+
+  const sections = useMemo(() => {
+    const visible = searchData.filter(
+      item => !item.permission || hasPermission(permissoes, item.permission)
+    )
+
+    const grouped = visible.reduce<Record<string, typeof visible>>((acc, item) => {
+      if (!acc[item.section]) {
+        acc[item.section] = []
+      }
+
+      acc[item.section].push(item)
+
+      return acc
+    }, {})
+
+    return Object.entries(grouped).map(([sectionLabel, items]) => ({
+      sectionLabel,
+      items: items.map(item => ({
+        label: item.name,
+        href: item.url,
+        icon: item.icon
+      }))
+    }))
+  }, [permissoes])
+
+  if (sections.length === 0) {
+    return null
+  }
 
   return (
     <div className='flex grow flex-wrap gap-x-[48px] gap-y-8 plb-14 pli-16 overflow-y-auto overflow-x-hidden bs-full'>
-      {defaultSuggestions.map((section, index) => (
+      {sections.map((section, index) => (
         <div
           key={index}
           className='flex flex-col justify-center overflow-x-hidden gap-4 basis-full sm:basis-[calc((100%-3rem)/2)]'
