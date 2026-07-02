@@ -10,7 +10,7 @@ import ClienteListTable from './ClienteListTable'
 import { useClientesStore } from '../useClientesStore'
 
 const ClienteList = () => {
-  const { lista, carregando, erro, addCliente } = useClientesStore()
+  const { lista, resumo, carregando, erro, addCliente } = useClientesStore()
 
   return (
     <Grid container spacing={6}>
@@ -33,7 +33,7 @@ const ClienteList = () => {
       ) : (
         <>
           <Grid size={{ xs: 12 }}>
-            <ClienteListCards lista={lista} />
+            <ClienteListCards lista={lista} resumo={resumo} />
           </Grid>
           <Grid size={{ xs: 12 }}>
             <ClienteListTable lista={lista} onAdd={addCliente} />

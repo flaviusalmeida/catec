@@ -95,6 +95,41 @@ export function parseCatecClienteList(raw: unknown): CatecCliente[] {
   return raw.map(parseCatecCliente)
 }
 
+export type CatecClienteResumoCardTipo = 'TOTAL' | 'PF' | 'PJ' | 'COM_RESPONSAVEL'
+
+export type CatecClienteResumoCard = {
+  tipo: CatecClienteResumoCardTipo
+  total: number
+  totalInicioTrimestre: number
+  variacaoPercentual: number
+}
+
+export type CatecClienteResumo = {
+  periodoTipo: string
+  periodoRotulo: string
+  cards: CatecClienteResumoCard[]
+}
+
+export function parseCatecClienteResumo(raw: unknown): CatecClienteResumo {
+  const data = raw as Record<string, unknown>
+  const cardsRaw = Array.isArray(data.cards) ? data.cards : []
+
+  return {
+    periodoTipo: String(data.periodoTipo ?? 'TRIMESTRE'),
+    periodoRotulo: String(data.periodoRotulo ?? ''),
+    cards: cardsRaw.map(card => {
+      const item = card as Record<string, unknown>
+
+      return {
+        tipo: String(item.tipo ?? 'TOTAL') as CatecClienteResumoCardTipo,
+        total: Number(item.total ?? 0),
+        totalInicioTrimestre: Number(item.totalInicioTrimestre ?? 0),
+        variacaoPercentual: Number(item.variacaoPercentual ?? 0)
+      }
+    })
+  }
+}
+
 export type CatecClienteResponsavelFormState = {
   nome: string
   email: string

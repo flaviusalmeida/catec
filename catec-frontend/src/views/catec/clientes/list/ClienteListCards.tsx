@@ -7,57 +7,76 @@ import Grid from '@mui/material/Grid'
 import type { UserDataType } from '@components/card-statistics/HorizontalWithSubtitle'
 import HorizontalWithSubtitle from '@components/card-statistics/HorizontalWithSubtitle'
 
-import type { CatecCliente } from '@/types/catec/clienteTypes'
+import type { CatecCliente, CatecClienteResumo, CatecClienteResumoCardTipo } from '@/types/catec/clienteTypes'
+import { formatVariacaoPercentual, trendFromVariacao } from '@/utils/catec/resumoFormatters'
 
 type Props = {
   lista: CatecCliente[]
+  resumo: CatecClienteResumo | null
 }
 
-const ClienteListCards = ({ lista }: Props) => {
-  const data = useMemo<UserDataType[]>(() => {
-    const pf = lista.filter(c => c.tipoPessoa === 'PF').length
-    const pj = lista.filter(c => c.tipoPessoa === 'PJ').length
-    const comResponsavel = lista.filter(c => c.responsaveis.length > 0).length
+type CardDef = {
+  tipo: CatecClienteResumoCardTipo
+  title: string
+  avatarIcon: string
+  avatarColor: UserDataType['avatarColor']
+  subtitle: string
+  fallbackCount: (lista: CatecCliente[]) => number
+}
 
-    return [
-      {
-        title: 'Total',
-        stats: String(lista.length),
-        avatarIcon: 'tabler-building',
-        avatarColor: 'primary',
-        trend: 'positive',
-        trendNumber: '—',
-        subtitle: 'Clientes cadastrados'
-      },
-      {
-        title: 'Pessoa Física',
-        stats: String(pf),
-        avatarIcon: 'tabler-user',
-        avatarColor: 'info',
-        trend: 'positive',
-        trendNumber: '—',
-        subtitle: 'Clientes PF'
-      },
-      {
-        title: 'Pessoa Jurídica',
-        stats: String(pj),
-        avatarIcon: 'tabler-building-skyscraper',
-        avatarColor: 'success',
-        trend: 'positive',
-        trendNumber: '—',
-        subtitle: 'Clientes PJ'
-      },
-      {
-        title: 'Com responsável',
-        stats: String(comResponsavel),
-        avatarIcon: 'tabler-user-check',
-        avatarColor: 'warning',
-        trend: 'positive',
-        trendNumber: '—',
-        subtitle: 'Contato principal definido'
+const CARD_DEFS: CardDef[] = [
+  {
+    tipo: 'TOTAL',
+    title: 'Total',
+    avatarIcon: 'tabler-building',
+    avatarColor: 'primary',
+    subtitle: 'Comparativo com o início do trimestre',
+    fallbackCount: lista => lista.length
+  },
+  {
+    tipo: 'PF',
+    title: 'Pessoa Física',
+    avatarIcon: 'tabler-user',
+    avatarColor: 'info',
+    subtitle: 'Comparativo com o início do trimestre',
+    fallbackCount: lista => lista.filter(c => c.tipoPessoa === 'PF').length
+  },
+  {
+    tipo: 'PJ',
+    title: 'Pessoa Jurídica',
+    avatarIcon: 'tabler-building-skyscraper',
+    avatarColor: 'success',
+    subtitle: 'Comparativo com o início do trimestre',
+    fallbackCount: lista => lista.filter(c => c.tipoPessoa === 'PJ').length
+  },
+  {
+    tipo: 'COM_RESPONSAVEL',
+    title: 'Com responsável',
+    avatarIcon: 'tabler-user-check',
+    avatarColor: 'warning',
+    subtitle: 'Comparativo com o início do trimestre',
+    fallbackCount: lista => lista.filter(c => c.responsaveis.length > 0).length
+  }
+]
+
+const ClienteListCards = ({ lista, resumo }: Props) => {
+  const data = useMemo<UserDataType[]>(() => {
+    return CARD_DEFS.map(def => {
+      const cardResumo = resumo?.cards.find(c => c.tipo === def.tipo)
+      const total = cardResumo?.total ?? def.fallbackCount(lista)
+      const variacao = cardResumo?.variacaoPercentual
+
+      return {
+        title: def.title,
+        stats: String(total),
+        avatarIcon: def.avatarIcon,
+        avatarColor: def.avatarColor,
+        trend: variacao == null ? 'positive' : trendFromVariacao(variacao),
+        trendNumber: variacao == null ? '—' : formatVariacaoPercentual(variacao),
+        subtitle: def.subtitle
       }
-    ]
-  }, [lista])
+    })
+  }, [lista, resumo])
 
   return (
     <Grid container spacing={6}>

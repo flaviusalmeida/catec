@@ -46,6 +46,9 @@ class AdminClienteControllerMockMvcTest {
     private AdminClienteService adminClienteService;
 
     @MockBean
+    private ClienteCardsResumoService clienteCardsResumoService;
+
+    @MockBean
     private JwtService jwtService;
 
     @MockBean

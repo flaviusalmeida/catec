@@ -7,20 +7,22 @@ import {
   criarClienteCatec,
   excluirClienteCatec,
   listarClientesCatec,
-  obterClienteCatec
+  obterClienteCatec,
+  obterClientesResumoCatec
 } from '@/libs/catecClientesApi'
-import type { CatecCliente, CatecClienteRequest } from '@/types/catec/clienteTypes'
+import type { CatecCliente, CatecClienteRequest, CatecClienteResumo } from '@/types/catec/clienteTypes'
 
 import { clienteToRequest } from './clienteFormHelpers'
 
 type StoreState = {
   lista: CatecCliente[]
+  resumo: CatecClienteResumo | null
   carregando: boolean
   erro: string | null
   inicializado: boolean
 }
 
-const initialState: StoreState = { lista: [], carregando: false, erro: null, inicializado: false }
+const initialState: StoreState = { lista: [], resumo: null, carregando: false, erro: null, inicializado: false }
 
 let state: StoreState = { ...initialState }
 const listeners = new Set<() => void>()
@@ -52,12 +54,13 @@ async function carregarStore() {
     setState({ carregando: true, erro: null })
 
     try {
-      const lista = await listarClientesCatec()
+      const [lista, resumo] = await Promise.all([listarClientesCatec(), obterClientesResumoCatec()])
 
-      setState({ lista, carregando: false, erro: null, inicializado: true })
+      setState({ lista, resumo, carregando: false, erro: null, inicializado: true })
     } catch (err) {
       setState({
         lista: [],
+        resumo: null,
         carregando: false,
         erro: err instanceof Error ? err.message : 'Não foi possível carregar os clientes.',
         inicializado: true
@@ -73,7 +76,7 @@ async function carregarStore() {
 async function addClienteStore(body: CatecClienteRequest): Promise<CatecCliente> {
   const criado = await criarClienteCatec(body)
 
-  setState({ lista: [...state.lista, criado] })
+  await carregarStore()
 
   return criado
 }
@@ -90,12 +93,14 @@ async function updateClienteStore(id: number, patch: Partial<CatecCliente>): Pro
     lista: exists ? state.lista.map(c => (c.id === id ? atualizado : c)) : [...state.lista, atualizado]
   })
 
+  void carregarStore()
+
   return atualizado
 }
 
 async function removeClienteStore(id: number): Promise<void> {
   await excluirClienteCatec(id)
-  setState({ lista: state.lista.filter(c => c.id !== id) })
+  await carregarStore()
 }
 
 async function obterClienteStore(id: number): Promise<CatecCliente | null> {
@@ -141,6 +146,7 @@ export function useClientesStore() {
 
   return {
     lista: snapshot.lista,
+    resumo: snapshot.resumo,
     carregando: snapshot.carregando,
     erro: snapshot.erro,
     carregar,

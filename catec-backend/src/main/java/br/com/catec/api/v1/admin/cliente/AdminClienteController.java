@@ -22,9 +22,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminClienteController {
 
     private final AdminClienteService adminClienteService;
+    private final ClienteCardsResumoService clienteCardsResumoService;
 
-    public AdminClienteController(AdminClienteService adminClienteService) {
+    public AdminClienteController(
+            AdminClienteService adminClienteService, ClienteCardsResumoService clienteCardsResumoService) {
         this.adminClienteService = adminClienteService;
+        this.clienteCardsResumoService = clienteCardsResumoService;
     }
 
     @Operation(summary = "Listar clientes")
@@ -32,6 +35,15 @@ public class AdminClienteController {
     @PreAuthorize("@authz.has('tela.clientes')")
     public List<ClienteResponse> listar() {
         return adminClienteService.listar();
+    }
+
+    @Operation(
+            summary = "Resumo dos cards de clientes",
+            description = "Totais e variação percentual no trimestre corrente por categoria dos cards.")
+    @GetMapping("/resumo")
+    @PreAuthorize("@authz.has('tela.clientes')")
+    public ClienteCardsResumoResponse resumo() {
+        return clienteCardsResumoService.resumo();
     }
 
     @Operation(summary = "Detalhe do cliente")

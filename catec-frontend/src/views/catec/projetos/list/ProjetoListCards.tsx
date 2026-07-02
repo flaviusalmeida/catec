@@ -9,7 +9,7 @@ import HorizontalWithSubtitle from '@components/card-statistics/HorizontalWithSu
 
 import type { CatecProjeto, CatecProjetoResumo, CatecProjetoResumoCardStatus } from '@/types/catec/projetoTypes'
 
-import { formatVariacaoPercentual, trendFromVariacao } from './projetoResumoHelpers'
+import { formatVariacaoPercentual, trendFromVariacao } from '@/utils/catec/resumoFormatters'
 
 type Props = {
   lista: CatecProjeto[]
@@ -30,35 +30,33 @@ const CARD_DEFS: CardDef[] = [
     title: 'Rev. proposta',
     avatarIcon: 'tabler-file-pencil',
     avatarColor: 'info',
-    subtitle: 'Em revisão da proposta'
+    subtitle: 'Comparativo com 30 dias atrás'
   },
   {
     status: 'AGUARDANDO_ACEITE_PROPOSTA',
     title: 'Aguard. cliente',
     avatarIcon: 'tabler-user-check',
     avatarColor: 'warning',
-    subtitle: 'Aceite da proposta'
+    subtitle: 'Comparativo com 30 dias atrás'
   },
   {
     status: 'AGUARDANDO_EXECUCAO',
     title: 'Aguard. execução',
     avatarIcon: 'tabler-hourglass',
     avatarColor: 'primary',
-    subtitle: 'Aguardando execução'
+    subtitle: 'Comparativo com 30 dias atrás'
   },
   {
     status: 'EM_EXECUCAO',
     title: 'Em execução',
     avatarIcon: 'tabler-player-play',
     avatarColor: 'success',
-    subtitle: 'Projetos ativos'
+    subtitle: 'Comparativo com 30 dias atrás'
   }
 ]
 
 const ProjetoListCards = ({ lista, resumo }: Props) => {
   const data = useMemo<UserDataType[]>(() => {
-    const periodo = resumo?.periodoDias ?? 30
-
     return CARD_DEFS.map(def => {
       const cardResumo = resumo?.cards.find(c => c.status === def.status)
       const totalFallback = lista.filter(p => p.status === def.status).length
@@ -72,7 +70,7 @@ const ProjetoListCards = ({ lista, resumo }: Props) => {
         avatarColor: def.avatarColor,
         trend: variacao == null ? 'positive' : trendFromVariacao(variacao),
         trendNumber: variacao == null ? '—' : formatVariacaoPercentual(variacao),
-        subtitle: `${def.subtitle} • vs. há ${periodo} dias`
+        subtitle: def.subtitle
       }
     })
   }, [lista, resumo])
