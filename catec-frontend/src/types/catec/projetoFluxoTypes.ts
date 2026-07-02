@@ -46,7 +46,7 @@ export const TIPO_INTERACAO_ROTULO_CONTRATO: Record<CatecTipoInteracaoFluxo, str
   CONSIDERACOES_CLIENTE: 'Ajustar contrato'
 }
 
-export const STATUS_PROPOSTA_UPLOAD: CatecPropostaStatus[] = ['RASCUNHO', 'PENDENTE_AVALIACAO']
+export const STATUS_PROPOSTA_UPLOAD: CatecPropostaStatus[] = ['RASCUNHO', 'PENDENTE_AVALIACAO', 'AGUARDANDO_AJUSTE']
 export const STATUS_PROPOSTA_ENVIADA: CatecPropostaStatus[] = [
   'ENVIADA_AO_CLIENTE',
   'EM_AVALIACAO_CLIENTE',
@@ -84,6 +84,7 @@ export type CatecProposta = {
   enviadaClienteEm: string | null
   avaliadaSocioEm: string | null
   consideracoesPendentes: boolean
+  parecerSocio: string | null
   criadoEm: string
   atualizadoEm: string
   documentos: CatecDocumentoAnexo[]
@@ -169,6 +170,7 @@ export function parseCatecProposta(raw: unknown): CatecProposta {
     enviadaClienteEm: data.enviadaClienteEm == null ? null : String(data.enviadaClienteEm),
     avaliadaSocioEm: data.avaliadaSocioEm == null ? null : String(data.avaliadaSocioEm),
     consideracoesPendentes: data.consideracoesPendentes === true,
+    parecerSocio: data.parecerSocio == null ? null : String(data.parecerSocio),
     criadoEm: String(data.criadoEm ?? ''),
     atualizadoEm: String(data.atualizadoEm ?? ''),
     documentos: []

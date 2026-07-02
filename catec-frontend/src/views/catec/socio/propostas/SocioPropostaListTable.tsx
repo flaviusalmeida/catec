@@ -49,7 +49,7 @@ import SocioPropostaPreviewDrawer from './SocioPropostaPreviewDrawer'
 
 type Row = CatecPropostaPendenteSocio & { action?: string }
 
-type DialogMode = 'aprovar' | 'devolver' | null
+type DialogMode = 'aprovar' | 'reprovar' | null
 
 const globalFilterFn: FilterFn<Row> = (row, _columnId, filterValue) => {
   const q = String(filterValue).toLowerCase()
@@ -139,8 +139,8 @@ const SocioPropostaListTable = ({ lista, onRecarregar }: Props) => {
   const confirmarAcao = useCallback(async () => {
     if (!dialogItem || !dialogMode) return
 
-    if (dialogMode === 'devolver' && !observacao.trim()) {
-      toast.error('Informe o parecer ao devolver a proposta para elaboração.')
+    if (dialogMode === 'reprovar' && !observacao.trim()) {
+      toast.error('Informe o parecer ao reprovar a proposta para elaboração.')
 
       return
     }
@@ -159,7 +159,7 @@ const SocioPropostaListTable = ({ lista, onRecarregar }: Props) => {
           projetoId: dialogItem.projetoId,
           observacao: observacao.trim()
         })
-        toast.success('Proposta devolvida para ajustes.')
+        toast.success('Proposta reprovada. O administrativo deve ajustar e reenviar.')
       }
 
       setPreviewItem(prev => (prev?.propostaId === dialogItem.propostaId ? null : prev))
@@ -231,8 +231,8 @@ const SocioPropostaListTable = ({ lista, onRecarregar }: Props) => {
             </IconButton>
             <IconButton
               size='small'
-              title='Devolver'
-              onClick={() => abrirDialog(row.original, 'devolver')}
+              title='Reprovar'
+              onClick={() => abrirDialog(row.original, 'reprovar')}
             >
               <i className='tabler-arrow-back-up text-error' />
             </IconButton>
@@ -317,12 +317,12 @@ const SocioPropostaListTable = ({ lista, onRecarregar }: Props) => {
         open={previewItem != null}
         onClose={() => setPreviewItem(null)}
         onAprovar={item => abrirDialog(item, 'aprovar')}
-        onDevolver={item => abrirDialog(item, 'devolver')}
+        onReprovar={item => abrirDialog(item, 'reprovar')}
         processando={processando}
       />
 
       <Dialog open={dialogMode != null} onClose={fecharDialog} fullWidth maxWidth='sm'>
-        <DialogTitle>{dialogMode === 'aprovar' ? 'Aprovar proposta' : 'Devolver proposta'}</DialogTitle>
+        <DialogTitle>{dialogMode === 'aprovar' ? 'Aprovar proposta' : 'Reprovar proposta'}</DialogTitle>
         <DialogContent className='flex flex-col gap-4 pbs-2'>
           {dialogItem ? (
             <Typography variant='body2' color='text.secondary'>
@@ -333,11 +333,11 @@ const SocioPropostaListTable = ({ lista, onRecarregar }: Props) => {
             fullWidth
             multiline
             minRows={3}
-            label={dialogMode === 'devolver' ? 'Parecer (obrigatório)' : 'Observação (opcional)'}
+            label={dialogMode === 'reprovar' ? 'Parecer (obrigatório)' : 'Observação (opcional)'}
             value={observacao}
             onChange={e => setObservacao(e.target.value)}
             placeholder={
-              dialogMode === 'devolver'
+              dialogMode === 'reprovar'
                 ? 'Descreva os ajustes necessários na proposta.'
                 : 'Comentário opcional sobre a aprovação.'
             }
@@ -351,9 +351,9 @@ const SocioPropostaListTable = ({ lista, onRecarregar }: Props) => {
             variant='contained'
             color={dialogMode === 'aprovar' ? 'success' : 'error'}
             onClick={() => void confirmarAcao()}
-            disabled={processando || (dialogMode === 'devolver' && !observacao.trim())}
+            disabled={processando || (dialogMode === 'reprovar' && !observacao.trim())}
           >
-            {dialogMode === 'aprovar' ? 'Confirmar aprovação' : 'Confirmar devolução'}
+            {dialogMode === 'aprovar' ? 'Confirmar aprovação' : 'Confirmar reprovação'}
           </Button>
         </DialogActions>
       </Dialog>

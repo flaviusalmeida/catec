@@ -35,5 +35,5 @@ export async function devolverPropostaSocioCatec(
   })
   const data = await readCatecJsonBody(res)
 
-  assertCatecOk(res, data, 'Não foi possível devolver a proposta.')
+  assertCatecOk(res, data, 'Não foi possível reprovar a proposta.')
 }

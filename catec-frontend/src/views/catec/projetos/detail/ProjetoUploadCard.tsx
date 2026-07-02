@@ -23,12 +23,22 @@ type Props = {
   nomeArquivo?: string | null
   meta?: string
   disabled?: boolean
+  permitirSubstituir?: boolean
   onUpload: (file: File) => Promise<void>
   onDownload?: () => void
   acoes?: AcaoUpload[]
 }
 
-const ProjetoUploadCard = ({ titulo, nomeArquivo, meta, disabled, onUpload, onDownload, acoes }: Props) => {
+const ProjetoUploadCard = ({
+  titulo,
+  nomeArquivo,
+  meta,
+  disabled,
+  permitirSubstituir = true,
+  onUpload,
+  onDownload,
+  acoes
+}: Props) => {
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -55,23 +65,25 @@ const ProjetoUploadCard = ({ titulo, nomeArquivo, meta, disabled, onUpload, onDo
         ) : (
           <Typography color='text.secondary'>Nenhum documento anexado.</Typography>
         )}
-        <div>
-          <input
-            ref={inputRef}
-            type='file'
-            accept='.pdf,.doc,.docx'
-            className='hidden'
-            onChange={e => void handleFileChange(e)}
-          />
-          <Button
-            variant='contained'
-            startIcon={<i className='tabler-upload' />}
-            disabled={disabled}
-            onClick={() => inputRef.current?.click()}
-          >
-            {nomeArquivo ? 'Substituir arquivo' : 'Selecionar arquivo'}
-          </Button>
-        </div>
+        {permitirSubstituir ? (
+          <div>
+            <input
+              ref={inputRef}
+              type='file'
+              accept='.pdf,.doc,.docx'
+              className='hidden'
+              onChange={e => void handleFileChange(e)}
+            />
+            <Button
+              variant='contained'
+              startIcon={<i className='tabler-upload' />}
+              disabled={disabled}
+              onClick={() => inputRef.current?.click()}
+            >
+              {nomeArquivo ? 'Substituir arquivo' : 'Selecionar arquivo'}
+            </Button>
+          </div>
+        ) : null}
         {nomeArquivo && acoes && acoes.length > 0 ? (
           <div className='flex flex-wrap gap-3 pt-2 border-t'>
             {acoes.map(acao => (

@@ -24,9 +24,10 @@ type TabId = 'geral' | 'propostas' | 'contrato' | 'interacoes' | 'historico'
 type Props = {
   projeto: CatecProjeto
   fluxo: UseProjetoFluxoStore
+  onStatusAlterado?: () => Promise<void>
 }
 
-const ProjetoRight = ({ projeto, fluxo }: Props) => {
+const ProjetoRight = ({ projeto, fluxo, onStatusAlterado }: Props) => {
   const [activeTab, setActiveTab] = useState<TabId>('geral')
 
   const handleChange = (_event: SyntheticEvent, value: string) => {
@@ -65,7 +66,9 @@ const ProjetoRight = ({ projeto, fluxo }: Props) => {
             {activeTab === 'geral' ? <ProjetoTabGeral projeto={projeto} /> : null}
             {activeTab === 'propostas' ? <ProjetoTabPropostas projeto={projeto} fluxo={fluxo} /> : null}
             {activeTab === 'contrato' ? <ProjetoTabContrato projeto={projeto} fluxo={fluxo} /> : null}
-            {activeTab === 'interacoes' ? <ProjetoTabInteracoes fluxo={fluxo} /> : null}
+            {activeTab === 'interacoes' ? (
+              <ProjetoTabInteracoes projeto={projeto} fluxo={fluxo} onStatusAlterado={onStatusAlterado} />
+            ) : null}
             {activeTab === 'historico' ? <ProjetoTabHistorico fluxo={fluxo} /> : null}
           </TabPanel>
         </Grid>

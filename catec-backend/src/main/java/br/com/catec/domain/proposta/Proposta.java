@@ -63,6 +63,9 @@ public class Proposta {
     @Column(name = "cobranca_proposta_inicio_em")
     private Instant cobrancaPropostaInicioEm;
 
+    @Column(name = "parecer_socio", columnDefinition = "TEXT")
+    private String parecerSocio;
+
     @Column(name = "criado_em", nullable = false)
     private Instant criadoEm = Instant.now();
 
@@ -167,6 +170,14 @@ public class Proposta {
 
     public void setCobrancaPropostaInicioEm(Instant cobrancaPropostaInicioEm) {
         this.cobrancaPropostaInicioEm = cobrancaPropostaInicioEm;
+    }
+
+    public String getParecerSocio() {
+        return parecerSocio;
+    }
+
+    public void setParecerSocio(String parecerSocio) {
+        this.parecerSocio = parecerSocio;
     }
 
     public Instant getCriadoEm() {

@@ -23,11 +23,11 @@ type Props = {
   open: boolean
   onClose: () => void
   onAprovar: (item: CatecPropostaPendenteSocio) => void
-  onDevolver: (item: CatecPropostaPendenteSocio) => void
+  onReprovar: (item: CatecPropostaPendenteSocio) => void
   processando: boolean
 }
 
-const SocioPropostaPreviewDrawer = ({ item, open, onClose, onAprovar, onDevolver, processando }: Props) => {
+const SocioPropostaPreviewDrawer = ({ item, open, onClose, onAprovar, onReprovar, processando }: Props) => {
   const [documento, setDocumento] = useState<CatecDocumentoAnexo | null>(null)
   const [carregandoDoc, setCarregandoDoc] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -195,8 +195,8 @@ const SocioPropostaPreviewDrawer = ({ item, open, onClose, onAprovar, onDevolver
               Ver projeto
             </Button>
             <div className='flex-1' />
-            <Button variant='tonal' color='error' disabled={processando} onClick={() => onDevolver(item)}>
-              Devolver
+            <Button variant='tonal' color='error' disabled={processando} onClick={() => onReprovar(item)}>
+              Reprovar
             </Button>
             <Button variant='contained' color='success' disabled={processando} onClick={() => onAprovar(item)}>
               Aprovar

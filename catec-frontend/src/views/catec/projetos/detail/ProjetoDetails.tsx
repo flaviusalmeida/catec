@@ -16,14 +16,12 @@ import { formatTelefoneBrasil } from '@/utils/catec/brFormat'
 import { getInitials } from '@/utils/getInitials'
 
 import ProjetoStatusBadge from '../ProjetoStatusBadge'
-import ProjetoEncerrarStatus from './ProjetoEncerrarStatus'
 
 type Props = {
   projeto: CatecProjeto
-  onStatusAlterado?: () => Promise<void>
 }
 
-const ProjetoDetails = ({ projeto, onStatusAlterado }: Props) => {
+const ProjetoDetails = ({ projeto }: Props) => {
   
 
   return (
@@ -40,7 +38,6 @@ const ProjetoDetails = ({ projeto, onStatusAlterado }: Props) => {
               </Typography>
             </div>
             <ProjetoStatusBadge status={projeto.status} />
-            <ProjetoEncerrarStatus projeto={projeto} onStatusAlterado={onStatusAlterado} />
           </div>
 
           <div>

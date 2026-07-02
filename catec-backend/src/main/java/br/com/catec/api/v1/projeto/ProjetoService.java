@@ -213,7 +213,20 @@ public class ProjetoService {
                 switch (atual) {
                     case PENDENTE_CLIENTE -> false;
                     case AGUARDANDO_PROPOSTA_COMERCIAL -> novo == ProjetoStatus.ELABORANDO_PROPOSTA;
-                    case ELABORANDO_PROPOSTA -> novo == ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA;
+                    case ELABORANDO_PROPOSTA ->
+                            novo == ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA
+                                    || novo == ProjetoStatus.AGUARDANDO_REVISAO_PROPOSTA
+                                    || novo == ProjetoStatus.AGUARDANDO_AJUSTE
+                                    || novo == ProjetoStatus.AGUARDANDO_ENVIO_CLIENTE;
+                    case AGUARDANDO_REVISAO_PROPOSTA ->
+                            novo == ProjetoStatus.AGUARDANDO_ENVIO_CLIENTE
+                                    || novo == ProjetoStatus.AGUARDANDO_AJUSTE
+                                    || novo == ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA;
+                    case AGUARDANDO_AJUSTE ->
+                            novo == ProjetoStatus.ELABORANDO_PROPOSTA
+                                    || novo == ProjetoStatus.AGUARDANDO_REVISAO_PROPOSTA
+                                    || novo == ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA;
+                    case AGUARDANDO_ENVIO_CLIENTE -> novo == ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA;
                     case AGUARDANDO_ACEITE_PROPOSTA -> false;
                     case AGUARDANDO_CONTRATO -> false;
                     case AGUARDANDO_EXECUCAO ->
@@ -237,6 +250,9 @@ public class ProjetoService {
             case PENDENTE_CLIENTE -> "Pendente de cliente";
             case AGUARDANDO_PROPOSTA_COMERCIAL -> "Aguardando proposta comercial";
             case ELABORANDO_PROPOSTA -> "Elaborando proposta";
+            case AGUARDANDO_REVISAO_PROPOSTA -> "Aguardando revisão de proposta";
+            case AGUARDANDO_AJUSTE -> "Aguardando ajuste";
+            case AGUARDANDO_ENVIO_CLIENTE -> "Aguardando envio ao cliente";
             case AGUARDANDO_ACEITE_PROPOSTA -> "Aguardando aceite da proposta";
             case AGUARDANDO_CONTRATO -> "Aguardando contrato";
             case AGUARDANDO_EXECUCAO -> "Aguardando execução";

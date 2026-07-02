@@ -1,0 +1,18 @@
+-- Proposta aprovada pelo sócio; aguardando envio ao cliente.
+
+ALTER TABLE projeto DROP CONSTRAINT IF EXISTS ck_projeto_status;
+
+ALTER TABLE projeto ADD CONSTRAINT ck_projeto_status CHECK (status IN (
+    'PENDENTE_CLIENTE',
+    'AGUARDANDO_PROPOSTA_COMERCIAL',
+    'ELABORANDO_PROPOSTA',
+    'AGUARDANDO_REVISAO_PROPOSTA',
+    'AGUARDANDO_AJUSTE',
+    'AGUARDANDO_ENVIO_CLIENTE',
+    'AGUARDANDO_ACEITE_PROPOSTA',
+    'AGUARDANDO_CONTRATO',
+    'AGUARDANDO_EXECUCAO',
+    'EM_EXECUCAO',
+    'CANCELADO',
+    'FINALIZADO'
+));

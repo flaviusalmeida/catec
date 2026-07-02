@@ -119,6 +119,38 @@ class InteracaoFluxoServiceTest {
     }
 
     @Test
+    void registrarConsideracoes_deveAtualizarProjetoParaAguardandoAjuste() {
+        Proposta proposta = proposta(7L, PropostaStatus.ENVIADA_AO_CLIENTE, ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA);
+        when(propostaRepository.findById(7L)).thenReturn(Optional.of(proposta));
+        when(usuarioRepository.getReferenceById(1L)).thenReturn(new Usuario());
+        when(propostaRepository.save(any(Proposta.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(interacaoFluxoRepository.save(any(InteracaoFluxo.class))).thenAnswer(inv -> {
+            InteracaoFluxo i = inv.getArgument(0);
+            org.springframework.test.util.ReflectionTestUtils.setField(i, "id", 101L);
+            Usuario u = new Usuario();
+            org.springframework.test.util.ReflectionTestUtils.setField(u, "id", 1L);
+            u.setNome("Admin");
+            i.setRegistradoPor(u);
+            return i;
+        });
+
+        var req = new InteracaoFluxoCreateRequest(TipoInteracaoFluxo.CONSIDERACOES_CLIENTE, "Pediu ajuste.", null);
+        var res = service.registrarRespostaCliente(10L, 7L, req, admin());
+
+        assertEquals(PropostaStatus.AGUARDANDO_AJUSTE, res.proposta().status());
+        assertEquals(ProjetoStatus.AGUARDANDO_AJUSTE, proposta.getProjeto().getStatus());
+        verify(auditoriaService)
+                .registrarTransicaoStatus(
+                        eq(TipoEntidadeAuditoria.PROJETO),
+                        eq(10L),
+                        eq("PROPOSTA_AJUSTE_CLIENTE"),
+                        eq("AGUARDANDO_ACEITE_PROPOSTA"),
+                        eq("AGUARDANDO_AJUSTE"),
+                        eq(1L));
+    }
+
+    @Test
     void registrarRecusa_deveAtualizarPropostaParaNegadaECancelarProjeto() {
         Proposta proposta = proposta(8L, PropostaStatus.ENVIADA_AO_CLIENTE, ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA);
         when(propostaRepository.findById(8L)).thenReturn(Optional.of(proposta));

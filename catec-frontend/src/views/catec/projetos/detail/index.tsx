@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import Link from 'next/link'
 
@@ -22,10 +22,17 @@ type Props = {
 }
 
 const ProjetoDetalhe = ({ id }: Props) => {
-  const { lista, carregando: storeCarregando, obterProjeto } = useProjetosStore()
+  const { lista, carregando: storeCarregando, refreshProjeto } = useProjetosStore()
   
   const projetoId = Number(id)
-  const fluxo = useProjetoFluxoStore(projetoId)
+
+  const recarregarProjeto = useCallback(async () => {
+    const remoto = await refreshProjeto(projetoId)
+
+    if (remoto) setProjeto(remoto)
+  }, [projetoId, refreshProjeto])
+
+  const fluxo = useProjetoFluxoStore(projetoId, recarregarProjeto)
 
   const [projeto, setProjeto] = useState<CatecProjeto | null>(null)
   const [carregando, setCarregando] = useState(true)
@@ -55,7 +62,7 @@ const ProjetoDetalhe = ({ id }: Props) => {
 
     void (async () => {
       setCarregando(true)
-      const remoto = await obterProjeto(projetoId)
+      const remoto = await refreshProjeto(projetoId)
 
       if (cancelled) return
 
@@ -67,7 +74,7 @@ const ProjetoDetalhe = ({ id }: Props) => {
     return () => {
       cancelled = true
     }
-  }, [projetoId, lista, storeCarregando, obterProjeto])
+  }, [projetoId, lista, storeCarregando, refreshProjeto])
 
   useEffect(() => {
     if (!projeto) return
@@ -110,10 +117,10 @@ const ProjetoDetalhe = ({ id }: Props) => {
         </Grid>
       ) : null}
       <Grid size={{ xs: 12, lg: 4, md: 5 }}>
-        <ProjetoLeftOverview projeto={projeto} onStatusAlterado={fluxo.recarregar} />
+        <ProjetoLeftOverview projeto={projeto} />
       </Grid>
       <Grid size={{ xs: 12, lg: 8, md: 7 }}>
-        <ProjetoRight projeto={projeto} fluxo={fluxo} />
+        <ProjetoRight projeto={projeto} fluxo={fluxo} onStatusAlterado={recarregarProjeto} />
       </Grid>
     </Grid>
   )

@@ -33,7 +33,7 @@ public class PropostaService {
             PropostaStatus.RASCUNHO, PropostaStatus.PENDENTE_AVALIACAO);
 
     private static final EnumSet<PropostaStatus> STATUS_UPLOAD_DOCUMENTO = EnumSet.of(
-            PropostaStatus.RASCUNHO, PropostaStatus.PENDENTE_AVALIACAO);
+            PropostaStatus.RASCUNHO, PropostaStatus.PENDENTE_AVALIACAO, PropostaStatus.AGUARDANDO_AJUSTE);
 
     private final PropostaRepository propostaRepository;
     private final ProjetoRepository projetoRepository;
@@ -92,7 +92,8 @@ public class PropostaService {
                 principal.id());
 
         if (projeto.getStatus() == ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL
-                || projeto.getStatus() == ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA) {
+                || projeto.getStatus() == ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA
+                || projeto.getStatus() == ProjetoStatus.AGUARDANDO_AJUSTE) {
             sincronizarProjeto(projeto, ProjetoStatus.ELABORANDO_PROPOSTA, principal.id());
         }
 
@@ -159,9 +160,29 @@ public class PropostaService {
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
         garantirUploadDocumento(proposta);
         if (proposta.getStatus() == PropostaStatus.RASCUNHO) {
-            return documentoService.uploadPropostaSubstituindo(propostaId, tipoArquivo, file, principal);
+            if (proposta.getAvaliadaSocioEm() != null) {
+                throw badRequest("Proposta já aprovada pelo sócio; envie ao cliente.");
+            }
+            var uploaded =
+                    documentoService.uploadPropostaSubstituindo(propostaId, tipoArquivo, file, principal);
+            sincronizarProjetoSeElaboracao(proposta.getProjeto(), principal.id());
+            return uploaded;
         }
-        return documentoService.uploadProposta(propostaId, tipoArquivo, file, principal);
+        if (proposta.getStatus() == PropostaStatus.AGUARDANDO_AJUSTE) {
+            var uploaded = documentoService.uploadPropostaSubstituindo(propostaId, tipoArquivo, file, principal);
+            sincronizarProjetoSeElaboracao(proposta.getProjeto(), principal.id());
+            return uploaded;
+        }
+        var uploaded = documentoService.uploadProposta(propostaId, tipoArquivo, file, principal);
+        sincronizarProjetoSeElaboracao(proposta.getProjeto(), principal.id());
+        return uploaded;
+    }
+
+    private void sincronizarProjetoSeElaboracao(Projeto projeto, Long usuarioId) {
+        if (projeto.getStatus() == ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL
+                || projeto.getStatus() == ProjetoStatus.AGUARDANDO_AJUSTE) {
+            sincronizarProjeto(projeto, ProjetoStatus.ELABORANDO_PROPOSTA, usuarioId);
+        }
     }
 
     @Transactional
@@ -173,6 +194,9 @@ public class PropostaService {
         proposta.setAvaliadaPorSocio(null);
         Proposta salva =
                 transicionar(proposta, PropostaStatus.PENDENTE_AVALIACAO, "SUBMETER_AVALIACAO_SOCIO", principal);
+        salva.setParecerSocio(null);
+        salva = propostaRepository.save(salva);
+        sincronizarProjeto(salva.getProjeto(), ProjetoStatus.AGUARDANDO_REVISAO_PROPOSTA, principal.id());
         socioPropostaNotificacaoService.propostaSubmetidaParaAvaliacaoSocio(
                 salva.getId(), salva.getProjeto().getId(), salva.getProjeto().getTitulo());
         return toResponse(salva);
@@ -199,6 +223,7 @@ public class PropostaService {
         salva.setAvaliadaSocioEm(Instant.now());
         salva.setAvaliadaPorSocio(usuarioRepository.getReferenceById(principal.id()));
         salva = propostaRepository.save(salva);
+        sincronizarProjeto(salva.getProjeto(), ProjetoStatus.AGUARDANDO_ENVIO_CLIENTE, principal.id());
         socioPropostaNotificacaoService.propostaAprovadaPeloSocio(salva.getId(), principal.id());
         return toResponse(salva);
     }
@@ -214,19 +239,21 @@ public class PropostaService {
             Long projetoId, Long propostaId, String observacao, UsuarioAutenticado principal) {
         authz.require(principal, PermissaoCodigo.ACAO_SOCIO_PROPOSTA_DEVOLVER);
         if (!StringUtils.hasText(observacao)) {
-            throw badRequest("Informe o parecer ao devolver a proposta para elaboração.");
+            throw badRequest("Informe o parecer ao reprovar a proposta para elaboração.");
         }
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
         validarPendenteAvaliacaoSocio(proposta);
         Proposta salva = transicionar(
                 proposta,
-                PropostaStatus.RASCUNHO,
-                "DEVOLVER_RASCUNHO_SOCIO",
+                PropostaStatus.AGUARDANDO_AJUSTE,
+                "REPROVAR_SOCIO",
                 principal,
                 payloadObservacao(observacao.trim()));
+        salva.setParecerSocio(observacao.trim());
         salva.setAvaliadaSocioEm(null);
         salva.setAvaliadaPorSocio(null);
         salva = propostaRepository.save(salva);
+        sincronizarProjeto(salva.getProjeto(), ProjetoStatus.AGUARDANDO_AJUSTE, principal.id());
         socioPropostaNotificacaoService.propostaDevolvidaPeloSocio(salva.getId(), principal.id(), observacao.trim());
         return toResponse(salva);
     }
@@ -244,7 +271,10 @@ public class PropostaService {
         salva = propostaRepository.save(salva);
 
         Projeto projeto = salva.getProjeto();
-        if (projeto.getStatus() == ProjetoStatus.ELABORANDO_PROPOSTA) {
+        if (projeto.getStatus() == ProjetoStatus.ELABORANDO_PROPOSTA
+                || projeto.getStatus() == ProjetoStatus.AGUARDANDO_REVISAO_PROPOSTA
+                || projeto.getStatus() == ProjetoStatus.AGUARDANDO_AJUSTE
+                || projeto.getStatus() == ProjetoStatus.AGUARDANDO_ENVIO_CLIENTE) {
             sincronizarProjeto(projeto, ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA, principal.id());
         }
 
@@ -313,10 +343,11 @@ public class PropostaService {
                             novo == PropostaStatus.PENDENTE_AVALIACAO
                                     || (novo == PropostaStatus.ENVIADA_AO_CLIENTE
                                             && proposta.getAvaliadaSocioEm() != null);
-                    case PENDENTE_AVALIACAO -> novo == PropostaStatus.RASCUNHO;
+                    case AGUARDANDO_AJUSTE -> novo == PropostaStatus.PENDENTE_AVALIACAO;
+                    case PENDENTE_AVALIACAO ->
+                            novo == PropostaStatus.RASCUNHO || novo == PropostaStatus.AGUARDANDO_AJUSTE;
                     case ENVIADA_AO_CLIENTE,
                             EM_AVALIACAO_CLIENTE,
-                            AGUARDANDO_AJUSTE,
                             ACEITA,
                             NEGADA -> false;
                 };
@@ -447,6 +478,7 @@ public class PropostaService {
                 p.getAvaliadaSocioEm(),
                 p.getAvaliadaPorSocio() != null ? p.getAvaliadaPorSocio().getId() : null,
                 p.isConsideracoesPendentes(),
+                p.getParecerSocio(),
                 p.getCobrancaPropostaInicioEm(),
                 p.getCriadoEm(),
                 p.getAtualizadoEm());

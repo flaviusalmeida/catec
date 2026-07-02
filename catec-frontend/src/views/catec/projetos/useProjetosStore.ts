@@ -129,6 +129,21 @@ async function associarClienteStore(id: number, clienteId: number): Promise<Cate
   return atualizado
 }
 
+async function refreshProjetoStore(id: number): Promise<CatecProjeto | null> {
+  try {
+    const projeto = await obterProjetoCatec(id)
+    const exists = state.lista.some(p => p.id === id)
+
+    setState({
+      lista: exists ? state.lista.map(p => (p.id === id ? projeto : p)) : [...state.lista, projeto]
+    })
+
+    return projeto
+  } catch {
+    return null
+  }
+}
+
 async function obterProjetoStore(id: number): Promise<CatecProjeto | null> {
   const cached = state.lista.find(p => p.id === id)
 
@@ -179,6 +194,8 @@ export function useProjetosStore() {
 
   const obterProjeto = useCallback(async (id: number) => obterProjetoStore(id), [])
 
+  const refreshProjeto = useCallback(async (id: number) => refreshProjetoStore(id), [])
+
   return {
     lista: snapshot.lista,
     resumo: snapshot.resumo,
@@ -189,6 +206,7 @@ export function useProjetosStore() {
     updateProjeto,
     atualizarStatusProjeto,
     associarCliente,
-    obterProjeto
+    obterProjeto,
+    refreshProjeto
   }
 }

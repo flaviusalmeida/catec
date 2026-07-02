@@ -142,6 +142,10 @@ public class InteracaoFluxoService {
         } else if (novoStatus == PropostaStatus.ACEITA) {
             sincronizarProjeto(
                     salva.getProjeto(), ProjetoStatus.AGUARDANDO_CONTRATO, "PROPOSTA_ACEITA_CLIENTE", principal.id());
+        } else if (novoStatus == PropostaStatus.AGUARDANDO_AJUSTE
+                && salva.getProjeto().getStatus() == ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA) {
+            sincronizarProjeto(
+                    salva.getProjeto(), ProjetoStatus.AGUARDANDO_AJUSTE, "PROPOSTA_AJUSTE_CLIENTE", principal.id());
         }
 
         return new RegistroInteracaoResult(toResponse(salvaInteracao), toPropostaResponse(salva));
@@ -366,6 +370,7 @@ public class InteracaoFluxoService {
                 p.getAvaliadaSocioEm(),
                 p.getAvaliadaPorSocio() != null ? p.getAvaliadaPorSocio().getId() : null,
                 p.isConsideracoesPendentes(),
+                p.getParecerSocio(),
                 p.getCobrancaPropostaInicioEm(),
                 p.getCriadoEm(),
                 p.getAtualizadoEm());

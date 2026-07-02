@@ -66,22 +66,39 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
 
   const documentoAtual = propostaAtual?.documentos[0] ?? null
   const temAnexo = Boolean(documentoAtual)
-  const temPropostaAtiva = data.propostas.some(p => p.status === 'RASCUNHO' || p.status === 'PENDENTE_AVALIACAO')
+  const temPropostaAtiva = data.propostas.some(
+    p => p.status === 'RASCUNHO' || p.status === 'PENDENTE_AVALIACAO' || p.status === 'AGUARDANDO_AJUSTE'
+  )
 
-  const aguardandoAjuste = data.propostas.some(
-    p => p.status === 'AGUARDANDO_AJUSTE' || p.consideracoesPendentes
+  const propostaAprovadaSocio =
+    propostaAtual?.status === 'RASCUNHO' && propostaAtual.avaliadaSocioEm != null
+
+  const aguardandoAjusteSocio = propostaAtual?.status === 'AGUARDANDO_AJUSTE'
+
+  const aguardandoAjusteCliente = data.propostas.some(
+    p => p.consideracoesPendentes && p.status !== 'AGUARDANDO_AJUSTE'
   )
 
   const podeIniciarProposta =
     projetoTemCliente &&
     !temPropostaAtiva &&
-    (data.propostas.length === 0 || aguardandoAjuste)
+    (data.propostas.length === 0 || aguardandoAjusteCliente)
 
   const podeUploadExistente =
     propostaAtual != null && STATUS_PROPOSTA_UPLOAD.includes(propostaAtual.status)
 
   const mostrarUpload = projetoTemCliente && (podeUploadExistente || podeIniciarProposta)
-  const mostrarUploadCard = mostrarUpload && (propostaAtual == null || propostaAtual.status === 'RASCUNHO')
+  const mostrarUploadCard =
+    mostrarUpload &&
+    (propostaAtual == null ||
+      propostaAtual.status === 'AGUARDANDO_AJUSTE' ||
+      (propostaAtual.status === 'RASCUNHO' && !propostaAprovadaSocio))
+
+  const mostrarPropostaAtualCard =
+    propostaAtual != null &&
+    !mostrarUploadCard &&
+    (propostaAtual.status === 'PENDENTE_AVALIACAO' ||
+      STATUS_PROPOSTA_ENVIADA.includes(propostaAtual.status))
 
   const versoesAnteriores = useMemo(() => {
     if (!propostaAtual) return data.propostas
@@ -100,7 +117,8 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
       })
     : []
 
-  const acoesRascunho = workflowActions.filter(acao => acao.key === 'solicitar-revisao' || acao.key === 'enviar-cliente')
+  const acoesElaboracao = workflowActions.filter(acao => acao.key === 'solicitar-revisao')
+  const acoesEnviarCliente = workflowActions.filter(acao => acao.key === 'enviar-cliente')
 
   const acoesWorkflowRestantes = workflowActions.filter(
     acao => acao.key !== 'solicitar-revisao' && acao.key !== 'enviar-cliente'
@@ -132,7 +150,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
     if (!dialogParecer) return
 
     if (dialogParecer === 'reprovar-socio' && !observacao.trim()) {
-      toast.error('Informe o parecer ao devolver a proposta para elaboração.')
+      toast.error('Informe o parecer ao reprovar a proposta para elaboração.')
 
       return
     }
@@ -193,7 +211,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
                     )
                 : undefined
             }
-            acoes={acoesRascunho.map(acao => ({
+            acoes={acoesElaboracao.map(acao => ({
               ...acao,
               onClick: () => handleAcaoWorkflow(acao.key as CatecPropostaWorkflowActionKey, acao.label)
             }))}
@@ -201,14 +219,24 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
         </Grid>
       ) : null}
 
-      {propostaAtual ? (
+      {aguardandoAjusteSocio && propostaAtual?.parecerSocio ? (
+        <Grid size={{ xs: 12 }}>
+          <ProjetoStateCard
+            titulo='Reprovação do sócio'
+            descricao={propostaAtual.parecerSocio}
+            tipo='info'
+          />
+        </Grid>
+      ) : null}
+
+      {mostrarPropostaAtualCard ? (
         <Grid size={{ xs: 12 }}>
           <Card>
-            <CardHeader title='Proposta atual' subheader={`Versão ${propostaAtual.versao}`} />
+            <CardHeader title='Proposta atual' subheader={`Versão ${propostaAtual!.versao}`} />
             <CardContent>
               <Grid container spacing={4}>
-                <InfoField label='Status'>{STATUS_PROPOSTA_ROTULO[propostaAtual.status]}</InfoField>
-                <InfoField label='Responsável'>{propostaAtual.elaboradoPorNome || '—'}</InfoField>
+                <InfoField label='Status'>{STATUS_PROPOSTA_ROTULO[propostaAtual!.status]}</InfoField>
+                <InfoField label='Responsável'>{propostaAtual!.elaboradoPorNome || '—'}</InfoField>
               </Grid>
             </CardContent>
           </Card>
@@ -220,7 +248,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
           <Card variant='outlined'>
             <CardHeader
               title={
-                STATUS_PROPOSTA_ENVIADA.includes(propostaAtual.status)
+                propostaAprovadaSocio || STATUS_PROPOSTA_ENVIADA.includes(propostaAtual.status)
                   ? 'Documento da proposta'
                   : 'Documento da proposta em elaboração'
               }
@@ -275,9 +303,23 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
         </Grid>
       ) : null}
 
-      {propostaAtual?.status === 'ACEITA' ? (
+      {propostaAprovadaSocio && acoesEnviarCliente.length > 0 ? (
         <Grid size={{ xs: 12 }}>
-          <ProjetoStateCard titulo='Proposta aprovada.' tipo='info' />
+          <Card variant='outlined'>
+            <CardContent className='flex flex-wrap gap-3'>
+              {acoesEnviarCliente.map(acao => (
+                <Button
+                  key={acao.key}
+                  variant='contained'
+                  color='primary'
+                  onClick={() => handleAcaoWorkflow(acao.key as CatecPropostaWorkflowActionKey, acao.label)}
+                  disabled={processando}
+                >
+                  {acao.label}
+                </Button>
+              ))}
+            </CardContent>
+          </Card>
         </Grid>
       ) : null}
 
@@ -308,7 +350,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
       ) : null}
 
       <Dialog open={dialogParecer != null} onClose={fecharDialogParecer} fullWidth maxWidth='sm'>
-        <DialogTitle>{dialogParecer === 'aprovar-socio' ? 'Aprovar proposta' : 'Devolver proposta'}</DialogTitle>
+        <DialogTitle>{dialogParecer === 'aprovar-socio' ? 'Aprovar proposta' : 'Reprovar proposta'}</DialogTitle>
         <DialogContent className='flex flex-col gap-4 pbs-2'>
           {propostaAtual ? (
             <Typography variant='body2' color='text.secondary'>
@@ -339,7 +381,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
             onClick={confirmarDialogParecer}
             disabled={processando || (dialogParecer === 'reprovar-socio' && !observacao.trim())}
           >
-            {dialogParecer === 'aprovar-socio' ? 'Confirmar aprovação' : 'Confirmar devolução'}
+            {dialogParecer === 'aprovar-socio' ? 'Confirmar aprovação' : 'Confirmar reprovação'}
           </Button>
         </DialogActions>
       </Dialog>

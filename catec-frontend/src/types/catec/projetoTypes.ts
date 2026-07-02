@@ -2,6 +2,9 @@ export type CatecProjetoStatus =
   | 'PENDENTE_CLIENTE'
   | 'AGUARDANDO_PROPOSTA_COMERCIAL'
   | 'ELABORANDO_PROPOSTA'
+  | 'AGUARDANDO_REVISAO_PROPOSTA'
+  | 'AGUARDANDO_AJUSTE'
+  | 'AGUARDANDO_ENVIO_CLIENTE'
   | 'AGUARDANDO_ACEITE_PROPOSTA'
   | 'AGUARDANDO_CONTRATO'
   | 'AGUARDANDO_EXECUCAO'
@@ -110,6 +113,9 @@ export const ORDEM_STATUS_PROJETO: CatecProjetoStatus[] = [
   'PENDENTE_CLIENTE',
   'AGUARDANDO_PROPOSTA_COMERCIAL',
   'ELABORANDO_PROPOSTA',
+  'AGUARDANDO_REVISAO_PROPOSTA',
+  'AGUARDANDO_AJUSTE',
+  'AGUARDANDO_ENVIO_CLIENTE',
   'AGUARDANDO_ACEITE_PROPOSTA',
   'AGUARDANDO_CONTRATO',
   'AGUARDANDO_EXECUCAO',
@@ -122,6 +128,9 @@ export const STATUS_PROJETO_ROTULO: Record<CatecProjetoStatus, string> = {
   PENDENTE_CLIENTE: 'Pendente de cadastro de cliente',
   AGUARDANDO_PROPOSTA_COMERCIAL: 'Aguardando proposta comercial',
   ELABORANDO_PROPOSTA: 'Elaborando proposta',
+  AGUARDANDO_REVISAO_PROPOSTA: 'Aguardando revisão de proposta',
+  AGUARDANDO_AJUSTE: 'Aguardando ajuste',
+  AGUARDANDO_ENVIO_CLIENTE: 'Aguardando envio ao cliente',
   AGUARDANDO_ACEITE_PROPOSTA: 'Aguardando aceite da proposta',
   AGUARDANDO_CONTRATO: 'Aguardando contrato',
   AGUARDANDO_EXECUCAO: 'Aguardando execução',
@@ -134,6 +143,9 @@ export const STATUS_PROJETO_ROTULO_BADGE: Record<CatecProjetoStatus, string> = {
   PENDENTE_CLIENTE: 'Pend. cliente',
   AGUARDANDO_PROPOSTA_COMERCIAL: 'Aguard. prop.',
   ELABORANDO_PROPOSTA: 'Elaborando',
+  AGUARDANDO_REVISAO_PROPOSTA: 'Aguard. revisão',
+  AGUARDANDO_AJUSTE: 'Aguard. ajuste',
+  AGUARDANDO_ENVIO_CLIENTE: 'Aguard. envio',
   AGUARDANDO_ACEITE_PROPOSTA: 'Aguard. aceite',
   AGUARDANDO_CONTRATO: 'Aguard. contrato',
   AGUARDANDO_EXECUCAO: 'Aguard. execução',

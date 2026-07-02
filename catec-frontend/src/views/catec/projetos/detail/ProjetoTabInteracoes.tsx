@@ -25,12 +25,17 @@ import {
 
 import CustomTextField from '@core/components/mui/TextField'
 
+import type { CatecProjeto } from '@/types/catec/projetoTypes'
+
 import type { UseProjetoFluxoStore } from '../useProjetoFluxoStore'
+import ProjetoEncerrarStatus from './ProjetoEncerrarStatus'
 import ProjetoStateCard from './ProjetoStateCard'
 import ProjetoTimeline from './ProjetoTimeline'
 
 type Props = {
+  projeto: CatecProjeto
   fluxo: UseProjetoFluxoStore
+  onStatusAlterado?: () => Promise<void>
 }
 
 const ORDEM_TIPO: CatecTipoInteracaoFluxo[] = [
@@ -39,7 +44,7 @@ const ORDEM_TIPO: CatecTipoInteracaoFluxo[] = [
   'RECUSA_CLIENTE'
 ]
 
-const ProjetoTabInteracoes = ({ fluxo }: Props) => {
+const ProjetoTabInteracoes = ({ projeto, fluxo, onStatusAlterado }: Props) => {
   const { data, podeRegistrarInteracao, registrarInteracao } = fluxo
   const [dialogAberto, setDialogAberto] = useState(false)
   const [tipo, setTipo] = useState<CatecTipoInteracaoFluxo>('CONSIDERACOES_CLIENTE')
@@ -110,6 +115,15 @@ const ProjetoTabInteracoes = ({ fluxo }: Props) => {
 
   return (
     <>
+      {projeto.status === 'AGUARDANDO_EXECUCAO' || projeto.status === 'EM_EXECUCAO' ? (
+        <Card className='mbe-6'>
+          <CardHeader title='Alteração de status' />
+          <CardContent className='flex flex-wrap items-center gap-3'>
+            <ProjetoEncerrarStatus projeto={projeto} onStatusAlterado={onStatusAlterado} />
+          </CardContent>
+        </Card>
+      ) : null}
+
       <Card>
         <CardHeader
           title='Interações com cliente'

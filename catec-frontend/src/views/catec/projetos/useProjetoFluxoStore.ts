@@ -41,7 +41,7 @@ const emptyData: CatecProjetoFluxoData = {
   historico: []
 }
 
-export function useProjetoFluxoStore(projetoId: number) {
+export function useProjetoFluxoStore(projetoId: number, onAfterMutation?: () => Promise<void>) {
   const [data, setData] = useState<CatecProjetoFluxoData>(emptyData)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
@@ -122,6 +122,12 @@ export function useProjetoFluxoStore(projetoId: number) {
 
   const podeRegistrarInteracao = Boolean(propostaParaRegistro || contratoParaRegistro)
 
+  const notificarMutacao = useCallback(async () => {
+    if (onAfterMutation) {
+      await onAfterMutation()
+    }
+  }, [onAfterMutation])
+
   const uploadProposta = useCallback(
     async (file: File) => {
       setProcessando(true)
@@ -129,11 +135,12 @@ export function useProjetoFluxoStore(projetoId: number) {
       try {
         await uploadDocumentoPropostaCatec(projetoId, propostaAtual?.id ?? null, file)
         await recarregar()
+        await notificarMutacao()
       } finally {
         setProcessando(false)
       }
     },
-    [projetoId, propostaAtual?.id, recarregar]
+    [projetoId, propostaAtual?.id, recarregar, notificarMutacao]
   )
 
   const acaoProposta = useCallback(
@@ -145,11 +152,12 @@ export function useProjetoFluxoStore(projetoId: number) {
       try {
         await acaoPropostaCatec(projetoId, propostaAtual.id, acao, { observacao })
         await recarregar()
+        await notificarMutacao()
       } finally {
         setProcessando(false)
       }
     },
-    [projetoId, propostaAtual, recarregar]
+    [projetoId, propostaAtual, recarregar, notificarMutacao]
   )
 
   const uploadContrato = useCallback(
@@ -159,11 +167,12 @@ export function useProjetoFluxoStore(projetoId: number) {
       try {
         await uploadDocumentoContratoCatec(projetoId, data.contrato?.id ?? null, file)
         await recarregar()
+        await notificarMutacao()
       } finally {
         setProcessando(false)
       }
     },
-    [projetoId, data.contrato?.id, recarregar]
+    [projetoId, data.contrato?.id, recarregar, notificarMutacao]
   )
 
   const enviarContratoCliente = useCallback(async () => {
@@ -174,10 +183,11 @@ export function useProjetoFluxoStore(projetoId: number) {
     try {
       await enviarContratoClienteCatec(projetoId, data.contrato.id)
       await recarregar()
+      await notificarMutacao()
     } finally {
       setProcessando(false)
     }
-  }, [projetoId, data.contrato, recarregar])
+  }, [projetoId, data.contrato, recarregar, notificarMutacao])
 
   const registrarInteracao = useCallback(
     async (tipo: CatecTipoInteracaoFluxo, texto: string) => {
@@ -199,11 +209,12 @@ export function useProjetoFluxoStore(projetoId: number) {
         }
 
         await recarregar()
+        await notificarMutacao()
       } finally {
         setProcessando(false)
       }
     },
-    [data.contrato, data.propostas, projetoId, recarregar]
+    [data.contrato, data.propostas, projetoId, recarregar, notificarMutacao]
   )
 
   return {
