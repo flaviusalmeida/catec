@@ -35,6 +35,15 @@ Variáveis mínimas para desenvolvimento:
 
 Menus demo do template Vuexy ficam ocultos por padrão. Para exibir: `NEXT_PUBLIC_SHOW_VUEXY_DEMOS=true`.
 
+### Problemas comuns
+
+**`NO_SECRET` / `JWT_SESSION_ERROR` / `decryption operation failed`**
+
+1. Confirme que existe `novo-front/novo-catec-frontend/.env` (não vai no Git — ao mover a pasta, copie de novo: `cp .env.example .env`).
+2. `NEXTAUTH_SECRET` não pode estar vazio.
+3. Limpe cookies do site `localhost:3000` no browser (cookie antigo foi encriptado com outro segredo).
+4. Reinicie o dev server após criar/editar o `.env`.
+
 ## Executar
 
 ```bash

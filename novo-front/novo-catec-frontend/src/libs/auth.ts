@@ -7,7 +7,16 @@ import type { NextAuthOptions } from 'next-auth'
 import { fetchCatecMe, postCatecLogin } from '@/libs/catecApiServer'
 import { parseCatecLoginResponse } from '@/types/catec/authTypes'
 
+const nextAuthSecret = process.env.NEXTAUTH_SECRET
+
+if (!nextAuthSecret && process.env.NODE_ENV !== 'production') {
+  console.warn(
+    '[catec] NEXTAUTH_SECRET ausente. Copie .env.example para .env e defina um segredo (openssl rand -base64 32).'
+  )
+}
+
 export const authOptions: NextAuthOptions = {
+  secret: nextAuthSecret,
   providers: [
     CredentialProvider({
       name: 'Credentials',
@@ -131,4 +140,11 @@ export const authOptions: NextAuthOptions = {
   }
 }
 
-export const getAuthSession = () => getServerSession(authOptions)
+export const getAuthSession = async () => {
+  try {
+    return await getServerSession(authOptions)
+  } catch {
+    // Cookie de sessão inválido (ex.: NEXTAUTH_SECRET mudou após mover o projeto).
+    return null
+  }
+}
