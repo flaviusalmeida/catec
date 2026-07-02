@@ -20,6 +20,9 @@ import NavHeader from '@menu/components/vertical-menu/NavHeader'
 import Logo from '@components/layout/shared/Logo'
 import NavCollapseIcons from '@menu/components/vertical-menu/NavCollapseIcons'
 
+// Config Imports
+import themeConfig from '@configs/themeConfig'
+
 // Hook Imports
 import useHorizontalNav from '@menu/hooks/useHorizontalNav'
 
@@ -74,7 +77,7 @@ const VerticalNavContent = ({ children }: ChildrenType) => {
   return (
     <>
       <NavHeader>
-        <Link href={getLocalizedUrl('/', locale as Locale)}>
+        <Link href={getLocalizedUrl(themeConfig.homePageUrl, locale as Locale)}>
           <Logo />
         </Link>
         <NavCollapseIcons

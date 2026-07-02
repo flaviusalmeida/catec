@@ -4,14 +4,14 @@
 import { useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
 
+// Next Imports
+import Image from 'next/image'
+
 // Third-party Imports
 import styled from '@emotion/styled'
 
 // Type Imports
 import type { VerticalNavContextProps } from '@menu/contexts/verticalNavContext'
-
-// Component Imports
-import VuexyLogo from '@core/svg/Logo'
 
 // Config Imports
 import themeConfig from '@configs/themeConfig'
@@ -71,7 +71,14 @@ const Logo = ({ color }: { color?: CSSProperties['color'] }) => {
 
   return (
     <div className='flex items-center'>
-      <VuexyLogo className='text-2xl text-primary' />
+      <Image
+        src='/images/logo-catec.png'
+        alt='CATEC — Assessoria em engenharia'
+        width={40}
+        height={22}
+        priority
+        className='object-contain'
+      />
       <LogoText
         color={color}
         ref={logoTextRef}

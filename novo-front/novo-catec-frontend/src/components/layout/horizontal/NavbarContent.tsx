@@ -20,6 +20,9 @@ import ShortcutsDropdown from '@components/layout/shared/ShortcutsDropdown'
 import NotificationsDropdown from '@components/layout/shared/NotificationsDropdown'
 import UserDropdown from '@components/layout/shared/UserDropdown'
 
+// Config Imports
+import themeConfig from '@configs/themeConfig'
+
 // Hook Imports
 import useHorizontalNav from '@menu/hooks/useHorizontalNav'
 
@@ -128,7 +131,7 @@ const NavbarContent = () => {
         <NavToggle />
         {/* Hide Logo on Smaller screens */}
         {!isBreakpointReached && (
-          <Link href={getLocalizedUrl('/', locale as Locale)}>
+          <Link href={getLocalizedUrl(themeConfig.homePageUrl, locale as Locale)}>
             <Logo />
           </Link>
         )}

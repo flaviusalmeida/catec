@@ -56,7 +56,7 @@ export type Config = {
 const themeConfig: Config = {
   templateName: 'CATEC',
   homePageUrl: '/catec/projetos',
-  settingsCookieName: 'vuexy-mui-next-demo-1',
+  settingsCookieName: 'catec-mui-settings',
   mode: 'system', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'
   semiDark: false, // true, false
