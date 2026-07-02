@@ -2,7 +2,7 @@
 
 // Component Imports
 import CanPermission from '@/components/catec/CanPermission'
-import { MenuItem } from '@menu/vertical-menu'
+import { MenuItem, SubMenu } from '@menu/vertical-menu'
 
 // Type Imports
 import { PermissaoCodigo } from '@/types/catec/permissao'
@@ -26,15 +26,19 @@ const CatecNavMenuItems = ({ withIcons = false }: Props) => {
           Clientes
         </MenuItem>
       </CanPermission>
-      <CanPermission code={PermissaoCodigo.TELA_USUARIOS}>
-        <MenuItem href='/catec/usuarios' icon={icon('tabler-user')}>
-          Usuários
-        </MenuItem>
-      </CanPermission>
-      <CanPermission code={PermissaoCodigo.TELA_GRUPOS}>
-        <MenuItem href='/catec/grupos' icon={icon('tabler-lock')}>
-          Grupos
-        </MenuItem>
+      <CanPermission anyOf={[PermissaoCodigo.TELA_USUARIOS, PermissaoCodigo.TELA_GRUPOS]}>
+        <SubMenu label='Segurança' icon={icon('tabler-shield-lock')}>
+          <CanPermission code={PermissaoCodigo.TELA_USUARIOS}>
+            <MenuItem href='/catec/usuarios' icon={icon('tabler-user')}>
+              Usuários
+            </MenuItem>
+          </CanPermission>
+          <CanPermission code={PermissaoCodigo.TELA_GRUPOS}>
+            <MenuItem href='/catec/grupos' icon={icon('tabler-lock')}>
+              Grupos
+            </MenuItem>
+          </CanPermission>
+        </SubMenu>
       </CanPermission>
     </>
   )

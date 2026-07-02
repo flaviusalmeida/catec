@@ -34,7 +34,7 @@ export const catecNavItems: CatecNavItem[] = [
     name: 'Usuários',
     url: '/catec/usuarios',
     icon: 'tabler-user',
-    section: 'Usuários',
+    section: 'Segurança',
     subtitle: 'Gerir usuários',
     permission: PermissaoCodigo.TELA_USUARIOS
   },
@@ -43,7 +43,7 @@ export const catecNavItems: CatecNavItem[] = [
     name: 'Grupos',
     url: '/catec/grupos',
     icon: 'tabler-lock',
-    section: 'Grupos',
+    section: 'Segurança',
     subtitle: 'Permissões e grupos',
     permission: PermissaoCodigo.TELA_GRUPOS
   }

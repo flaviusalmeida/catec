@@ -18,7 +18,6 @@ import { Title, Description } from '@radix-ui/react-dialog'
 // Type Imports
 
 // Component Imports
-import DefaultSuggestions from './DefaultSuggestions'
 import NoResult from './NoResult'
 
 // Hook Imports
@@ -195,6 +194,29 @@ const NavSearch = () => {
 
   const limitedData = getFilteredResults(filteredData(transformedData, searchValue))
 
+  const renderSections = (sections: Section[]) =>
+    sections.map((section, index) => (
+      <CommandGroup
+        key={index}
+        heading={section.items.length > 1 ? section.title.toUpperCase() : undefined}
+        className='text-xs'
+      >
+        {section.items.map((item, itemIndex) => (
+          <SearchItem
+            shortcut={item.shortcut}
+            key={itemIndex}
+            currentPath={pathName}
+            url={item.url}
+            value={`${item.name} ${section.title} ${item.shortcut ?? ''}`}
+            onSelect={() => onSearchItemSelect(item)}
+          >
+            {item.icon && <i className={classnames('text-xl', item.icon)} />}
+            {item.name}
+          </SearchItem>
+        ))}
+      </CommandGroup>
+    ))
+
   // Toggle the menu when ⌘K is pressed
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -243,32 +265,14 @@ const NavSearch = () => {
         <CommandList>
           {searchValue ? (
             limitedData.length > 0 ? (
-              limitedData.map((section, index) => (
-                <CommandGroup key={index} heading={section.title.toUpperCase()} className='text-xs'>
-                  {section.items.map((item, index) => {
-                    return (
-                      <SearchItem
-                        shortcut={item.shortcut}
-                        key={index}
-                        currentPath={pathName}
-                        url={item.url}
-                        value={`${item.name} ${section.title} ${item.shortcut}`}
-                        onSelect={() => onSearchItemSelect(item)}
-                      >
-                        {item.icon && <i className={classnames('text-xl', item.icon)} />}
-                        {item.name}
-                      </SearchItem>
-                    )
-                  })}
-                </CommandGroup>
-              ))
+              renderSections(limitedData)
             ) : (
               <CommandEmpty>
                 <NoResult searchValue={searchValue} setOpen={setOpen} />
               </CommandEmpty>
             )
           ) : (
-            <DefaultSuggestions setOpen={setOpen} />
+            renderSections(transformedData)
           )}
         </CommandList>
         <CommandFooter />
