@@ -26,7 +26,11 @@ import '@assets/iconify-icons/generated-icons.css'
 
 export const metadata = {
   title: 'CATEC',
-  description: 'CATEC — Assessoria em engenharia'
+  description: 'CATEC — Assessoria em engenharia',
+  icons: {
+    icon: '/images/logo-catec.png',
+    apple: '/images/logo-catec.png'
+  }
 }
 
 const RootLayout = async (props: ChildrenType ) => {
