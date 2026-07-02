@@ -100,6 +100,11 @@
     "menuLevels": "Menu Levels",
     "menuLevel2": "Menu Level 2",
     "menuLevel3": "Menu Level 3",
-    "disabledMenu": "Disabled Menu"
+    "disabledMenu": "Disabled Menu",
+    "catec": "CATEC",
+    "projetos": "Projects",
+    "clientes": "Customers",
+    "usuarios": "Users",
+    "grupos": "Groups"
   }
 }

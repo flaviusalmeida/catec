@@ -92,18 +92,18 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           <MenuItem href={`/${locale}/dashboards/academy`}>{dictionary['navigation'].academy}</MenuItem>
           <MenuItem href={`/${locale}/dashboards/logistics`}>{dictionary['navigation'].logistics}</MenuItem>
         </SubMenu>
-        <SubMenu label='CATEC' icon={<i className='tabler-building' />}>
+        <SubMenu label={dictionary['navigation'].catec} icon={<i className='tabler-building' />}>
           <MenuItem href={`/${locale}/catec/projetos`} icon={<i className='tabler-briefcase' />}>
-            Projetos
+            {dictionary['navigation'].projetos}
           </MenuItem>
           <MenuItem href={`/${locale}/catec/clientes`} icon={<i className='tabler-user' />}>
-            Clientes
+            {dictionary['navigation'].clientes}
           </MenuItem>
           <MenuItem href={`/${locale}/catec/usuarios`} icon={<i className='tabler-user' />}>
-            Usuários
+            {dictionary['navigation'].usuarios}
           </MenuItem>
           <MenuItem href={`/${locale}/catec/grupos`} icon={<i className='tabler-lock' />}>
-            Grupos
+            {dictionary['navigation'].grupos}
           </MenuItem>
         </SubMenu>
         <SubMenu label={dictionary['navigation'].frontPages} icon={<i className='tabler-files' />}>

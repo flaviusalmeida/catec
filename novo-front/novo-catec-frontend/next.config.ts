@@ -6,19 +6,19 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/',
-        destination: '/en/dashboards/crm',
+        destination: '/pt/catec/projetos',
         permanent: true,
         locale: false
       },
       {
-        source: '/:lang(en|fr|ar)',
-        destination: '/:lang/dashboards/crm',
+        source: '/:lang(pt|en|fr|ar)',
+        destination: '/:lang/catec/projetos',
         permanent: true,
         locale: false
       },
       {
-        source: '/:path((?!en|fr|ar|front-pages|images|api|favicon.ico).*)*',
-        destination: '/en/:path*',
+        source: '/:path((?!pt|en|fr|ar|front-pages|images|api|favicon.ico).*)*',
+        destination: '/pt/:path*',
         permanent: true,
         locale: false
       }

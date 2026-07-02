@@ -39,6 +39,10 @@ const getLocalePath = (pathName: string, locale: string) => {
 // Vars
 const languageData: LanguageDataType[] = [
   {
+    langCode: 'pt',
+    langName: 'Português'
+  },
+  {
     langCode: 'en',
     langName: 'English'
   },

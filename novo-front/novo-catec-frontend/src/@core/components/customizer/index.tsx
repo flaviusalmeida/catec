@@ -442,7 +442,7 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
                 <div className='flex flex-col gap-2'>
                   <p className='font-medium'>Direction</p>
                   <div className='flex items-center gap-4'>
-                    <Link href={getLocalePath(pathName, 'en')}>
+                    <Link href={getLocalePath(pathName, 'pt')}>
                       <div className='flex flex-col items-start gap-0.5'>
                         <div
                           className={classnames(styles.itemWrapper, {
@@ -453,7 +453,7 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
                         </div>
                         <p className={styles.itemLabel}>
                           Left to Right <br />
-                          (English)
+                          (Português)
                         </p>
                       </div>
                     </Link>
