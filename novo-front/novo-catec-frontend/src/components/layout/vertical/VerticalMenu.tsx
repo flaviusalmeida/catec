@@ -31,6 +31,9 @@ import menuSectionStyles from '@core/styles/vertical/menuSectionStyles'
 // Menu Data Imports
 // import menuData from '@/data/navigation/verticalMenuData'
 
+// Config Imports
+import { SHOW_VUEXY_DEMOS } from '@configs/featureFlags'
+
 type RenderExpandIconProps = {
   open?: boolean
   transitionDuration?: VerticalMenuContextProps['transitionDuration']
@@ -82,7 +85,9 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
         renderExpandedMenuItemIcon={{ icon: <i className='tabler-circle text-xs' /> }}
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
-        <SubMenu
+        {SHOW_VUEXY_DEMOS ? (
+          <>
+            <SubMenu
           label={dictionary['navigation'].dashboards}
           icon={<i className='tabler-smart-home' />}
           suffix={<CustomChip label='5' size='small' color='error' round='true' />}
@@ -390,6 +395,10 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
             <MenuItem disabled>{dictionary['navigation'].disabledMenu}</MenuItem>
           </SubMenu>
         </MenuSection>
+          </>
+        ) : (
+          <CatecNavMenuItems dictionary={dictionary} withIcons />
+        )}
       </Menu>
       {/* <Menu
         popoutMenuOffset={{ mainAxis: 23 }}

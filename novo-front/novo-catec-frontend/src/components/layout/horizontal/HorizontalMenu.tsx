@@ -33,6 +33,9 @@ import verticalMenuSectionStyles from '@core/styles/vertical/menuSectionStyles'
 // Menu Data Imports
 // import menuData from '@/data/navigation/horizontalMenuData'
 
+// Config Imports
+import { SHOW_VUEXY_DEMOS } from '@configs/featureFlags'
+
 type RenderExpandIconProps = {
   level?: number
 }
@@ -91,7 +94,9 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
           menuSectionStyles: verticalMenuSectionStyles(verticalNavOptions, theme)
         }}
       >
-        <SubMenu label={dictionary['navigation'].dashboards} icon={<i className='tabler-smart-home' />}>
+        {SHOW_VUEXY_DEMOS ? (
+          <>
+            <SubMenu label={dictionary['navigation'].dashboards} icon={<i className='tabler-smart-home' />}>
           <MenuItem href={`/${locale}/dashboards/crm`} icon={<i className='tabler-chart-pie-2' />}>
             {dictionary['navigation'].crm}
           </MenuItem>
@@ -419,6 +424,10 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
           </SubMenu>
           <MenuItem disabled>{dictionary['navigation'].disabledMenu}</MenuItem>
         </SubMenu>
+          </>
+        ) : (
+          <CatecNavMenuItems dictionary={dictionary} withIcons />
+        )}
       </Menu>
       {/* <Menu
         rootStyles={menuRootStyles(theme)}
