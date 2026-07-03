@@ -15,8 +15,8 @@ import type { TimelineProps } from '@mui/lab/Timeline'
 export type ProjetoTimelineEntry = {
   key: string
   titulo: string
-  meta: string
   icone: string
+  meta?: ReactNode
   statusTransicao?: ReactNode
   texto?: string | null
 }
@@ -61,9 +61,7 @@ const ProjetoTimeline = ({ items }: Props) => {
             <Typography className='font-medium' color='text.primary'>
               {item.titulo}
             </Typography>
-            <Typography variant='caption' color='text.secondary' className='block mbe-1'>
-              {item.meta}
-            </Typography>
+            {item.meta}
             {item.statusTransicao}
             {item.texto?.trim() ? (
               <Typography variant='body2' color='text.secondary' className='whitespace-pre-wrap'>

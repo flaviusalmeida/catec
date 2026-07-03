@@ -185,6 +185,83 @@ class ProjetoServiceTest {
         verify(projetoRepository).findAll(any(Sort.class));
     }
 
+    @Test
+    void criar_semCliente_deveRegistrarAuditoriaCriacao() {
+        Usuario criador = usuario(1L);
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(criador));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> {
+            Projeto proj = inv.getArgument(0);
+            ReflectionTestUtils.setField(proj, "id", 10L);
+            return proj;
+        });
+
+        var req = new ProjetoCreateRequest(null, "Demanda X", "Escopo");
+
+        ProjetoResponse out = service.criar(req, colabPrincipal(1L));
+
+        assertEquals(ProjetoStatus.PENDENTE_CLIENTE, out.status());
+        verify(auditoriaService)
+                .registrarTransicaoStatus(
+                        TipoEntidadeAuditoria.PROJETO,
+                        10L,
+                        "CRIAR",
+                        null,
+                        ProjetoStatus.PENDENTE_CLIENTE.name(),
+                        1L);
+    }
+
+    @Test
+    void criar_comCliente_deveRegistrarAuditoriaCriacao() {
+        Usuario criador = usuario(1L);
+        Cliente cliente = cliente(5L);
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(criador));
+        when(clienteRepository.findById(5L)).thenReturn(Optional.of(cliente));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> {
+            Projeto proj = inv.getArgument(0);
+            ReflectionTestUtils.setField(proj, "id", 11L);
+            return proj;
+        });
+
+        var req = new ProjetoCreateRequest(5L, "Projeto Y", "Escopo");
+
+        ProjetoResponse out = service.criar(req, colabPrincipal(1L));
+
+        assertEquals(ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL, out.status());
+        verify(auditoriaService)
+                .registrarTransicaoStatus(
+                        TipoEntidadeAuditoria.PROJETO,
+                        11L,
+                        "CRIAR",
+                        null,
+                        ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL.name(),
+                        1L);
+    }
+
+    private static Usuario usuario(long id) {
+        Usuario u = new Usuario();
+        ReflectionTestUtils.setField(u, "id", id);
+        u.setNome("Criador");
+        u.setEmail("c@c.com");
+        u.setSenhaHash("x");
+        u.setAtivo(true);
+        u.setRequerTrocaSenha(false);
+        u.setCriadoEm(Instant.now());
+        u.setAtualizadoEm(Instant.now());
+        return u;
+    }
+
+    private static Cliente cliente(long id) {
+        Cliente c = new Cliente();
+        ReflectionTestUtils.setField(c, "id", id);
+        c.setTipoPessoa(TipoPessoa.PJ);
+        c.setRazaoSocialOuNome("Cliente SA");
+        c.setEmail("cliente@test.com");
+        c.setTelefone("11988887777");
+        c.setCriadoEm(Instant.now());
+        c.setAtualizadoEm(Instant.now());
+        return c;
+    }
+
     private static UsuarioAutenticado adminPrincipal() {
         return UsuarioAutenticadoFixtures.administrativo(1L);
     }

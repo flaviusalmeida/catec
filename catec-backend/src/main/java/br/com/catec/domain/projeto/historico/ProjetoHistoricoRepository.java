@@ -5,10 +5,10 @@ import java.util.List;
 
 public interface ProjetoHistoricoRepository {
 
-    long contarHistoricoProjeto(long projetoId, List<Long> propostaIds);
+    long contarHistoricoProjeto(long projetoId, List<Long> propostaIds, Long contratoId);
 
     List<ProjetoHistoricoLinha> listarHistoricoProjeto(
-            long projetoId, List<Long> propostaIds, int offset, int limit);
+            long projetoId, List<Long> propostaIds, Long contratoId, int offset, int limit);
 
     record ProjetoHistoricoLinha(
             String origem,

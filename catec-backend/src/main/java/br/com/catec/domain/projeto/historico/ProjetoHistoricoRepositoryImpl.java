@@ -23,19 +23,20 @@ class ProjetoHistoricoRepositoryImpl implements ProjetoHistoricoRepository {
     private EntityManager entityManager;
 
     @Override
-    public long contarHistoricoProjeto(long projetoId, List<Long> propostaIds) {
-        Query q = entityManager.createNativeQuery("SELECT COUNT(*) FROM (" + unionSql(propostaIds) + ") h");
-        bindParams(q, projetoId, propostaIds);
+    public long contarHistoricoProjeto(long projetoId, List<Long> propostaIds, Long contratoId) {
+        Query q = entityManager.createNativeQuery(
+                "SELECT COUNT(*) FROM (" + unionSql(propostaIds, contratoId) + ") h");
+        bindParams(q, projetoId, propostaIds, contratoId);
         return ((Number) q.getSingleResult()).longValue();
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public List<ProjetoHistoricoLinha> listarHistoricoProjeto(
-            long projetoId, List<Long> propostaIds, int offset, int limit) {
+            long projetoId, List<Long> propostaIds, Long contratoId, int offset, int limit) {
         Query q = entityManager.createNativeQuery(
-                "SELECT " + COLUNAS + " FROM (" + unionSql(propostaIds) + ") h ORDER BY ocorrido_em DESC");
-        bindParams(q, projetoId, propostaIds);
+                "SELECT " + COLUNAS + " FROM (" + unionSql(propostaIds, contratoId) + ") h ORDER BY ocorrido_em DESC");
+        bindParams(q, projetoId, propostaIds, contratoId);
         q.setFirstResult(offset);
         q.setMaxResults(limit);
         List<Object[]> rows = q.getResultList();
@@ -46,7 +47,7 @@ class ProjetoHistoricoRepositoryImpl implements ProjetoHistoricoRepository {
         return out;
     }
 
-    private static String unionSql(List<Long> propostaIds) {
+    private static String unionSql(List<Long> propostaIds, Long contratoId) {
         StringBuilder sb = new StringBuilder();
         sb.append(
                 """
@@ -106,13 +107,55 @@ class ProjetoHistoricoRepositoryImpl implements ProjetoHistoricoRepository {
                     WHERE i.tipo_entidade = 'PROPOSTA' AND i.entidade_id IN (:propostaIds)
                     """);
         }
+        if (contratoId != null) {
+            sb.append(
+                    """
+                    UNION ALL
+                    SELECT a.id,
+                           'AUDITORIA',
+                           a.criado_em,
+                           a.tipo_entidade,
+                           a.entidade_id,
+                           a.acao,
+                           a.status_anterior,
+                           a.status_novo,
+                           NULL,
+                           NULL,
+                           NULL::bigint,
+                           u.id,
+                           u.nome
+                    FROM auditoria_fluxo a
+                    JOIN usuario u ON u.id = a.usuario_id
+                    WHERE a.tipo_entidade = 'CONTRATO' AND a.entidade_id = :contratoId
+                    UNION ALL
+                    SELECT i.id,
+                           'INTERACAO',
+                           i.criado_em,
+                           i.tipo_entidade,
+                           i.entidade_id,
+                           NULL,
+                           NULL,
+                           NULL,
+                           i.tipo_interacao,
+                           i.texto,
+                           i.documento_id,
+                           u.id,
+                           u.nome
+                    FROM interacao_fluxo i
+                    JOIN usuario u ON u.id = i.registrado_por_usuario_id
+                    WHERE i.tipo_entidade = 'CONTRATO' AND i.entidade_id = :contratoId
+                    """);
+        }
         return sb.toString();
     }
 
-    private static void bindParams(Query q, long projetoId, List<Long> propostaIds) {
+    private static void bindParams(Query q, long projetoId, List<Long> propostaIds, Long contratoId) {
         q.setParameter("projetoId", projetoId);
         if (!propostaIds.isEmpty()) {
             q.setParameter("propostaIds", propostaIds);
+        }
+        if (contratoId != null) {
+            q.setParameter("contratoId", contratoId);
         }
     }
 

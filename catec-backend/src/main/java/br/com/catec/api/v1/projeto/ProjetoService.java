@@ -89,7 +89,15 @@ public class ProjetoService {
             p.setClienteAssociadoEm(agora);
             p.setClienteAssociadoPor(criador);
         }
-        return toResponse(projetoRepository.save(p));
+        Projeto salvo = projetoRepository.save(p);
+        auditoriaService.registrarTransicaoStatus(
+                TipoEntidadeAuditoria.PROJETO,
+                salvo.getId(),
+                "CRIAR",
+                null,
+                salvo.getStatus().name(),
+                principal.id());
+        return toResponse(salvo);
     }
 
     @Transactional

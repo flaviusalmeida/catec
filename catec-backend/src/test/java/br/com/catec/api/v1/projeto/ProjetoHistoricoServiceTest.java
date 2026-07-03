@@ -6,6 +6,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import br.com.catec.domain.contrato.Contrato;
+import br.com.catec.domain.contrato.ContratoRepository;
 import br.com.catec.domain.projeto.Projeto;
 import br.com.catec.domain.projeto.ProjetoRepository;
 import br.com.catec.domain.projeto.ProjetoStatus;
@@ -37,6 +39,9 @@ class ProjetoHistoricoServiceTest {
     private PropostaRepository propostaRepository;
 
     @Mock
+    private ContratoRepository contratoRepository;
+
+    @Mock
     private ProjetoHistoricoRepository projetoHistoricoRepository;
 
     private ProjetoHistoricoService projetoHistoricoService;
@@ -46,6 +51,7 @@ class ProjetoHistoricoServiceTest {
         projetoHistoricoService = new ProjetoHistoricoService(
                 projetoRepository,
                 propostaRepository,
+                contratoRepository,
                 projetoHistoricoRepository,
                 new AuthorizationService());
     }
@@ -74,8 +80,13 @@ class ProjetoHistoricoServiceTest {
         Proposta pr = mock(Proposta.class);
         when(pr.getId()).thenReturn(40L);
         when(propostaRepository.findByProjetoIdOrderByVersaoDesc(5L)).thenReturn(List.of(pr));
-        when(projetoHistoricoRepository.contarHistoricoProjeto(5L, List.of(40L))).thenReturn(1L);
-        when(projetoHistoricoRepository.listarHistoricoProjeto(5L, List.of(40L), 0, 20))
+
+        Contrato contrato = mock(Contrato.class);
+        when(contrato.getId()).thenReturn(50L);
+        when(contratoRepository.findByProjetoId(5L)).thenReturn(Optional.of(contrato));
+
+        when(projetoHistoricoRepository.contarHistoricoProjeto(5L, List.of(40L), 50L)).thenReturn(1L);
+        when(projetoHistoricoRepository.listarHistoricoProjeto(5L, List.of(40L), 50L, 0, 20))
                 .thenReturn(List.of(new ProjetoHistoricoLinha(
                         "AUDITORIA",
                         1L,
@@ -95,7 +106,29 @@ class ProjetoHistoricoServiceTest {
 
         assertEquals(1, page.totalElements());
         assertEquals("AUDITORIA", page.content().get(0).origem());
-        verify(projetoHistoricoRepository).listarHistoricoProjeto(5L, List.of(40L), 0, 20);
+        verify(projetoHistoricoRepository).listarHistoricoProjeto(5L, List.of(40L), 50L, 0, 20);
+    }
+
+    @Test
+    void historico_semContrato_passaContratoIdNulo() {
+        Projeto p = projeto(5L);
+        Usuario criador = mock(Usuario.class);
+        when(criador.getId()).thenReturn(9L);
+        when(p.getCriadoPor()).thenReturn(criador);
+        when(projetoRepository.findById(5L)).thenReturn(Optional.of(p));
+
+        Proposta pr = mock(Proposta.class);
+        when(pr.getId()).thenReturn(40L);
+        when(propostaRepository.findByProjetoIdOrderByVersaoDesc(5L)).thenReturn(List.of(pr));
+        when(contratoRepository.findByProjetoId(5L)).thenReturn(Optional.empty());
+        when(projetoHistoricoRepository.contarHistoricoProjeto(5L, List.of(40L), null)).thenReturn(0L);
+        when(projetoHistoricoRepository.listarHistoricoProjeto(5L, List.of(40L), null, 0, 20))
+                .thenReturn(List.of());
+
+        var page = projetoHistoricoService.historico(colab(9L), 5L, 0, 20);
+
+        assertEquals(0, page.totalElements());
+        verify(projetoHistoricoRepository).listarHistoricoProjeto(5L, List.of(40L), null, 0, 20);
     }
 
     private static Projeto projeto(long id) {

@@ -1,12 +1,14 @@
 'use client'
 
+import Typography from '@mui/material/Typography'
+
 import type { CatecContratoStatus, CatecHistoricoFluxoItem, CatecPropostaStatus } from '@/types/catec/projetoFluxoTypes'
 import { STATUS_CONTRATO_ROTULO_BADGE, STATUS_PROPOSTA_ROTULO_BADGE } from '@/types/catec/projetoFluxoTypes'
 import type { CatecProjetoStatus } from '@/types/catec/projetoTypes'
 import { STATUS_PROJETO_ROTULO_BADGE } from '@/types/catec/projetoTypes'
 
 import ContratoStatusBadge from '../ContratoStatusBadge'
-import { historicoTemTransicaoStatus } from '../historicoFluxoHelpers'
+import { historicoTemTransicaoStatus, rotuloStatusHistorico } from '../historicoFluxoHelpers'
 import ProjetoStatusBadge from '../ProjetoStatusBadge'
 import PropostaStatusBadge from '../PropostaStatusBadge'
 
@@ -39,12 +41,17 @@ const HistoricoStatusTransicao = ({ item }: Props) => {
   const hasNovo = Boolean(item.statusNovo)
 
   return (
-    <div className='flex flex-wrap items-center gap-2 mts-2'>
-      {hasAnterior && item.statusAnterior ? renderBadge(item.tipoEntidade, item.statusAnterior) : null}
-      {hasAnterior && hasNovo ? (
-        <i className='tabler-arrow-right text-base text-textSecondary' aria-hidden />
-      ) : null}
-      {hasNovo && item.statusNovo ? renderBadge(item.tipoEntidade, item.statusNovo) : null}
+    <div className='mts-2'>
+      <Typography variant='caption' color='text.secondary' className='block mbe-1'>
+        {rotuloStatusHistorico(item.tipoEntidade)}
+      </Typography>
+      <div className='flex flex-wrap items-center gap-2'>
+        {hasAnterior && item.statusAnterior ? renderBadge(item.tipoEntidade, item.statusAnterior) : null}
+        {hasAnterior && hasNovo ? (
+          <i className='tabler-arrow-right text-base text-textSecondary' aria-hidden />
+        ) : null}
+        {hasNovo && item.statusNovo ? renderBadge(item.tipoEntidade, item.statusNovo) : null}
+      </div>
     </div>
   )
 }

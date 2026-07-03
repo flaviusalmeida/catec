@@ -8,8 +8,12 @@ import CardHeader from '@mui/material/CardHeader'
 import CircularProgress from '@mui/material/CircularProgress'
 import TablePagination from '@mui/material/TablePagination'
 
-import { iconeHistoricoItem, metaHistoricoItem, tituloHistoricoItem } from '../historicoFluxoHelpers'
+import {
+  iconeHistoricoItem,
+  tituloHistoricoItem
+} from '../historicoFluxoHelpers'
 import type { UseProjetoFluxoStore } from '../useProjetoFluxoStore'
+import HistoricoMetaLinha from './HistoricoMetaLinha'
 import HistoricoStatusTransicao from './HistoricoStatusTransicao'
 import ProjetoStateCard from './ProjetoStateCard'
 import ProjetoTimeline from './ProjetoTimeline'
@@ -21,7 +25,7 @@ type Props = {
 const PAGE_SIZE = 20
 
 const ProjetoTabHistorico = ({ fluxo }: Props) => {
-  const { historicoPage, historicoCarregando, carregarHistorico } = fluxo
+  const { historicoPage, historicoCarregando, carregarHistorico, data } = fluxo
   const [page, setPage] = useState(0)
 
   useEffect(() => {
@@ -33,12 +37,12 @@ const ProjetoTabHistorico = ({ fluxo }: Props) => {
       historicoPage.content.map(item => ({
         key: `${item.origem}-${item.registroId}`,
         titulo: tituloHistoricoItem(item),
-        meta: metaHistoricoItem(item),
         icone: iconeHistoricoItem(item),
+        meta: <HistoricoMetaLinha item={item} propostas={data.propostas} />,
         statusTransicao: <HistoricoStatusTransicao item={item} />,
         texto: item.texto
       })),
-    [historicoPage.content]
+    [historicoPage.content, data.propostas]
   )
 
   if (historicoCarregando && historicoPage.content.length === 0) {

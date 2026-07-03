@@ -1,4 +1,8 @@
-import type { CatecHistoricoFluxoItem, CatecTipoInteracaoFluxo } from '@/types/catec/projetoFluxoTypes'
+import type {
+  CatecHistoricoFluxoItem,
+  CatecProposta,
+  CatecTipoInteracaoFluxo
+} from '@/types/catec/projetoFluxoTypes'
 import {
   TIPO_INTERACAO_ROTULO_CONTRATO,
   TIPO_INTERACAO_ROTULO_PROPOSTA
@@ -32,9 +36,10 @@ function tituloAcaoAuditoria(acao: string, tipoEntidade: string): string {
   switch (acao) {
     case 'CRIAR':
       if (ent === 'CONTRATO') return 'Contrato criado'
+      if (ent === 'PROPOSTA') return 'Proposta comercial iniciada'
       return 'Projeto criado'
     case 'SINCRONIZAR_PROPOSTA':
-      return 'Proposta atualizada'
+      return 'Status do projeto atualizado'
     case 'ENVIAR_CLIENTE':
       if (ent === 'CONTRATO') return 'Contrato enviado ao cliente'
       return 'Proposta enviada ao cliente'
@@ -91,6 +96,19 @@ export function metaHistoricoItem(item: CatecHistoricoFluxoItem): string {
   const usuario = item.usuarioNome?.trim()
 
   return usuario ? `${data} • ${usuario}` : data
+}
+
+export type HistoricoEntidadeTipo = 'PROJETO' | 'PROPOSTA' | 'CONTRATO'
+
+export function iconeEntidadeHistorico(tipo: HistoricoEntidadeTipo): string {
+  switch (tipo) {
+    case 'PROPOSTA':
+      return 'tabler-file'
+    case 'CONTRATO':
+      return 'tabler-file-text'
+    default:
+      return 'tabler-folder'
+  }
 }
 
 export const ICONE_HISTORICO_PADRAO = 'tabler-pin'
@@ -151,4 +169,38 @@ export function iconeHistoricoItem(item: CatecHistoricoFluxoItem): string {
 
 export function historicoTemTransicaoStatus(item: CatecHistoricoFluxoItem): boolean {
   return Boolean(item.statusAnterior || item.statusNovo)
+}
+
+export function tipoEntidadeHistorico(item: CatecHistoricoFluxoItem): HistoricoEntidadeTipo {
+  const ent = item.tipoEntidade.toUpperCase()
+
+  if (ent === 'PROPOSTA') return 'PROPOSTA'
+  if (ent === 'CONTRATO') return 'CONTRATO'
+
+  return 'PROJETO'
+}
+
+export function rotuloEntidadeHistorico(item: CatecHistoricoFluxoItem, _propostas: CatecProposta[]): string {
+  const tipo = tipoEntidadeHistorico(item)
+
+  if (tipo === 'PROPOSTA') return 'Proposta'
+  if (tipo === 'CONTRATO') return 'Contrato'
+
+  return 'Projeto'
+}
+
+export function metaHistoricoComEntidade(item: CatecHistoricoFluxoItem, propostas: CatecProposta[]): string {
+  const entidade = rotuloEntidadeHistorico(item, propostas)
+  const resto = metaHistoricoItem(item)
+
+  return `${entidade} • ${resto}`
+}
+
+export function rotuloStatusHistorico(tipoEntidade: string): string {
+  const ent = tipoEntidade.toUpperCase()
+
+  if (ent === 'PROPOSTA') return 'Status da proposta'
+  if (ent === 'CONTRATO') return 'Status do contrato'
+
+  return 'Status do projeto'
 }
