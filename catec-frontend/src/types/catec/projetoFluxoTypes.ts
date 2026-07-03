@@ -26,9 +26,9 @@ export const STATUS_PROPOSTA_ROTULO: Record<CatecPropostaStatus, string> = {
 
 export const STATUS_PROPOSTA_ROTULO_BADGE: Record<CatecPropostaStatus, string> = {
   RASCUNHO: 'Rascunho',
-  PENDENTE_AVALIACAO: 'Pend. avaliação',
+  PENDENTE_AVALIACAO: 'Pendente avaliação',
   ENVIADA_AO_CLIENTE: 'Enviada',
-  AGUARDANDO_AJUSTE: 'Aguard. ajuste',
+  AGUARDANDO_AJUSTE: 'Aguardando ajuste',
   ACEITA: 'Aceita',
   NEGADA: 'Negada'
 }
@@ -42,9 +42,9 @@ export const STATUS_CONTRATO_ROTULO: Record<CatecContratoStatus, string> = {
 }
 
 export const STATUS_CONTRATO_ROTULO_BADGE: Record<CatecContratoStatus, string> = {
-  RASCUNHO: 'Elaboração',
+  RASCUNHO: 'Elaborando',
   ENVIADO_AO_CLIENTE: 'Enviado',
-  AGUARDANDO_AJUSTE: 'Aguard. ajuste',
+  AGUARDANDO_AJUSTE: 'Aguardando ajuste',
   ACEITO: 'Aceito',
   RECUSADO: 'Recusado'
 }

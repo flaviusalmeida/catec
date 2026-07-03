@@ -1,19 +1,10 @@
 'use client'
 
-import Chip from '@mui/material/Chip'
-
-import type { ThemeColor } from '@core/types'
-
 import type { CatecContratoStatus } from '@/types/catec/projetoFluxoTypes'
 import { STATUS_CONTRATO_ROTULO_BADGE } from '@/types/catec/projetoFluxoTypes'
+import { semanticaContratoStatus } from '@/utils/catec/fluxoStatusBadge'
 
-const VARIANT_POR_STATUS: Record<CatecContratoStatus, ThemeColor> = {
-  RASCUNHO: 'info',
-  ENVIADO_AO_CLIENTE: 'primary',
-  AGUARDANDO_AJUSTE: 'warning',
-  ACEITO: 'success',
-  RECUSADO: 'error'
-}
+import FluxoStatusChip from './FluxoStatusChip'
 
 type Props = {
   status: CatecContratoStatus
@@ -21,11 +12,9 @@ type Props = {
 
 const ContratoStatusBadge = ({ status }: Props) => {
   return (
-    <Chip
+    <FluxoStatusChip
       label={STATUS_CONTRATO_ROTULO_BADGE[status]}
-      size='small'
-      variant='tonal'
-      color={VARIANT_POR_STATUS[status]}
+      semantica={semanticaContratoStatus(status)}
     />
   )
 }

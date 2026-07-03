@@ -140,15 +140,15 @@ export const STATUS_PROJETO_ROTULO: Record<CatecProjetoStatus, string> = {
 }
 
 export const STATUS_PROJETO_ROTULO_BADGE: Record<CatecProjetoStatus, string> = {
-  PENDENTE_CLIENTE: 'Pend. cliente',
-  AGUARDANDO_PROPOSTA_COMERCIAL: 'Aguard. prop.',
-  ELABORANDO_PROPOSTA: 'Elaborando',
-  AGUARDANDO_REVISAO_PROPOSTA: 'Aguard. revisão',
-  AGUARDANDO_AJUSTE: 'Aguard. ajuste',
-  AGUARDANDO_ENVIO_CLIENTE: 'Aguard. envio',
-  AGUARDANDO_ACEITE_PROPOSTA: 'Aguard. aceite',
-  AGUARDANDO_CONTRATO: 'Aguard. contrato',
-  AGUARDANDO_EXECUCAO: 'Aguard. execução',
+  PENDENTE_CLIENTE: 'Pendente cliente',
+  AGUARDANDO_PROPOSTA_COMERCIAL: 'Aguardando proposta',
+  ELABORANDO_PROPOSTA: 'Elaborando proposta',
+  AGUARDANDO_REVISAO_PROPOSTA: 'Aguardando revisão',
+  AGUARDANDO_AJUSTE: 'Aguardando ajuste',
+  AGUARDANDO_ENVIO_CLIENTE: 'Aguardando envio',
+  AGUARDANDO_ACEITE_PROPOSTA: 'Aguardando aceite',
+  AGUARDANDO_CONTRATO: 'Aguardando contrato',
+  AGUARDANDO_EXECUCAO: 'Aguardando execução',
   EM_EXECUCAO: 'Em execução',
   CANCELADO: 'Cancelado',
   FINALIZADO: 'Finalizado'

@@ -26,8 +26,17 @@ import {
 } from '@/types/catec/projetoTypes'
 
 import ContratoStatusBadge from '../ContratoStatusBadge'
+import FluxoStatusChip from '../FluxoStatusChip'
 import ProjetoStatusBadge from '../ProjetoStatusBadge'
 import PropostaStatusBadge from '../PropostaStatusBadge'
+import {
+  FLUXO_STATUS_CORES,
+  FLUXO_STATUS_SEMANTICA_ROTULO,
+  semanticaContratoStatus,
+  semanticaProjetoStatus,
+  semanticaPropostaStatus,
+  type FluxoStatusSemantica
+} from '@/utils/catec/fluxoStatusBadge'
 
 type FluxoPassoProjeto = {
   status: CatecProjetoStatus
@@ -176,6 +185,14 @@ function ColunaFluxo<T extends FluxoPassoProjeto | FluxoPassoEntidade>({
   )
 }
 
+const SEMANTICAS_ORDEM: FluxoStatusSemantica[] = [
+  'emAndamento',
+  'aguardandoAcao',
+  'concluidoSucesso',
+  'encerradoNegativo',
+  'neutro'
+]
+
 const ProjetoFluxoMapa = () => {
   return (
     <Grid container spacing={6}>
@@ -192,6 +209,26 @@ const ProjetoFluxoMapa = () => {
       </Grid>
 
       <Grid size={{ xs: 12 }}>
+        <Card variant='outlined'>
+          <CardHeader title='Legenda semântica de cores' />
+          <CardContent>
+            <Grid container spacing={3}>
+              {SEMANTICAS_ORDEM.map(semantica => (
+                <Grid key={semantica} size={{ xs: 12, sm: 6, md: 4 }}>
+                  <div className='flex flex-col gap-2'>
+                    <FluxoStatusChip label={FLUXO_STATUS_SEMANTICA_ROTULO[semantica]} semantica={semantica} />
+                    <Typography variant='caption' color='text.disabled' className='font-mono'>
+                      bg {FLUXO_STATUS_CORES[semantica].background} · text {FLUXO_STATUS_CORES[semantica].text}
+                    </Typography>
+                  </div>
+                </Grid>
+              ))}
+            </Grid>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid size={{ xs: 12 }}>
         <Card>
           <CardHeader title='Tags do projeto (sidebar e listagem)' subheader='Componente ProjetoStatusBadge' />
           <CardContent>
@@ -200,6 +237,9 @@ const ProjetoFluxoMapa = () => {
                 <Grid key={status} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                   <div className='flex flex-col gap-2 p-3 rounded-lg border border-solid border-divider'>
                     <ProjetoStatusBadge status={status} />
+                    <Typography variant='caption' color='text.secondary'>
+                      Semântica: {FLUXO_STATUS_SEMANTICA_ROTULO[semanticaProjetoStatus(status)]}
+                    </Typography>
                     <Typography variant='caption' color='text.secondary'>
                       Badge: {STATUS_PROJETO_ROTULO_BADGE[status]}
                     </Typography>
@@ -227,6 +267,9 @@ const ProjetoFluxoMapa = () => {
                   <div className='flex flex-col gap-2 p-3 rounded-lg border border-solid border-divider'>
                     <PropostaStatusBadge status={status} />
                     <Typography variant='caption' color='text.secondary'>
+                      Semântica: {FLUXO_STATUS_SEMANTICA_ROTULO[semanticaPropostaStatus(status)]}
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary'>
                       Badge: {STATUS_PROPOSTA_ROTULO_BADGE[status]}
                     </Typography>
                     <Typography variant='caption' color='text.disabled'>
@@ -252,6 +295,9 @@ const ProjetoFluxoMapa = () => {
                 <Grid key={status} size={{ xs: 12, sm: 6 }}>
                   <div className='flex flex-col gap-2 p-3 rounded-lg border border-solid border-divider'>
                     <ContratoStatusBadge status={status} />
+                    <Typography variant='caption' color='text.secondary'>
+                      Semântica: {FLUXO_STATUS_SEMANTICA_ROTULO[semanticaContratoStatus(status)]}
+                    </Typography>
                     <Typography variant='caption' color='text.secondary'>
                       Badge: {STATUS_CONTRATO_ROTULO_BADGE[status]}
                     </Typography>
