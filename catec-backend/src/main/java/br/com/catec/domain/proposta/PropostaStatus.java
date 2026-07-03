@@ -8,7 +8,6 @@ public enum PropostaStatus {
     RASCUNHO,
     PENDENTE_AVALIACAO,
     ENVIADA_AO_CLIENTE,
-    EM_AVALIACAO_CLIENTE,
     AGUARDANDO_AJUSTE,
     ACEITA,
     NEGADA

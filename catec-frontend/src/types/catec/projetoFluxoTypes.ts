@@ -2,7 +2,6 @@ export type CatecPropostaStatus =
   | 'RASCUNHO'
   | 'PENDENTE_AVALIACAO'
   | 'ENVIADA_AO_CLIENTE'
-  | 'EM_AVALIACAO_CLIENTE'
   | 'AGUARDANDO_AJUSTE'
   | 'ACEITA'
   | 'NEGADA'
@@ -20,7 +19,6 @@ export const STATUS_PROPOSTA_ROTULO: Record<CatecPropostaStatus, string> = {
   RASCUNHO: 'Rascunho',
   PENDENTE_AVALIACAO: 'Pendente avaliação',
   ENVIADA_AO_CLIENTE: 'Enviada ao cliente',
-  EM_AVALIACAO_CLIENTE: 'Em avaliação do cliente',
   AGUARDANDO_AJUSTE: 'Aguardando ajuste',
   ACEITA: 'Aceita pelo cliente',
   NEGADA: 'Negada pelo cliente'
@@ -49,14 +47,12 @@ export const TIPO_INTERACAO_ROTULO_CONTRATO: Record<CatecTipoInteracaoFluxo, str
 export const STATUS_PROPOSTA_UPLOAD: CatecPropostaStatus[] = ['RASCUNHO', 'PENDENTE_AVALIACAO', 'AGUARDANDO_AJUSTE']
 export const STATUS_PROPOSTA_ENVIADA: CatecPropostaStatus[] = [
   'ENVIADA_AO_CLIENTE',
-  'EM_AVALIACAO_CLIENTE',
   'AGUARDANDO_AJUSTE',
   'ACEITA',
   'NEGADA'
 ]
 export const STATUS_PROPOSTA_RESPOSTA_CLIENTE: CatecPropostaStatus[] = [
   'ENVIADA_AO_CLIENTE',
-  'EM_AVALIACAO_CLIENTE',
   'AGUARDANDO_AJUSTE'
 ]
 

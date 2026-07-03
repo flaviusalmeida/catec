@@ -40,7 +40,6 @@ public class PropostaService {
             PropostaStatus.PENDENTE_AVALIACAO,
             PropostaStatus.AGUARDANDO_AJUSTE,
             PropostaStatus.ENVIADA_AO_CLIENTE,
-            PropostaStatus.EM_AVALIACAO_CLIENTE,
             PropostaStatus.ACEITA,
             PropostaStatus.NEGADA);
 
@@ -363,10 +362,7 @@ public class PropostaService {
                     case AGUARDANDO_AJUSTE -> novo == PropostaStatus.PENDENTE_AVALIACAO;
                     case PENDENTE_AVALIACAO ->
                             novo == PropostaStatus.RASCUNHO || novo == PropostaStatus.AGUARDANDO_AJUSTE;
-                    case ENVIADA_AO_CLIENTE,
-                            EM_AVALIACAO_CLIENTE,
-                            ACEITA,
-                            NEGADA -> false;
+                    case ENVIADA_AO_CLIENTE, ACEITA, NEGADA -> false;
                 };
         if (!ok) {
             throw badRequest(
@@ -448,7 +444,7 @@ public class PropostaService {
                             : ProjetoStatus.ELABORANDO_PROPOSTA;
             case PENDENTE_AVALIACAO -> ProjetoStatus.AGUARDANDO_REVISAO_PROPOSTA;
             case AGUARDANDO_AJUSTE -> ProjetoStatus.AGUARDANDO_AJUSTE;
-            case ENVIADA_AO_CLIENTE, EM_AVALIACAO_CLIENTE -> ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA;
+            case ENVIADA_AO_CLIENTE -> ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA;
             case ACEITA -> ProjetoStatus.AGUARDANDO_CONTRATO;
             case NEGADA -> ProjetoStatus.CANCELADO;
         };
@@ -509,7 +505,6 @@ public class PropostaService {
             case RASCUNHO -> "Em elaboração";
             case PENDENTE_AVALIACAO -> "Pendente avaliação";
             case ENVIADA_AO_CLIENTE -> "Enviada ao cliente";
-            case EM_AVALIACAO_CLIENTE -> "Em avaliação do cliente";
             case AGUARDANDO_AJUSTE -> "Aguardando ajuste";
             case ACEITA -> "Aceita";
             case NEGADA -> "Negada";

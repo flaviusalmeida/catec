@@ -38,9 +38,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class InteracaoFluxoService {
 
     private static final EnumSet<PropostaStatus> STATUS_RESPOSTA_CLIENTE = EnumSet.of(
-            PropostaStatus.ENVIADA_AO_CLIENTE,
-            PropostaStatus.EM_AVALIACAO_CLIENTE,
-            PropostaStatus.AGUARDANDO_AJUSTE);
+            PropostaStatus.ENVIADA_AO_CLIENTE, PropostaStatus.AGUARDANDO_AJUSTE);
 
     private static final EnumSet<ContratoStatus> STATUS_INTERACAO_CLIENTE_CONTRATO = EnumSet.of(
             ContratoStatus.ENVIADO_AO_CLIENTE, ContratoStatus.AGUARDANDO_AJUSTE);
@@ -245,7 +243,7 @@ public class InteracaoFluxoService {
         PropostaStatus atual = proposta.getStatus();
         return switch (tipo) {
             case CONSIDERACOES_CLIENTE -> {
-                if (atual != PropostaStatus.ENVIADA_AO_CLIENTE && atual != PropostaStatus.EM_AVALIACAO_CLIENTE) {
+                if (atual != PropostaStatus.ENVIADA_AO_CLIENTE) {
                     throw badRequest("Considerações do cliente só podem ser registradas após o envio da proposta.");
                 }
                 yield PropostaStatus.AGUARDANDO_AJUSTE;
