@@ -66,7 +66,7 @@ const Layout = async (props: ChildrenType ) => {
             <i className='tabler-arrow-up' />
           </Button>
         </ScrollToTop>
-        <Customizer dir={direction}  disableDirection />
+        <Customizer dir={direction} disableDirection />
       </AuthGuard>
     </Providers>
   )

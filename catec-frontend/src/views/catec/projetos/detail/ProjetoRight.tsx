@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import type { SyntheticEvent } from 'react'
+
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import Tab from '@mui/material/Tab'
 import TabContext from '@mui/lab/TabContext'
@@ -18,7 +20,17 @@ import ProjetoTabGeral from './ProjetoTabGeral'
 import ProjetoTabHistorico from './ProjetoTabHistorico'
 import ProjetoTabPropostas from './ProjetoTabPropostas'
 
-type TabId = 'geral' | 'propostas' | 'contrato' | 'historico'
+const TAB_IDS = ['geral', 'propostas', 'contrato', 'historico'] as const
+
+type TabId = (typeof TAB_IDS)[number]
+
+const parseTab = (value: string | null): TabId => {
+  if (value && TAB_IDS.includes(value as TabId)) {
+    return value as TabId
+  }
+
+  return 'geral'
+}
 
 type Props = {
   projeto: CatecProjeto
@@ -26,11 +38,29 @@ type Props = {
 }
 
 const ProjetoRight = ({ projeto, fluxo }: Props) => {
-  const [activeTab, setActiveTab] = useState<TabId>('geral')
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
-  const handleChange = (_event: SyntheticEvent, value: string) => {
-    setActiveTab(value as TabId)
-  }
+  const activeTab = useMemo(() => parseTab(searchParams.get('tab')), [searchParams])
+
+  const handleChange = useCallback(
+    (_event: SyntheticEvent, value: string) => {
+      const nextTab = value as TabId
+      const params = new URLSearchParams(searchParams.toString())
+
+      if (nextTab === 'geral') {
+        params.delete('tab')
+      } else {
+        params.set('tab', nextTab)
+      }
+
+      const query = params.toString()
+
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
+    },
+    [pathname, router, searchParams]
+  )
 
   return (
     <TabContext value={activeTab}>

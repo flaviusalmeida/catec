@@ -5,7 +5,6 @@ import classnames from 'classnames'
 import NavToggle from './NavToggle'
 import NavSearch from '@components/layout/shared/search'
 
-import ModeDropdown from '@components/layout/shared/ModeDropdown'
 import ShortcutsDropdown from '@components/layout/shared/ShortcutsDropdown'
 import UserDropdown from '@components/layout/shared/UserDropdown'
 
@@ -20,7 +19,6 @@ const NavbarContent = () => {
         <NavSearch />
       </div>
       <div className='flex items-center'>
-        <ModeDropdown />
         <ShortcutsDropdown />
         <UserDropdown />
       </div>

@@ -68,7 +68,9 @@ const ProjetoDetalhe = ({ id }: Props) => {
     }
   }, [projetoId, fluxo.carregando, refreshProjeto])
 
-  if (carregando || storeCarregando || fluxo.carregando) {
+  const aguardandoConteudoInicial = (carregando || fluxo.carregando) && !projeto
+
+  if (aguardandoConteudoInicial || storeCarregando) {
     return (
       <div className='flex justify-center p-12'>
         <CircularProgress />
