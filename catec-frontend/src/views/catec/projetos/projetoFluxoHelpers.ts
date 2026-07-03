@@ -1,14 +1,9 @@
-import type {
-  CatecHistoricoFluxoItem,
-  CatecProjetoFluxoData,
-  CatecProjetoFluxoResumo,
-  CatecProposta,
-  CatecTipoInteracaoFluxo
-} from '@/types/catec/projetoFluxoTypes'
-import {
-  TIPO_INTERACAO_ROTULO_CONTRATO,
-  TIPO_INTERACAO_ROTULO_PROPOSTA
-} from '@/types/catec/projetoFluxoTypes'
+import type { CatecProjetoFluxoData, CatecProjetoFluxoResumo, CatecProposta } from '@/types/catec/projetoFluxoTypes'
+
+export {
+  metaHistoricoItem,
+  tituloHistoricoItem as rotuloHistoricoItem
+} from './historicoFluxoHelpers'
 
 export function formatarDataCurta(iso: string | null): string {
   if (!iso) return '—'
@@ -20,38 +15,6 @@ export function formatarDataHora(iso: string | null): string {
   if (!iso) return '—'
 
   return new Date(iso).toLocaleString('pt-BR')
-}
-
-function rotuloTipoInteracao(tipo: CatecTipoInteracaoFluxo, entidade: string): string {
-  const ent = entidade.toUpperCase()
-
-  if (ent === 'CONTRATO') return TIPO_INTERACAO_ROTULO_CONTRATO[tipo]
-
-  return TIPO_INTERACAO_ROTULO_PROPOSTA[tipo]
-}
-
-export function rotuloHistoricoItem(item: CatecHistoricoFluxoItem): string {
-  if (item.origem === 'INTERACAO' && item.tipoInteracao) {
-    return rotuloTipoInteracao(item.tipoInteracao, item.tipoEntidade)
-  }
-
-  if (item.acao) {
-    return item.acao.replaceAll('_', ' ')
-  }
-
-  return item.origem === 'AUDITORIA' ? 'Auditoria' : 'Interação'
-}
-
-export function metaHistoricoItem(item: CatecHistoricoFluxoItem): string {
-  const partes = [item.usuarioNome, formatarDataHora(item.ocorridoEm)]
-
-  if (item.statusAnterior && item.statusNovo) {
-    partes.push(`${item.statusAnterior} → ${item.statusNovo}`)
-  } else if (item.tipoEntidade) {
-    partes.push(item.tipoEntidade.toLowerCase())
-  }
-
-  return partes.join(' · ')
 }
 
 const STATUS_PROJETO_EDITAR_CONTRATO = [

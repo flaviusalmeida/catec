@@ -1,5 +1,7 @@
 'use client'
 
+import type { ReactNode } from 'react'
+
 import { styled } from '@mui/material/styles'
 import MuiTimeline from '@mui/lab/Timeline'
 import TimelineConnector from '@mui/lab/TimelineConnector'
@@ -14,6 +16,8 @@ export type ProjetoTimelineEntry = {
   key: string
   titulo: string
   meta: string
+  icone: string
+  statusTransicao?: ReactNode
   texto?: string | null
 }
 
@@ -25,6 +29,16 @@ const Timeline = styled(MuiTimeline)<TimelineProps>({
     '&:before': {
       display: 'none'
     }
+  },
+  '& .MuiTimelineDot-root:has(> i)': {
+    width: 32,
+    height: 32,
+    minWidth: 32,
+    minHeight: 32,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBlock: '0.625rem'
   }
 })
 
@@ -38,7 +52,9 @@ const ProjetoTimeline = ({ items }: Props) => {
       {items.map((item, index) => (
         <TimelineItem key={item.key}>
           <TimelineSeparator>
-            <TimelineDot color={index === 0 ? 'primary' : 'secondary'} variant={index === 0 ? 'filled' : 'outlined'} />
+            <TimelineDot variant='outlined' color='grey' className='mlb-0'>
+              <i className={`${item.icone} text-xl text-textSecondary`} aria-hidden />
+            </TimelineDot>
             {index < items.length - 1 ? <TimelineConnector /> : null}
           </TimelineSeparator>
           <TimelineContent className='pbs-1 pbe-6'>
@@ -48,6 +64,7 @@ const ProjetoTimeline = ({ items }: Props) => {
             <Typography variant='caption' color='text.secondary' className='block mbe-1'>
               {item.meta}
             </Typography>
+            {item.statusTransicao}
             {item.texto?.trim() ? (
               <Typography variant='body2' color='text.secondary' className='whitespace-pre-wrap'>
                 {item.texto}

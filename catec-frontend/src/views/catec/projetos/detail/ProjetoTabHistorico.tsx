@@ -8,8 +8,9 @@ import CardHeader from '@mui/material/CardHeader'
 import CircularProgress from '@mui/material/CircularProgress'
 import TablePagination from '@mui/material/TablePagination'
 
-import { metaHistoricoItem, rotuloHistoricoItem } from '../projetoFluxoHelpers'
+import { iconeHistoricoItem, metaHistoricoItem, tituloHistoricoItem } from '../historicoFluxoHelpers'
 import type { UseProjetoFluxoStore } from '../useProjetoFluxoStore'
+import HistoricoStatusTransicao from './HistoricoStatusTransicao'
 import ProjetoStateCard from './ProjetoStateCard'
 import ProjetoTimeline from './ProjetoTimeline'
 
@@ -31,8 +32,10 @@ const ProjetoTabHistorico = ({ fluxo }: Props) => {
     () =>
       historicoPage.content.map(item => ({
         key: `${item.origem}-${item.registroId}`,
-        titulo: rotuloHistoricoItem(item),
+        titulo: tituloHistoricoItem(item),
         meta: metaHistoricoItem(item),
+        icone: iconeHistoricoItem(item),
+        statusTransicao: <HistoricoStatusTransicao item={item} />,
         texto: item.texto
       })),
     [historicoPage.content]
