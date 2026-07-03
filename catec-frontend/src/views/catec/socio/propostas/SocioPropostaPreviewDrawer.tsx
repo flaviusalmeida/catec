@@ -16,7 +16,7 @@ import type { CatecDocumentoAnexo } from '@/types/catec/projetoFluxoTypes'
 import type { CatecPropostaPendenteSocio } from '@/types/catec/socioPropostaTypes'
 import { downloadDocumentoCatec, fetchDocumentoConteudoCatec } from '@/utils/catec/downloadDocumento'
 
-import { formatarDataCurta } from '@/views/catec/projetos/projetoFluxoHelpers'
+import { formatarDataHoraHistorico } from '@/views/catec/projetos/historicoFluxoHelpers'
 
 type Props = {
   item: CatecPropostaPendenteSocio | null
@@ -155,7 +155,7 @@ const SocioPropostaPreviewDrawer = ({ item, open, onClose, onAprovar, onReprovar
                 <div className='min-is-0'>
                   <Typography className='font-medium truncate'>{documento.nomeOriginal}</Typography>
                   <Typography variant='caption' color='text.secondary'>
-                    Enviado em {formatarDataCurta(documento.criadoEm)}
+                    Enviado em {formatarDataHoraHistorico(documento.criadoEm)}
                   </Typography>
                 </div>
                 <Button

@@ -36,7 +36,7 @@ import TablePaginationComponent from '@components/TablePaginationComponent'
 
 import tableStyles from '@core/styles/table.module.css'
 
-import { formatarDataCurta } from '@/views/catec/projetos/projetoFluxoHelpers'
+import { formatarDataHoraHistorico } from '@/views/catec/projetos/historicoFluxoHelpers'
 
 import SocioPropostaPreviewDrawer from './SocioPropostaPreviewDrawer'
 import SocioPropostaTableFilters from './SocioPropostaTableFilters'
@@ -180,7 +180,9 @@ const SocioPropostaListTable = ({ lista, onRecarregar }: Props) => {
       }),
       columnHelper.accessor('criadoEm', {
         header: 'Enviado em',
-        cell: ({ getValue }) => <Typography color='text.secondary'>{formatarDataCurta(getValue())}</Typography>
+        cell: ({ getValue }) => (
+          <Typography color='text.secondary'>{formatarDataHoraHistorico(getValue())}</Typography>
+        )
       }),
       columnHelper.display({
         id: 'action',
