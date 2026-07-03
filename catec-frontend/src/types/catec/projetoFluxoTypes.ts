@@ -24,6 +24,15 @@ export const STATUS_PROPOSTA_ROTULO: Record<CatecPropostaStatus, string> = {
   NEGADA: 'Negada pelo cliente'
 }
 
+export const STATUS_PROPOSTA_ROTULO_BADGE: Record<CatecPropostaStatus, string> = {
+  RASCUNHO: 'Rascunho',
+  PENDENTE_AVALIACAO: 'Pend. avaliação',
+  ENVIADA_AO_CLIENTE: 'Enviada',
+  AGUARDANDO_AJUSTE: 'Aguard. ajuste',
+  ACEITA: 'Aceita',
+  NEGADA: 'Negada'
+}
+
 export const STATUS_CONTRATO_ROTULO: Record<CatecContratoStatus, string> = {
   RASCUNHO: 'Em elaboração',
   ENVIADO_AO_CLIENTE: 'Enviado ao cliente',
@@ -31,6 +40,31 @@ export const STATUS_CONTRATO_ROTULO: Record<CatecContratoStatus, string> = {
   ACEITO: 'Aceito pelo cliente',
   RECUSADO: 'Recusado pelo cliente'
 }
+
+export const STATUS_CONTRATO_ROTULO_BADGE: Record<CatecContratoStatus, string> = {
+  RASCUNHO: 'Elaboração',
+  ENVIADO_AO_CLIENTE: 'Enviado',
+  AGUARDANDO_AJUSTE: 'Aguard. ajuste',
+  ACEITO: 'Aceito',
+  RECUSADO: 'Recusado'
+}
+
+export const ORDEM_STATUS_PROPOSTA: CatecPropostaStatus[] = [
+  'RASCUNHO',
+  'PENDENTE_AVALIACAO',
+  'ENVIADA_AO_CLIENTE',
+  'AGUARDANDO_AJUSTE',
+  'ACEITA',
+  'NEGADA'
+]
+
+export const ORDEM_STATUS_CONTRATO: CatecContratoStatus[] = [
+  'RASCUNHO',
+  'ENVIADO_AO_CLIENTE',
+  'AGUARDANDO_AJUSTE',
+  'ACEITO',
+  'RECUSADO'
+]
 
 export const TIPO_INTERACAO_ROTULO_PROPOSTA: Record<CatecTipoInteracaoFluxo, string> = {
   ACEITE_CLIENTE: 'Proposta aceita',

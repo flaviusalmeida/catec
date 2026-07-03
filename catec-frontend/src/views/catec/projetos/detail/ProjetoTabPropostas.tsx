@@ -35,6 +35,7 @@ import {
   formatarDataHora,
   resolvePropostaWorkflowActions
 } from '../projetoFluxoHelpers'
+import PropostaStatusBadge from '../PropostaStatusBadge'
 import type { UseProjetoFluxoStore } from '../useProjetoFluxoStore'
 import ProjetoFileRow from './ProjetoFileRow'
 import ProjetoStateCard from './ProjetoStateCard'
@@ -299,7 +300,9 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
             <CardHeader title='Proposta atual' subheader={`Versão ${propostaAtual!.versao}`} />
             <CardContent className='flex flex-col gap-6'>
               <Grid container spacing={4}>
-                <InfoField label='Status'>{STATUS_PROPOSTA_ROTULO[propostaAtual!.status]}</InfoField>
+                <InfoField label='Status'>
+                  <PropostaStatusBadge status={propostaAtual!.status} />
+                </InfoField>
                 <InfoField label='Responsável'>{propostaAtual!.elaboradoPorNome || '—'}</InfoField>
               </Grid>
               {podeRegistrarRespostaCliente ? (

@@ -29,6 +29,7 @@ import { useCatecPermission } from '@/hooks/useCatecPermission'
 import { PermissaoCodigo } from '@/types/catec/permissao'
 
 import { formatarDataCurta, projetoPermiteEditarContrato, projetoPermiteVisualizarContrato } from '../projetoFluxoHelpers'
+import ContratoStatusBadge from '../ContratoStatusBadge'
 import type { UseProjetoFluxoStore } from '../useProjetoFluxoStore'
 import ProjetoFileRow from './ProjetoFileRow'
 import ProjetoStateCard from './ProjetoStateCard'
@@ -178,7 +179,9 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
             <CardHeader title='Contrato' />
             <CardContent className='flex flex-col gap-6'>
               <Grid container spacing={4}>
-                <InfoField label='Status'>{STATUS_CONTRATO_ROTULO[contrato.status]}</InfoField>
+                <InfoField label='Status'>
+                  <ContratoStatusBadge status={contrato.status} />
+                </InfoField>
                 <InfoField label='Elaborado por'>{contrato.elaboradoPorNome || '—'}</InfoField>
               </Grid>
               {podeRegistrarRespostaCliente ? (
