@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -43,17 +43,6 @@ type Props = {
 }
 
 type DialogInteracaoCliente = CatecTipoInteracaoFluxo | null
-
-function InfoField({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <Grid size={{ xs: 12, sm: 6 }}>
-      <Typography variant='caption' color='text.secondary' className='block mbe-1'>
-        {label}
-      </Typography>
-      <Typography variant='body1'>{children}</Typography>
-    </Grid>
-  )
-}
 
 const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
   const { data, uploadContrato, enviarContratoCliente, registrarInteracao, processando } = fluxo
@@ -116,6 +105,15 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
           }
         ]
 
+  const acoesRespostaClienteCard = podeRegistrarRespostaCliente
+    ? acoesRespostaCliente.map(acao => ({
+        key: acao.tipo,
+        label: acao.label,
+        color: acao.color,
+        onClick: () => abrirDialogInteracaoCliente(acao.tipo)
+      }))
+    : []
+
   function abrirDialogInteracaoCliente(tipo: CatecTipoInteracaoFluxo) {
     setDialogInteracaoCliente(tipo)
     setTextoInteracaoCliente('')
@@ -146,6 +144,12 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
       .catch(err => toast.error(err instanceof Error ? err.message : 'Erro ao registrar interação.'))
   }
 
+  function handleEnviarContratoCliente() {
+    void enviarContratoCliente()
+      .then(() => toast.success('Contrato enviado ao cliente.'))
+      .catch(err => toast.error(err instanceof Error ? err.message : 'Envio falhou.'))
+  }
+
   if (!podeVisualizarContrato) {
     return (
       <ProjetoStateCard
@@ -160,12 +164,42 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
   const podeUploadExistente =
     podeEditarContrato && contrato != null && STATUS_CONTRATO_UPLOAD.includes(contrato.status)
 
+  const podeEnviarCliente = podeEditarContrato && contrato?.status === 'RASCUNHO' && temAnexo
+
+  const mostrarEnviarContratoCard = Boolean(contrato && contrato.status === 'RASCUNHO' && temAnexo && podeEnviarCliente)
+
+  const mostrarRespostaClienteCard = contrato?.status === 'ENVIADO_AO_CLIENTE' && temAnexo
+
+  const mostrarContratoAceitoCard = contrato?.status === 'ACEITO' && temAnexo
+
   const mostrarUploadCard = Boolean(
     podeIniciarContrato ||
-      (podeUploadExistente && (contrato?.status === 'RASCUNHO' || contrato?.status === 'AGUARDANDO_AJUSTE' || !temAnexo))
+      (podeUploadExistente &&
+        (contrato?.status === 'AGUARDANDO_AJUSTE' || (contrato?.status === 'RASCUNHO' && !temAnexo)))
   )
 
-  const podeEnviarCliente = podeEditarContrato && contrato?.status === 'RASCUNHO' && temAnexo
+  const metaDocumento = documentoAtual
+    ? `Versão ${documentoAtual.versao}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ''}`
+    : undefined
+
+  const downloadDocumento = documentoAtual
+    ? () =>
+        void downloadDocumentoCatec(documentoAtual.id, documentoAtual.nomeOriginal).catch(err =>
+          toast.error(err instanceof Error ? err.message : 'Download falhou.')
+        )
+    : undefined
+
+  const previewContratoSubtitulo = documentoAtual
+    ? `${projeto.titulo} · v${documentoAtual.versao}`
+    : projeto.titulo
+
+  const previewDocumentoProps = documentoAtual
+    ? {
+        documentoId: documentoAtual.id,
+        previewTitulo: 'Contrato' as const,
+        previewSubtitulo: previewContratoSubtitulo
+      }
+    : {}
 
   if (!contrato && !mostrarUploadCard) {
     return <ProjetoStateCard titulo='Nenhum contrato cadastrado.' />
@@ -173,54 +207,96 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
 
   return (
     <Grid container spacing={6}>
-      {contrato ? (
-        <Grid size={{ xs: 12 }}>
-          <Card>
-            <CardHeader title='Contrato' />
-            <CardContent className='flex flex-col gap-6'>
-              <Grid container spacing={4}>
-                <InfoField label='Status'>
-                  <ContratoStatusBadge status={contrato.status} />
-                </InfoField>
-                <InfoField label='Elaborado por'>{contrato.elaboradoPorNome || '—'}</InfoField>
-              </Grid>
-              {podeRegistrarRespostaCliente ? (
-                <div className='flex flex-wrap gap-3'>
-                  {acoesRespostaCliente.map(acao => (
-                    <Button
-                      key={acao.tipo}
-                      variant={acao.variant}
-                      color={acao.color}
-                      onClick={() => abrirDialogInteracaoCliente(acao.tipo)}
-                      disabled={processando}
-                    >
-                      {acao.label}
-                    </Button>
-                  ))}
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-        </Grid>
-      ) : null}
-
       {mostrarUploadCard ? (
         <Grid size={{ xs: 12 }}>
           <ProjetoUploadCard
             titulo='Enviar contrato'
             nomeArquivo={documentoAtual?.nomeOriginal}
-            meta={
-              documentoAtual
-                ? `Versão ${documentoAtual.versao}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ''}${documentoAtual.uploadedPorNome ? ` • ${documentoAtual.uploadedPorNome}` : ''}`
-                : undefined
-            }
+            meta={metaDocumento}
+            arquivoExtra={contrato ? <ContratoStatusBadge status={contrato.status} /> : undefined}
             onUpload={uploadContrato}
             disabled={processando}
+            onDownload={downloadDocumento}
+            {...previewDocumentoProps}
+            acoes={
+              contrato?.status === 'AGUARDANDO_AJUSTE' && acoesRespostaClienteCard.length > 0
+                ? acoesRespostaClienteCard
+                : undefined
+            }
           />
         </Grid>
       ) : null}
 
-      {!mostrarUploadCard && temAnexo && contrato ? (
+      {mostrarEnviarContratoCard ? (
+        <Grid size={{ xs: 12 }}>
+          <ProjetoUploadCard
+            titulo='Enviar contrato'
+            nomeArquivo={documentoAtual?.nomeOriginal}
+            meta={metaDocumento}
+            arquivoExtra={contrato ? <ContratoStatusBadge status={contrato.status} /> : undefined}
+            onUpload={uploadContrato}
+            disabled={processando}
+            onDownload={downloadDocumento}
+            {...previewDocumentoProps}
+            acoes={[
+              {
+                key: 'enviar-cliente',
+                label: 'Enviar ao cliente',
+                color: 'primary',
+                alinhamento: 'fim',
+                onClick: handleEnviarContratoCliente
+              }
+            ]}
+          />
+        </Grid>
+      ) : null}
+
+      {mostrarRespostaClienteCard ? (
+        <Grid size={{ xs: 12 }}>
+          <ProjetoUploadCard
+            titulo='Resposta do cliente'
+            nomeArquivo={documentoAtual?.nomeOriginal}
+            meta={metaDocumento}
+            arquivoExtra={contrato ? <ContratoStatusBadge status={contrato.status} /> : undefined}
+            permitirSubstituir={false}
+            disabled={processando}
+            onUpload={uploadContrato}
+            onDownload={downloadDocumento}
+            {...previewDocumentoProps}
+            acoes={acoesRespostaClienteCard.length > 0 ? acoesRespostaClienteCard : undefined}
+          />
+        </Grid>
+      ) : null}
+
+      {mostrarContratoAceitoCard ? (
+        <Grid size={{ xs: 12 }}>
+          <ProjetoUploadCard
+            titulo='Contrato aceito'
+            nomeArquivo={documentoAtual?.nomeOriginal}
+            meta={metaDocumento}
+            arquivoExtra={contrato ? <ContratoStatusBadge status={contrato.status} /> : undefined}
+            permitirSubstituir={false}
+            disabled={processando}
+            onUpload={uploadContrato}
+            onDownload={downloadDocumento}
+            {...previewDocumentoProps}
+          />
+        </Grid>
+      ) : null}
+
+      {contrato?.status === 'RECUSADO' ? (
+        <Grid size={{ xs: 12 }}>
+          <ProjetoStateCard titulo='Contrato recusado.' tipo='info' />
+        </Grid>
+      ) : null}
+
+      {contrato &&
+      !mostrarUploadCard &&
+      !mostrarEnviarContratoCard &&
+      !mostrarRespostaClienteCard &&
+      !mostrarContratoAceitoCard &&
+      contrato.status !== 'RECUSADO' &&
+      temAnexo ? (
         <Grid size={{ xs: 12 }}>
           <Card variant='outlined'>
             <CardHeader title='Documento do contrato' />
@@ -230,6 +306,10 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
                   key={doc.id}
                   nomeArquivo={doc.nomeOriginal}
                   meta={`Versão ${doc.versao}${doc.criadoEm ? ` • ${formatarDataCurta(doc.criadoEm)}` : ''}`}
+                  extra={<ContratoStatusBadge status={contrato.status} />}
+                  documentoId={doc.id}
+                  previewTitulo='Contrato'
+                  previewSubtitulo={previewContratoSubtitulo}
                   onDownload={() =>
                     void downloadDocumentoCatec(doc.id, doc.nomeOriginal).catch(err =>
                       toast.error(err instanceof Error ? err.message : 'Download falhou.')
@@ -239,23 +319,6 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
               ))}
             </CardContent>
           </Card>
-        </Grid>
-      ) : null}
-
-      {podeEnviarCliente ? (
-        <Grid size={{ xs: 12 }}>
-          <Button
-            variant='contained'
-            startIcon={<i className='tabler-send' />}
-            onClick={() => {
-              void enviarContratoCliente()
-                .then(() => toast.success('Contrato enviado ao cliente.'))
-                .catch(err => toast.error(err instanceof Error ? err.message : 'Envio falhou.'))
-            }}
-            disabled={processando}
-          >
-            Enviar ao cliente
-          </Button>
         </Grid>
       ) : null}
 

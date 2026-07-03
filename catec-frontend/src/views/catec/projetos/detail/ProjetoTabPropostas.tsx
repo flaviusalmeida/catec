@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -48,17 +48,6 @@ type Props = {
   fluxo: UseProjetoFluxoStore
 }
 
-function InfoField({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <Grid size={{ xs: 12, sm: 6 }}>
-      <Typography variant='caption' color='text.secondary' className='block mbe-1'>
-        {label}
-      </Typography>
-      <Typography variant='body1'>{children}</Typography>
-    </Grid>
-  )
-}
-
 type DialogParecerMode = 'aprovar-socio' | 'reprovar-socio' | null
 type DialogInteracaoCliente = CatecTipoInteracaoFluxo | null
 
@@ -101,11 +90,6 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
       propostaAtual.status === 'AGUARDANDO_AJUSTE' ||
       (propostaAtual.status === 'RASCUNHO' && !propostaAprovadaSocio))
 
-  const mostrarPropostaAtualCard =
-    propostaAtual != null &&
-    !mostrarUploadCard &&
-    STATUS_PROPOSTA_ENVIADA.includes(propostaAtual.status)
-
   const versoesAnteriores = useMemo(() => {
     if (!propostaAtual) return data.propostas
 
@@ -132,9 +116,26 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
 
   const mostrarRevisaoSocioCard = propostaAtual?.status === 'PENDENTE_AVALIACAO' && temAnexo
 
-  const acoesRevisaoSocio = acoesWorkflowRestantes.map(acao => ({
+  const mostrarEnviarClienteCard = propostaAprovadaSocio && temAnexo
+
+  const mostrarRespostaClienteCard = propostaAtual?.status === 'ENVIADA_AO_CLIENTE' && temAnexo
+
+  const mostrarPropostaAceitaCard = propostaAtual?.status === 'ACEITA' && temAnexo
+
+  const acoesRevisaoSocio = [...acoesWorkflowRestantes]
+    .sort((a, b) => {
+      if (a.key === 'reprovar-socio') return -1
+      if (b.key === 'reprovar-socio') return 1
+
+      return 0
+    })
+    .map(acao => ({
+      ...acao,
+      onClick: () => handleAcaoWorkflow(acao.key as CatecPropostaWorkflowActionKey, acao.label)
+    }))
+
+  const acoesEnviarClienteCard = acoesEnviarCliente.map(acao => ({
     ...acao,
-    alinhamento: acao.key === 'reprovar-socio' ? ('inicio' as const) : ('fim' as const),
     onClick: () => handleAcaoWorkflow(acao.key as CatecPropostaWorkflowActionKey, acao.label)
   }))
 
@@ -165,6 +166,15 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
           { tipo: 'ACEITE_CLIENTE', label: TIPO_INTERACAO_ROTULO_PROPOSTA.ACEITE_CLIENTE, color: 'success', variant: 'contained' },
           { tipo: 'RECUSA_CLIENTE', label: TIPO_INTERACAO_ROTULO_PROPOSTA.RECUSA_CLIENTE, color: 'error', variant: 'tonal' }
         ]
+
+  const acoesRespostaClienteCard = podeRegistrarRespostaCliente
+    ? acoesRespostaCliente.map(acao => ({
+        key: acao.tipo,
+        label: acao.label,
+        color: acao.color,
+        onClick: () => abrirDialogInteracaoCliente(acao.tipo)
+      }))
+    : []
 
   function abrirDialogInteracaoCliente(tipo: CatecTipoInteracaoFluxo) {
     setDialogInteracaoCliente(tipo)
@@ -261,6 +271,10 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
     return <ProjetoStateCard titulo='Nenhuma proposta cadastrada.' />
   }
 
+  const previewPropostaSubtitulo = propostaAtual
+    ? `${projeto.titulo} · v${propostaAtual.versao}`
+    : projeto.titulo
+
   return (
     <Grid container spacing={6}>
       {mostrarUploadCard ? (
@@ -275,6 +289,9 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
             }
             onUpload={uploadProposta}
             disabled={processando}
+            documentoId={documentoAtual?.id}
+            previewTitulo='Proposta comercial'
+            previewSubtitulo={previewPropostaSubtitulo}
             onDownload={
               documentoAtual
                 ? () =>
@@ -301,9 +318,16 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
                 ? `Versão ${propostaAtual?.versao ?? '—'}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ''}`
                 : undefined
             }
-            tituloExtra={propostaAtual ? <PropostaStatusBadge status={propostaAtual.status} /> : undefined}
+            arquivoExtra={
+              propostaAtual ? (
+                <PropostaStatusBadge status={propostaAtual.status} avaliadaSocioEm={propostaAtual.avaliadaSocioEm} />
+              ) : undefined
+            }
             permitirSubstituir={false}
             disabled={processando}
+            documentoId={documentoAtual?.id}
+            previewTitulo='Proposta comercial'
+            previewSubtitulo={previewPropostaSubtitulo}
             onUpload={uploadProposta}
             onDownload={() =>
               void downloadDocumentoCatec(documentoAtual!.id, documentoAtual!.nomeOriginal).catch(err =>
@@ -311,6 +335,98 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
               )
             }
             acoes={acoesRevisaoSocio.length > 0 ? acoesRevisaoSocio : undefined}
+          />
+        </Grid>
+      ) : null}
+
+      {mostrarEnviarClienteCard ? (
+        <Grid size={{ xs: 12 }}>
+          <ProjetoUploadCard
+            titulo='Enviar proposta'
+            nomeArquivo={documentoAtual?.nomeOriginal}
+            meta={
+              documentoAtual
+                ? `Versão ${propostaAtual?.versao ?? '—'}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ''}`
+                : undefined
+            }
+            arquivoExtra={
+              propostaAtual ? (
+                <PropostaStatusBadge status={propostaAtual.status} avaliadaSocioEm={propostaAtual.avaliadaSocioEm} />
+              ) : undefined
+            }
+            permitirSubstituir={false}
+            disabled={processando}
+            documentoId={documentoAtual?.id}
+            previewTitulo='Proposta comercial'
+            previewSubtitulo={previewPropostaSubtitulo}
+            onUpload={uploadProposta}
+            onDownload={() =>
+              void downloadDocumentoCatec(documentoAtual!.id, documentoAtual!.nomeOriginal).catch(err =>
+                toast.error(err instanceof Error ? err.message : 'Download falhou.')
+              )
+            }
+            acoes={acoesEnviarClienteCard.length > 0 ? acoesEnviarClienteCard : undefined}
+          />
+        </Grid>
+      ) : null}
+
+      {mostrarRespostaClienteCard ? (
+        <Grid size={{ xs: 12 }}>
+          <ProjetoUploadCard
+            titulo='Resposta do cliente'
+            nomeArquivo={documentoAtual?.nomeOriginal}
+            meta={
+              documentoAtual
+                ? `Versão ${propostaAtual?.versao ?? '—'}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ''}`
+                : undefined
+            }
+            arquivoExtra={
+              propostaAtual ? (
+                <PropostaStatusBadge status={propostaAtual.status} avaliadaSocioEm={propostaAtual.avaliadaSocioEm} />
+              ) : undefined
+            }
+            permitirSubstituir={false}
+            disabled={processando}
+            documentoId={documentoAtual?.id}
+            previewTitulo='Proposta comercial'
+            previewSubtitulo={previewPropostaSubtitulo}
+            onUpload={uploadProposta}
+            onDownload={() =>
+              void downloadDocumentoCatec(documentoAtual!.id, documentoAtual!.nomeOriginal).catch(err =>
+                toast.error(err instanceof Error ? err.message : 'Download falhou.')
+              )
+            }
+            acoes={acoesRespostaClienteCard.length > 0 ? acoesRespostaClienteCard : undefined}
+          />
+        </Grid>
+      ) : null}
+
+      {mostrarPropostaAceitaCard ? (
+        <Grid size={{ xs: 12 }}>
+          <ProjetoUploadCard
+            titulo='Proposta aceita'
+            nomeArquivo={documentoAtual?.nomeOriginal}
+            meta={
+              documentoAtual
+                ? `Versão ${propostaAtual?.versao ?? '—'}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ''}`
+                : undefined
+            }
+            arquivoExtra={
+              propostaAtual ? (
+                <PropostaStatusBadge status={propostaAtual.status} avaliadaSocioEm={propostaAtual.avaliadaSocioEm} />
+              ) : undefined
+            }
+            permitirSubstituir={false}
+            disabled={processando}
+            documentoId={documentoAtual?.id}
+            previewTitulo='Proposta comercial'
+            previewSubtitulo={previewPropostaSubtitulo}
+            onUpload={uploadProposta}
+            onDownload={() =>
+              void downloadDocumentoCatec(documentoAtual!.id, documentoAtual!.nomeOriginal).catch(err =>
+                toast.error(err instanceof Error ? err.message : 'Download falhou.')
+              )
+            }
           />
         </Grid>
       ) : null}
@@ -325,38 +441,13 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
         </Grid>
       ) : null}
 
-      {mostrarPropostaAtualCard ? (
-        <Grid size={{ xs: 12 }}>
-          <Card>
-            <CardHeader title='Proposta atual' subheader={`Versão ${propostaAtual!.versao}`} />
-            <CardContent className='flex flex-col gap-6'>
-              <Grid container spacing={4}>
-                <InfoField label='Status'>
-                  <PropostaStatusBadge status={propostaAtual!.status} />
-                </InfoField>
-                <InfoField label='Responsável'>{propostaAtual!.elaboradoPorNome || '—'}</InfoField>
-              </Grid>
-              {podeRegistrarRespostaCliente ? (
-                <div className='flex flex-wrap gap-3'>
-                  {acoesRespostaCliente.map(acao => (
-                    <Button
-                      key={acao.tipo}
-                      variant={acao.variant}
-                      color={acao.color}
-                      onClick={() => abrirDialogInteracaoCliente(acao.tipo)}
-                      disabled={processando}
-                    >
-                      {acao.label}
-                    </Button>
-                  ))}
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-        </Grid>
-      ) : null}
-
-      {propostaAtual && !mostrarUploadCard && !mostrarRevisaoSocioCard && temAnexo ? (
+      {propostaAtual &&
+      !mostrarUploadCard &&
+      !mostrarRevisaoSocioCard &&
+      !mostrarEnviarClienteCard &&
+      !mostrarRespostaClienteCard &&
+      !mostrarPropostaAceitaCard &&
+      temAnexo ? (
         <Grid size={{ xs: 12 }}>
           <Card variant='outlined'>
             <CardHeader
@@ -372,6 +463,9 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
                   key={doc.id}
                   nomeArquivo={doc.nomeOriginal}
                   meta={`Versão ${propostaAtual.versao}${doc.criadoEm ? ` • ${formatarDataCurta(doc.criadoEm)}` : ''}`}
+                  documentoId={doc.id}
+                  previewTitulo='Proposta comercial'
+                  previewSubtitulo={previewPropostaSubtitulo}
                   onDownload={() =>
                     void downloadDocumentoCatec(doc.id, doc.nomeOriginal).catch(err =>
                       toast.error(err instanceof Error ? err.message : 'Download falhou.')
@@ -403,6 +497,9 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
                     key={proposta.id}
                     nomeArquivo={doc.nomeOriginal}
                     meta={`Versão ${proposta.versao} • ${titulo}`}
+                    documentoId={doc.id}
+                    previewTitulo='Proposta comercial'
+                    previewSubtitulo={`${projeto.titulo} · v${proposta.versao}`}
                     onDownload={() =>
                     void downloadDocumentoCatec(doc.id, doc.nomeOriginal).catch(err =>
                       toast.error(err instanceof Error ? err.message : 'Download falhou.')
@@ -411,26 +508,6 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
                   />
                 )
               })}
-            </CardContent>
-          </Card>
-        </Grid>
-      ) : null}
-
-      {propostaAprovadaSocio && acoesEnviarCliente.length > 0 ? (
-        <Grid size={{ xs: 12 }}>
-          <Card variant='outlined'>
-            <CardContent className='flex flex-wrap gap-3'>
-              {acoesEnviarCliente.map(acao => (
-                <Button
-                  key={acao.key}
-                  variant='contained'
-                  color='primary'
-                  onClick={() => handleAcaoWorkflow(acao.key as CatecPropostaWorkflowActionKey, acao.label)}
-                  disabled={processando}
-                >
-                  {acao.label}
-                </Button>
-              ))}
             </CardContent>
           </Card>
         </Grid>

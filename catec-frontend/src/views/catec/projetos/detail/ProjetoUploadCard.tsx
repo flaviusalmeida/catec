@@ -14,7 +14,7 @@ import ProjetoFileRow from './ProjetoFileRow'
 type AcaoUpload = {
   key: string
   label: string
-  color: 'primary' | 'secondary' | 'error'
+  color: 'primary' | 'secondary' | 'error' | 'success'
   onClick: () => void
   alinhamento?: 'inicio' | 'fim'
 }
@@ -27,7 +27,10 @@ type Props = {
   permitirSubstituir?: boolean
   onUpload: (file: File) => Promise<void>
   onDownload?: () => void
-  tituloExtra?: ReactNode
+  documentoId?: number
+  previewTitulo?: string
+  previewSubtitulo?: string
+  arquivoExtra?: ReactNode
   acoes?: AcaoUpload[]
 }
 
@@ -39,7 +42,10 @@ const ProjetoUploadCard = ({
   permitirSubstituir = true,
   onUpload,
   onDownload,
-  tituloExtra,
+  documentoId,
+  previewTitulo,
+  previewSubtitulo,
+  arquivoExtra,
   acoes
 }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -47,15 +53,33 @@ const ProjetoUploadCard = ({
   const acoesFim = nomeArquivo ? (acoes?.filter(acao => acao.alinhamento !== 'inicio') ?? []) : []
   const temLinhaAcoes = permitirSubstituir || acoesInicio.length > 0 || acoesFim.length > 0
 
-  function renderAcao(acao: AcaoUpload) {
-    const variant =
-      acao.alinhamento === 'inicio' ? 'outlined' : acao.color === 'primary' || acao.color === 'error' ? 'contained' : 'outlined'
+  function renderAcao(acao: AcaoUpload, splitLayout: boolean) {
+    const isPrimaria = acao.color === 'primary' || acao.color === 'success'
+
+    const variant = splitLayout
+      ? acao.alinhamento === 'inicio'
+        ? 'outlined'
+        : isPrimaria
+          ? 'contained'
+          : 'outlined'
+      : isPrimaria
+        ? 'contained'
+        : 'outlined'
+
+    const color =
+      acao.color === 'error'
+        ? 'error'
+        : acao.color === 'success'
+          ? 'success'
+          : acao.color === 'secondary'
+            ? 'secondary'
+            : 'primary'
 
     return (
       <Button
         key={acao.key}
         variant={variant}
-        color={acao.color === 'error' ? 'error' : acao.color === 'secondary' ? 'secondary' : 'primary'}
+        color={color}
         disabled={disabled}
         onClick={acao.onClick}
       >
@@ -81,39 +105,51 @@ const ProjetoUploadCard = ({
 
   return (
     <Card variant='outlined'>
-      <CardHeader title={titulo} action={tituloExtra} />
+      <CardHeader title={titulo} />
       <CardContent className='flex flex-col gap-4'>
         {nomeArquivo ? (
-          <ProjetoFileRow nomeArquivo={nomeArquivo} meta={meta} onDownload={onDownload} />
+          <ProjetoFileRow
+            nomeArquivo={nomeArquivo}
+            meta={meta}
+            extra={arquivoExtra}
+            documentoId={documentoId}
+            previewTitulo={previewTitulo}
+            previewSubtitulo={previewSubtitulo}
+            onDownload={onDownload}
+          />
         ) : (
           <Typography color='text.secondary'>Nenhum documento anexado.</Typography>
         )}
         {temLinhaAcoes ? (
-          <div className='flex flex-wrap items-center justify-between gap-3'>
-            <div className='flex flex-wrap gap-3'>
-              {permitirSubstituir ? (
-                <>
-                  <input
-                    ref={inputRef}
-                    type='file'
-                    accept='.pdf,.doc,.docx'
-                    className='hidden'
-                    onChange={e => void handleFileChange(e)}
-                  />
-                  <Button
-                    variant={nomeArquivo ? 'outlined' : 'contained'}
-                    startIcon={<i className='tabler-upload' />}
-                    disabled={disabled}
-                    onClick={() => inputRef.current?.click()}
-                  >
-                    {nomeArquivo ? 'Trocar arquivo' : 'Selecionar arquivo'}
-                  </Button>
-                </>
+          permitirSubstituir ? (
+            <div className='flex flex-wrap items-center justify-between gap-3'>
+              <div className='flex flex-wrap gap-3'>
+                <input
+                  ref={inputRef}
+                  type='file'
+                  accept='.pdf,.doc,.docx'
+                  className='hidden'
+                  onChange={e => void handleFileChange(e)}
+                />
+                <Button
+                  variant={nomeArquivo ? 'outlined' : 'contained'}
+                  startIcon={<i className='tabler-upload' />}
+                  disabled={disabled}
+                  onClick={() => inputRef.current?.click()}
+                >
+                  {nomeArquivo ? 'Trocar arquivo' : 'Selecionar arquivo'}
+                </Button>
+                {acoesInicio.map(acao => renderAcao(acao, true))}
+              </div>
+              {acoesFim.length > 0 ? (
+                <div className='flex flex-wrap gap-3'>{acoesFim.map(acao => renderAcao(acao, true))}</div>
               ) : null}
-              {acoesInicio.map(renderAcao)}
             </div>
-            {acoesFim.length > 0 ? <div className='flex flex-wrap gap-3'>{acoesFim.map(renderAcao)}</div> : null}
-          </div>
+          ) : (
+            <div className='flex flex-wrap items-center gap-3'>
+              {(acoes ?? []).map(acao => renderAcao(acao, false))}
+            </div>
+          )
         ) : null}
       </CardContent>
     </Card>

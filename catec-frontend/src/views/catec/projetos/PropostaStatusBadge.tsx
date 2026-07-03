@@ -8,13 +8,16 @@ import FluxoStatusChip from './FluxoStatusChip'
 
 type Props = {
   status: CatecPropostaStatus
+  avaliadaSocioEm?: string | null
 }
 
-const PropostaStatusBadge = ({ status }: Props) => {
+const PropostaStatusBadge = ({ status, avaliadaSocioEm }: Props) => {
+  const aguardandoEnvio = status === 'RASCUNHO' && avaliadaSocioEm != null
+
   return (
     <FluxoStatusChip
-      label={STATUS_PROPOSTA_ROTULO_BADGE[status]}
-      semantica={semanticaPropostaStatus(status)}
+      label={aguardandoEnvio ? 'Aguardando envio' : STATUS_PROPOSTA_ROTULO_BADGE[status]}
+      semantica={aguardandoEnvio ? 'aguardandoAcao' : semanticaPropostaStatus(status)}
     />
   )
 }
