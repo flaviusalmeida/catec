@@ -195,12 +195,3 @@ export function metaHistoricoComEntidade(item: CatecHistoricoFluxoItem, proposta
 
   return `${entidade} • ${resto}`
 }
-
-export function rotuloStatusHistorico(tipoEntidade: string): string {
-  const ent = tipoEntidade.toUpperCase()
-
-  if (ent === 'PROPOSTA') return 'Status da proposta'
-  if (ent === 'CONTRATO') return 'Status do contrato'
-
-  return 'Status do projeto'
-}

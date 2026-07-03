@@ -22,12 +22,10 @@ const HistoricoMetaLinha = ({ item, propostas }: Props) => {
 
   return (
     <Typography
-      variant='caption'
-      color='text.secondary'
-      className='flex flex-wrap items-center gap-1 mbe-1'
       component='div'
+      className='flex flex-wrap items-center gap-1 mbe-1 text-xs font-normal text-textSecondary'
     >
-      <i className={`${icone} text-sm shrink-0`} aria-hidden />
+      <i className={`${icone} shrink-0 text-[13px] opacity-80`} aria-hidden />
       <span>{texto}</span>
     </Typography>
   )

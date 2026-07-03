@@ -39,6 +39,10 @@ const Timeline = styled(MuiTimeline)<TimelineProps>({
     alignItems: 'center',
     justifyContent: 'center',
     marginBlock: '0.625rem'
+  },
+  '& .MuiTimelineConnector-root.timeline-connector-recente': {
+    width: 2,
+    backgroundColor: 'var(--mui-palette-primary-main)'
   }
 })
 
@@ -49,28 +53,44 @@ type Props = {
 const ProjetoTimeline = ({ items }: Props) => {
   return (
     <Timeline>
-      {items.map((item, index) => (
-        <TimelineItem key={item.key}>
-          <TimelineSeparator>
-            <TimelineDot variant='outlined' color='grey' className='mlb-0'>
-              <i className={`${item.icone} text-xl text-textSecondary`} aria-hidden />
-            </TimelineDot>
-            {index < items.length - 1 ? <TimelineConnector /> : null}
-          </TimelineSeparator>
-          <TimelineContent className='pbs-1 pbe-6'>
-            <Typography className='font-medium' color='text.primary'>
-              {item.titulo}
-            </Typography>
-            {item.meta}
-            {item.statusTransicao}
-            {item.texto?.trim() ? (
-              <Typography variant='body2' color='text.secondary' className='whitespace-pre-wrap'>
-                {item.texto}
+      {items.map((item, index) => {
+        const isRecent = index === 0
+
+        return (
+          <TimelineItem key={item.key}>
+            <TimelineSeparator>
+              <TimelineDot
+                variant={isRecent ? 'filled' : 'outlined'}
+                color={isRecent ? 'primary' : 'grey'}
+                className='mlb-0'
+              >
+                <i
+                  className={`${item.icone} text-xl ${isRecent ? '' : 'text-textSecondary'}`}
+                  aria-hidden
+                />
+              </TimelineDot>
+              {index < items.length - 1 ? (
+                <TimelineConnector className={isRecent ? 'timeline-connector-recente' : undefined} />
+              ) : null}
+            </TimelineSeparator>
+            <TimelineContent className='pbs-1 pbe-6'>
+              <Typography
+                className={isRecent ? 'font-semibold' : 'font-medium'}
+                color='text.primary'
+              >
+                {item.titulo}
               </Typography>
-            ) : null}
-          </TimelineContent>
-        </TimelineItem>
-      ))}
+              {item.meta}
+              {item.statusTransicao}
+              {item.texto?.trim() ? (
+                <Typography variant='body2' color='text.secondary' className='mts-2 whitespace-pre-wrap'>
+                  {item.texto}
+                </Typography>
+              ) : null}
+            </TimelineContent>
+          </TimelineItem>
+        )
+      })}
     </Timeline>
   )
 }
