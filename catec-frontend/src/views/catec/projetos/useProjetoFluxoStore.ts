@@ -5,12 +5,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   acaoPropostaCatec,
   carregarContratoComDocumentosCatec,
-  carregarInteracoesProjetoCatec,
   carregarPropostasComDocumentosCatec,
-  contratoParaRegistroInteracao,
   enviarContratoClienteCatec,
   listarHistoricoProjetoCatec,
-  propostaParaRegistroInteracao,
   registrarInteracaoContratoCatec,
   registrarInteracaoPropostaCatec,
   uploadDocumentoContratoCatec,
@@ -74,9 +71,7 @@ export function useProjetoFluxoStore(projetoId: number, onAfterMutation?: () => 
         carregarContratoComDocumentosCatec(projetoId)
       ])
 
-      const interacoes = await carregarInteracoesProjetoCatec(projetoId, propostas, contrato)
-
-      setData({ propostas, contrato, interacoes, historico: [] })
+      setData({ propostas, contrato, interacoes: [], historico: [] })
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Falha ao carregar dados do projeto.')
       setData(emptyData)
@@ -109,18 +104,6 @@ export function useProjetoFluxoStore(projetoId: number, onAfterMutation?: () => 
 
   const resumo = useMemo(() => computeProjetoFluxoResumo(projetoId, data), [projetoId, data])
   const propostaAtual = useMemo(() => propostaMaisRecente(data.propostas), [data.propostas])
-
-  const propostaParaRegistro = useMemo(
-    () => propostaParaRegistroInteracao(data.propostas),
-    [data.propostas]
-  )
-
-  const contratoParaRegistro = useMemo(
-    () => contratoParaRegistroInteracao(data.contrato),
-    [data.contrato]
-  )
-
-  const podeRegistrarInteracao = Boolean(propostaParaRegistro || contratoParaRegistro)
 
   const notificarMutacao = useCallback(async () => {
     if (onAfterMutation) {
@@ -232,8 +215,7 @@ export function useProjetoFluxoStore(projetoId: number, onAfterMutation?: () => 
     acaoProposta,
     uploadContrato,
     enviarContratoCliente,
-    registrarInteracao,
-    podeRegistrarInteracao
+    registrarInteracao
   }
 }
 

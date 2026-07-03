@@ -1,30 +1,47 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardHeader from '@mui/material/CardHeader'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
 import { toast } from 'react-toastify'
 
 import type { CatecProjeto } from '@/types/catec/projetoTypes'
-import { STATUS_CONTRATO_ROTULO, STATUS_CONTRATO_UPLOAD } from '@/types/catec/projetoFluxoTypes'
+import {
+  STATUS_CONTRATO_INTERACAO_CLIENTE,
+  STATUS_CONTRATO_ROTULO,
+  STATUS_CONTRATO_UPLOAD,
+  TIPO_INTERACAO_ROTULO_CONTRATO,
+  type CatecTipoInteracaoFluxo
+} from '@/types/catec/projetoFluxoTypes'
 
 import { downloadDocumentoCatec } from '@/utils/catec/downloadDocumento'
 
-import { formatarDataCurta, projetoPermiteContrato } from '../projetoFluxoHelpers'
+import { useCatecPermission } from '@/hooks/useCatecPermission'
+import { PermissaoCodigo } from '@/types/catec/permissao'
+
+import { formatarDataCurta, projetoPermiteEditarContrato, projetoPermiteVisualizarContrato } from '../projetoFluxoHelpers'
 import type { UseProjetoFluxoStore } from '../useProjetoFluxoStore'
 import ProjetoFileRow from './ProjetoFileRow'
 import ProjetoStateCard from './ProjetoStateCard'
 import ProjetoUploadCard from './ProjetoUploadCard'
 
+import CustomTextField from '@core/components/mui/TextField'
+
 type Props = {
   projeto: CatecProjeto
   fluxo: UseProjetoFluxoStore
 }
+
+type DialogInteracaoCliente = CatecTipoInteracaoFluxo | null
 
 function InfoField({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -38,14 +55,97 @@ function InfoField({ label, children }: { label: string; children: ReactNode }) 
 }
 
 const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
-  const { data, uploadContrato, enviarContratoCliente, processando } = fluxo
+  const { data, uploadContrato, enviarContratoCliente, registrarInteracao, processando } = fluxo
+  const { hasPermission } = useCatecPermission()
+  const [dialogInteracaoCliente, setDialogInteracaoCliente] = useState<DialogInteracaoCliente>(null)
+  const [textoInteracaoCliente, setTextoInteracaoCliente] = useState('')
+
   const contrato = data.contrato
   const documentoAtual = contrato?.documentos[0] ?? null
   const temAnexo = Boolean(documentoAtual)
 
-  const mostrarContrato = projetoPermiteContrato(projeto.status)
+  const podeEditarContrato = projetoPermiteEditarContrato(projeto.status)
+  const podeVisualizarContrato = projetoPermiteVisualizarContrato(projeto.status, contrato != null)
 
-  if (!mostrarContrato) {
+  const aguardandoRespostaCliente =
+    contrato != null && STATUS_CONTRATO_INTERACAO_CLIENTE.includes(contrato.status)
+
+  const podeRegistrarRespostaCliente =
+    aguardandoRespostaCliente && hasPermission(PermissaoCodigo.ACAO_INTERACAO_REGISTRAR)
+
+  const acoesRespostaCliente: Array<{
+    tipo: CatecTipoInteracaoFluxo
+    label: string
+    color: 'primary' | 'success' | 'error' | 'secondary'
+    variant: 'contained' | 'tonal'
+  }> =
+    contrato?.status === 'AGUARDANDO_AJUSTE'
+      ? [
+          {
+            tipo: 'ACEITE_CLIENTE',
+            label: TIPO_INTERACAO_ROTULO_CONTRATO.ACEITE_CLIENTE,
+            color: 'success',
+            variant: 'contained'
+          },
+          {
+            tipo: 'RECUSA_CLIENTE',
+            label: TIPO_INTERACAO_ROTULO_CONTRATO.RECUSA_CLIENTE,
+            color: 'error',
+            variant: 'tonal'
+          }
+        ]
+      : [
+          {
+            tipo: 'CONSIDERACOES_CLIENTE',
+            label: TIPO_INTERACAO_ROTULO_CONTRATO.CONSIDERACOES_CLIENTE,
+            color: 'secondary',
+            variant: 'tonal'
+          },
+          {
+            tipo: 'ACEITE_CLIENTE',
+            label: TIPO_INTERACAO_ROTULO_CONTRATO.ACEITE_CLIENTE,
+            color: 'success',
+            variant: 'contained'
+          },
+          {
+            tipo: 'RECUSA_CLIENTE',
+            label: TIPO_INTERACAO_ROTULO_CONTRATO.RECUSA_CLIENTE,
+            color: 'error',
+            variant: 'tonal'
+          }
+        ]
+
+  function abrirDialogInteracaoCliente(tipo: CatecTipoInteracaoFluxo) {
+    setDialogInteracaoCliente(tipo)
+    setTextoInteracaoCliente('')
+  }
+
+  function fecharDialogInteracaoCliente() {
+    if (processando) return
+
+    setDialogInteracaoCliente(null)
+    setTextoInteracaoCliente('')
+  }
+
+  function confirmarInteracaoCliente() {
+    if (!dialogInteracaoCliente) return
+
+    if (!textoInteracaoCliente.trim()) {
+      toast.error('Informe o texto da interação.')
+
+      return
+    }
+
+    void registrarInteracao(dialogInteracaoCliente, textoInteracaoCliente.trim())
+      .then(() => {
+        toast.success('Resposta do cliente registrada.')
+        setDialogInteracaoCliente(null)
+        setTextoInteracaoCliente('')
+      })
+      .catch(err => toast.error(err instanceof Error ? err.message : 'Erro ao registrar interação.'))
+  }
+
+  if (!podeVisualizarContrato) {
     return (
       <ProjetoStateCard
         titulo='Contrato indisponível no momento.'
@@ -55,15 +155,16 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
     )
   }
 
-  const podeIniciarContrato = !contrato
-  const podeUploadExistente = contrato != null && STATUS_CONTRATO_UPLOAD.includes(contrato.status)
+  const podeIniciarContrato = podeEditarContrato && !contrato
+  const podeUploadExistente =
+    podeEditarContrato && contrato != null && STATUS_CONTRATO_UPLOAD.includes(contrato.status)
 
   const mostrarUploadCard = Boolean(
     podeIniciarContrato ||
       (podeUploadExistente && (contrato?.status === 'RASCUNHO' || contrato?.status === 'AGUARDANDO_AJUSTE' || !temAnexo))
   )
 
-  const podeEnviarCliente = contrato?.status === 'RASCUNHO' && temAnexo
+  const podeEnviarCliente = podeEditarContrato && contrato?.status === 'RASCUNHO' && temAnexo
 
   if (!contrato && !mostrarUploadCard) {
     return <ProjetoStateCard titulo='Nenhum contrato cadastrado.' />
@@ -75,11 +176,26 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
         <Grid size={{ xs: 12 }}>
           <Card>
             <CardHeader title='Contrato' />
-            <CardContent>
+            <CardContent className='flex flex-col gap-6'>
               <Grid container spacing={4}>
                 <InfoField label='Status'>{STATUS_CONTRATO_ROTULO[contrato.status]}</InfoField>
                 <InfoField label='Elaborado por'>{contrato.elaboradoPorNome || '—'}</InfoField>
               </Grid>
+              {podeRegistrarRespostaCliente ? (
+                <div className='flex flex-wrap gap-3'>
+                  {acoesRespostaCliente.map(acao => (
+                    <Button
+                      key={acao.tipo}
+                      variant={acao.variant}
+                      color={acao.color}
+                      onClick={() => abrirDialogInteracaoCliente(acao.tipo)}
+                      disabled={processando}
+                    >
+                      {acao.label}
+                    </Button>
+                  ))}
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         </Grid>
@@ -139,6 +255,47 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
           </Button>
         </Grid>
       ) : null}
+
+      <Dialog open={dialogInteracaoCliente != null} onClose={fecharDialogInteracaoCliente} fullWidth maxWidth='sm'>
+        <DialogTitle>
+          {dialogInteracaoCliente ? TIPO_INTERACAO_ROTULO_CONTRATO[dialogInteracaoCliente] : 'Registrar resposta'}
+        </DialogTitle>
+        <DialogContent className='flex flex-col gap-4 pbs-2'>
+          {contrato ? (
+            <Typography variant='body2' color='text.secondary'>
+              {projeto.titulo} · {STATUS_CONTRATO_ROTULO[contrato.status]}
+            </Typography>
+          ) : null}
+          <CustomTextField
+            fullWidth
+            multiline
+            minRows={3}
+            label='Texto'
+            value={textoInteracaoCliente}
+            onChange={e => setTextoInteracaoCliente(e.target.value)}
+            placeholder='Descreva a resposta ou considerações do cliente.'
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button variant='tonal' color='secondary' onClick={fecharDialogInteracaoCliente} disabled={processando}>
+            Cancelar
+          </Button>
+          <Button
+            variant='contained'
+            color={
+              dialogInteracaoCliente === 'RECUSA_CLIENTE'
+                ? 'error'
+                : dialogInteracaoCliente === 'ACEITE_CLIENTE'
+                  ? 'success'
+                  : 'primary'
+            }
+            onClick={confirmarInteracaoCliente}
+            disabled={processando || !textoInteracaoCliente.trim()}
+          >
+            Registrar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Grid>
   )
 }

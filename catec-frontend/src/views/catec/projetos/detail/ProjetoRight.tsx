@@ -16,18 +16,16 @@ import type { UseProjetoFluxoStore } from '../useProjetoFluxoStore'
 import ProjetoTabContrato from './ProjetoTabContrato'
 import ProjetoTabGeral from './ProjetoTabGeral'
 import ProjetoTabHistorico from './ProjetoTabHistorico'
-import ProjetoTabInteracoes from './ProjetoTabInteracoes'
 import ProjetoTabPropostas from './ProjetoTabPropostas'
 
-type TabId = 'geral' | 'propostas' | 'contrato' | 'interacoes' | 'historico'
+type TabId = 'geral' | 'propostas' | 'contrato' | 'historico'
 
 type Props = {
   projeto: CatecProjeto
   fluxo: UseProjetoFluxoStore
-  onStatusAlterado?: () => Promise<void>
 }
 
-const ProjetoRight = ({ projeto, fluxo, onStatusAlterado }: Props) => {
+const ProjetoRight = ({ projeto, fluxo }: Props) => {
   const [activeTab, setActiveTab] = useState<TabId>('geral')
 
   const handleChange = (_event: SyntheticEvent, value: string) => {
@@ -52,12 +50,6 @@ const ProjetoRight = ({ projeto, fluxo, onStatusAlterado }: Props) => {
               label='Contrato'
               iconPosition='start'
             />
-            <Tab
-              icon={<i className='tabler-messages' />}
-              value='interacoes'
-              label='Interações'
-              iconPosition='start'
-            />
             <Tab icon={<i className='tabler-history' />} value='historico' label='Histórico' iconPosition='start' />
           </CustomTabList>
         </Grid>
@@ -66,9 +58,6 @@ const ProjetoRight = ({ projeto, fluxo, onStatusAlterado }: Props) => {
             {activeTab === 'geral' ? <ProjetoTabGeral projeto={projeto} /> : null}
             {activeTab === 'propostas' ? <ProjetoTabPropostas projeto={projeto} fluxo={fluxo} /> : null}
             {activeTab === 'contrato' ? <ProjetoTabContrato projeto={projeto} fluxo={fluxo} /> : null}
-            {activeTab === 'interacoes' ? (
-              <ProjetoTabInteracoes projeto={projeto} fluxo={fluxo} onStatusAlterado={onStatusAlterado} />
-            ) : null}
             {activeTab === 'historico' ? <ProjetoTabHistorico fluxo={fluxo} /> : null}
           </TabPanel>
         </Grid>

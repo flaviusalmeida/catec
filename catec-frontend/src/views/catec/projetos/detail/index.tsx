@@ -22,7 +22,7 @@ type Props = {
 }
 
 const ProjetoDetalhe = ({ id }: Props) => {
-  const { lista, carregando: storeCarregando, refreshProjeto } = useProjetosStore()
+  const { carregando: storeCarregando, refreshProjeto } = useProjetosStore()
   
   const projetoId = Number(id)
 
@@ -30,6 +30,8 @@ const ProjetoDetalhe = ({ id }: Props) => {
     const remoto = await refreshProjeto(projetoId)
 
     if (remoto) setProjeto(remoto)
+
+    return remoto
   }, [projetoId, refreshProjeto])
 
   const fluxo = useProjetoFluxoStore(projetoId, recarregarProjeto)
@@ -46,17 +48,7 @@ const ProjetoDetalhe = ({ id }: Props) => {
       return
     }
 
-    const cached = lista.find(p => p.id === projetoId)
-
-    if (cached) {
-      setProjeto(cached)
-      setNaoEncontrado(false)
-      setCarregando(false)
-
-      return
-    }
-
-    if (storeCarregando) return
+    if (fluxo.carregando) return
 
     let cancelled = false
 
@@ -74,15 +66,7 @@ const ProjetoDetalhe = ({ id }: Props) => {
     return () => {
       cancelled = true
     }
-  }, [projetoId, lista, storeCarregando, refreshProjeto])
-
-  useEffect(() => {
-    if (!projeto) return
-
-    const atualizado = lista.find(p => p.id === projeto.id)
-
-    if (atualizado) setProjeto(atualizado)
-  }, [lista, projeto?.id])
+  }, [projetoId, fluxo.carregando, refreshProjeto])
 
   if (carregando || storeCarregando || fluxo.carregando) {
     return (
@@ -117,10 +101,10 @@ const ProjetoDetalhe = ({ id }: Props) => {
         </Grid>
       ) : null}
       <Grid size={{ xs: 12, lg: 4, md: 5 }}>
-        <ProjetoLeftOverview projeto={projeto} />
+        <ProjetoLeftOverview projeto={projeto} onStatusAlterado={recarregarProjeto} />
       </Grid>
       <Grid size={{ xs: 12, lg: 8, md: 7 }}>
-        <ProjetoRight projeto={projeto} fluxo={fluxo} onStatusAlterado={recarregarProjeto} />
+        <ProjetoRight projeto={projeto} fluxo={fluxo} />
       </Grid>
     </Grid>
   )

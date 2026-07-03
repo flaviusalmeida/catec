@@ -33,8 +33,6 @@ function InfoField({ label, children }: { label: string; children: ReactNode }) 
 }
 
 const ProjetoTabGeral = ({ projeto }: Props) => {
-  
-
   return (
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>

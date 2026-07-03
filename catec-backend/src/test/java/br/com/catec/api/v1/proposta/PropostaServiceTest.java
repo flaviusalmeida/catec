@@ -271,6 +271,48 @@ class PropostaServiceTest {
     }
 
     @Test
+    void listarPorProjeto_quandoPropostaPendenteAvaliacao_deveReconciliarProjetoAguardandoRevisao() {
+        projeto.setStatus(ProjetoStatus.ELABORANDO_PROPOSTA);
+        Proposta proposta = proposta(70L, PropostaStatus.PENDENTE_AVALIACAO);
+        when(projetoRepository.findById(10L)).thenReturn(Optional.of(projeto));
+        when(propostaRepository.findByProjetoIdOrderByVersaoDesc(10L)).thenReturn(List.of(proposta));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        service.listarPorProjeto(10L, admin);
+
+        assertEquals(ProjetoStatus.AGUARDANDO_REVISAO_PROPOSTA, projeto.getStatus());
+        verify(auditoriaService)
+                .registrarTransicaoStatus(
+                        eq(TipoEntidadeAuditoria.PROJETO),
+                        eq(10L),
+                        eq("SINCRONIZAR_PROPOSTA"),
+                        eq("ELABORANDO_PROPOSTA"),
+                        eq("AGUARDANDO_REVISAO_PROPOSTA"),
+                        eq(1L));
+    }
+
+    @Test
+    void submeterParaAvaliacaoSocio_deveSincronizarProjetoAguardandoRevisao() {
+        Proposta proposta = proposta(61L, PropostaStatus.RASCUNHO);
+        when(propostaRepository.findById(61L)).thenReturn(Optional.of(proposta));
+        when(propostaRepository.save(any(Proposta.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PropostaResponse res = service.submeterParaAvaliacaoSocio(10L, 61L, admin);
+
+        assertEquals(PropostaStatus.PENDENTE_AVALIACAO, res.status());
+        assertEquals(ProjetoStatus.AGUARDANDO_REVISAO_PROPOSTA, projeto.getStatus());
+        verify(auditoriaService)
+                .registrarTransicaoStatus(
+                        eq(TipoEntidadeAuditoria.PROJETO),
+                        eq(10L),
+                        eq("SINCRONIZAR_PROPOSTA"),
+                        eq("ELABORANDO_PROPOSTA"),
+                        eq("AGUARDANDO_REVISAO_PROPOSTA"),
+                        eq(1L));
+    }
+
+    @Test
     void fluxoComSocio_submeterAprovarEnviar() {
         Proposta proposta = proposta(60L, PropostaStatus.RASCUNHO);
         when(propostaRepository.findById(60L)).thenReturn(Optional.of(proposta));

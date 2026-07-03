@@ -35,6 +35,23 @@ public class PropostaService {
     private static final EnumSet<PropostaStatus> STATUS_UPLOAD_DOCUMENTO = EnumSet.of(
             PropostaStatus.RASCUNHO, PropostaStatus.PENDENTE_AVALIACAO, PropostaStatus.AGUARDANDO_AJUSTE);
 
+    private static final EnumSet<PropostaStatus> STATUS_PROPOSTA_REFERENCIA_STATUS_PROJETO = EnumSet.of(
+            PropostaStatus.RASCUNHO,
+            PropostaStatus.PENDENTE_AVALIACAO,
+            PropostaStatus.AGUARDANDO_AJUSTE,
+            PropostaStatus.ENVIADA_AO_CLIENTE,
+            PropostaStatus.EM_AVALIACAO_CLIENTE,
+            PropostaStatus.ACEITA,
+            PropostaStatus.NEGADA);
+
+    private static final EnumSet<ProjetoStatus> STATUS_PROJETO_SINCRONIZAVEL_PROPOSTA = EnumSet.of(
+            ProjetoStatus.AGUARDANDO_PROPOSTA_COMERCIAL,
+            ProjetoStatus.ELABORANDO_PROPOSTA,
+            ProjetoStatus.AGUARDANDO_REVISAO_PROPOSTA,
+            ProjetoStatus.AGUARDANDO_AJUSTE,
+            ProjetoStatus.AGUARDANDO_ENVIO_CLIENTE,
+            ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA);
+
     private final PropostaRepository propostaRepository;
     private final ProjetoRepository projetoRepository;
     private final UsuarioRepository usuarioRepository;
@@ -124,13 +141,13 @@ public class PropostaService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<PropostaResponse> listarPorProjeto(Long projetoId, UsuarioAutenticado principal) {
         Projeto projeto = loadProjeto(projetoId);
         garantirLeitura(projeto, principal);
-        return propostaRepository.findByProjetoIdOrderByVersaoDesc(projetoId).stream()
-                .map(this::toResponse)
-                .toList();
+        List<Proposta> propostas = propostaRepository.findByProjetoIdOrderByVersaoDesc(projetoId);
+        reconciliarStatusProjetoComProposta(projeto, propostas, principal.id());
+        return propostas.stream().map(this::toResponse).toList();
     }
 
     /** RASCUNHO → PENDENTE_AVALIACAO (quando exige avaliação do sócio). */
@@ -402,6 +419,39 @@ public class PropostaService {
                 anterior.name(),
                 novoStatus.name(),
                 usuarioId);
+    }
+
+    private void reconciliarStatusProjetoComProposta(Projeto projeto, List<Proposta> propostas, Long usuarioId) {
+        if (propostas.isEmpty() || !STATUS_PROJETO_SINCRONIZAVEL_PROPOSTA.contains(projeto.getStatus())) {
+            return;
+        }
+
+        Proposta referencia = propostas.stream()
+                .filter(p -> STATUS_PROPOSTA_REFERENCIA_STATUS_PROJETO.contains(p.getStatus()))
+                .findFirst()
+                .orElse(null);
+        if (referencia == null) {
+            return;
+        }
+
+        ProjetoStatus esperado = statusProjetoEsperadoParaProposta(referencia);
+        if (esperado != null && projeto.getStatus() != esperado) {
+            sincronizarProjeto(projeto, esperado, usuarioId);
+        }
+    }
+
+    private ProjetoStatus statusProjetoEsperadoParaProposta(Proposta proposta) {
+        return switch (proposta.getStatus()) {
+            case RASCUNHO ->
+                    proposta.getAvaliadaSocioEm() != null
+                            ? ProjetoStatus.AGUARDANDO_ENVIO_CLIENTE
+                            : ProjetoStatus.ELABORANDO_PROPOSTA;
+            case PENDENTE_AVALIACAO -> ProjetoStatus.AGUARDANDO_REVISAO_PROPOSTA;
+            case AGUARDANDO_AJUSTE -> ProjetoStatus.AGUARDANDO_AJUSTE;
+            case ENVIADA_AO_CLIENTE, EM_AVALIACAO_CLIENTE -> ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA;
+            case ACEITA -> ProjetoStatus.AGUARDANDO_CONTRATO;
+            case NEGADA -> ProjetoStatus.CANCELADO;
+        };
     }
 
     private Proposta loadProposta(Long id) {

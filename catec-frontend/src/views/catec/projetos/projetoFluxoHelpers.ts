@@ -54,8 +54,23 @@ export function metaHistoricoItem(item: CatecHistoricoFluxoItem): string {
   return partes.join(' · ')
 }
 
+const STATUS_PROJETO_EDITAR_CONTRATO = [
+  'AGUARDANDO_CONTRATO',
+  'AGUARDANDO_EXECUCAO',
+  'EM_EXECUCAO'
+] as const
+
+export function projetoPermiteEditarContrato(status: string): boolean {
+  return STATUS_PROJETO_EDITAR_CONTRATO.includes(status as (typeof STATUS_PROJETO_EDITAR_CONTRATO)[number])
+}
+
+/** @deprecated use projetoPermiteEditarContrato */
 export function projetoPermiteContrato(status: string): boolean {
-  return status === 'AGUARDANDO_CONTRATO' || status === 'AGUARDANDO_EXECUCAO' || status === 'EM_EXECUCAO'
+  return projetoPermiteEditarContrato(status)
+}
+
+export function projetoPermiteVisualizarContrato(status: string, temContrato: boolean): boolean {
+  return temContrato || projetoPermiteEditarContrato(status)
 }
 
 export function propostaMaisRecente(propostas: CatecProposta[]): CatecProposta | null {

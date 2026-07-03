@@ -18,8 +18,11 @@ import type { CatecProjeto } from '@/types/catec/projetoTypes'
 import type { CatecPropostaWorkflowActionKey } from '@/types/catec/projetoFluxoTypes'
 import {
   STATUS_PROPOSTA_ENVIADA,
+  STATUS_PROPOSTA_RESPOSTA_CLIENTE,
   STATUS_PROPOSTA_ROTULO,
-  STATUS_PROPOSTA_UPLOAD
+  STATUS_PROPOSTA_UPLOAD,
+  TIPO_INTERACAO_ROTULO_PROPOSTA,
+  type CatecTipoInteracaoFluxo
 } from '@/types/catec/projetoFluxoTypes'
 
 import { downloadDocumentoCatec } from '@/utils/catec/downloadDocumento'
@@ -56,12 +59,15 @@ function InfoField({ label, children }: { label: string; children: ReactNode }) 
 }
 
 type DialogParecerMode = 'aprovar-socio' | 'reprovar-socio' | null
+type DialogInteracaoCliente = CatecTipoInteracaoFluxo | null
 
 const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
-  const { data, propostaAtual, uploadProposta, acaoProposta, processando } = fluxo
+  const { data, propostaAtual, uploadProposta, acaoProposta, registrarInteracao, processando } = fluxo
   const { hasPermission } = useCatecPermission()
   const [dialogParecer, setDialogParecer] = useState<DialogParecerMode>(null)
+  const [dialogInteracaoCliente, setDialogInteracaoCliente] = useState<DialogInteracaoCliente>(null)
   const [observacao, setObservacao] = useState('')
+  const [textoInteracaoCliente, setTextoInteracaoCliente] = useState('')
   const projetoTemCliente = projeto.clienteId != null
 
   const documentoAtual = propostaAtual?.documentos[0] ?? null
@@ -123,6 +129,64 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
   const acoesWorkflowRestantes = workflowActions.filter(
     acao => acao.key !== 'solicitar-revisao' && acao.key !== 'enviar-cliente'
   )
+
+  const aguardandoRespostaCliente =
+    propostaAtual != null && STATUS_PROPOSTA_RESPOSTA_CLIENTE.includes(propostaAtual.status)
+
+  const podeRegistrarRespostaCliente =
+    aguardandoRespostaCliente && hasPermission(PermissaoCodigo.ACAO_INTERACAO_REGISTRAR)
+
+  const acoesRespostaCliente: Array<{
+    tipo: CatecTipoInteracaoFluxo
+    label: string
+    color: 'primary' | 'success' | 'error' | 'secondary'
+    variant: 'contained' | 'tonal'
+  }> =
+    propostaAtual?.status === 'AGUARDANDO_AJUSTE'
+      ? [
+          { tipo: 'ACEITE_CLIENTE', label: TIPO_INTERACAO_ROTULO_PROPOSTA.ACEITE_CLIENTE, color: 'success', variant: 'contained' },
+          { tipo: 'RECUSA_CLIENTE', label: TIPO_INTERACAO_ROTULO_PROPOSTA.RECUSA_CLIENTE, color: 'error', variant: 'tonal' }
+        ]
+      : [
+          {
+            tipo: 'CONSIDERACOES_CLIENTE',
+            label: TIPO_INTERACAO_ROTULO_PROPOSTA.CONSIDERACOES_CLIENTE,
+            color: 'secondary',
+            variant: 'tonal'
+          },
+          { tipo: 'ACEITE_CLIENTE', label: TIPO_INTERACAO_ROTULO_PROPOSTA.ACEITE_CLIENTE, color: 'success', variant: 'contained' },
+          { tipo: 'RECUSA_CLIENTE', label: TIPO_INTERACAO_ROTULO_PROPOSTA.RECUSA_CLIENTE, color: 'error', variant: 'tonal' }
+        ]
+
+  function abrirDialogInteracaoCliente(tipo: CatecTipoInteracaoFluxo) {
+    setDialogInteracaoCliente(tipo)
+    setTextoInteracaoCliente('')
+  }
+
+  function fecharDialogInteracaoCliente() {
+    if (processando) return
+
+    setDialogInteracaoCliente(null)
+    setTextoInteracaoCliente('')
+  }
+
+  function confirmarInteracaoCliente() {
+    if (!dialogInteracaoCliente) return
+
+    if (!textoInteracaoCliente.trim()) {
+      toast.error('Informe o texto da interação.')
+
+      return
+    }
+
+    void registrarInteracao(dialogInteracaoCliente, textoInteracaoCliente.trim())
+      .then(() => {
+        toast.success('Resposta do cliente registrada.')
+        setDialogInteracaoCliente(null)
+        setTextoInteracaoCliente('')
+      })
+      .catch(err => toast.error(err instanceof Error ? err.message : 'Erro ao registrar interação.'))
+  }
 
   function executarAcaoProposta(
     key: CatecPropostaWorkflowActionKey,
@@ -233,11 +297,26 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
         <Grid size={{ xs: 12 }}>
           <Card>
             <CardHeader title='Proposta atual' subheader={`Versão ${propostaAtual!.versao}`} />
-            <CardContent>
+            <CardContent className='flex flex-col gap-6'>
               <Grid container spacing={4}>
                 <InfoField label='Status'>{STATUS_PROPOSTA_ROTULO[propostaAtual!.status]}</InfoField>
                 <InfoField label='Responsável'>{propostaAtual!.elaboradoPorNome || '—'}</InfoField>
               </Grid>
+              {podeRegistrarRespostaCliente ? (
+                <div className='flex flex-wrap gap-3'>
+                  {acoesRespostaCliente.map(acao => (
+                    <Button
+                      key={acao.tipo}
+                      variant={acao.variant}
+                      color={acao.color}
+                      onClick={() => abrirDialogInteracaoCliente(acao.tipo)}
+                      disabled={processando}
+                    >
+                      {acao.label}
+                    </Button>
+                  ))}
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         </Grid>
@@ -348,6 +427,47 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
           </Card>
         </Grid>
       ) : null}
+
+      <Dialog open={dialogInteracaoCliente != null} onClose={fecharDialogInteracaoCliente} fullWidth maxWidth='sm'>
+        <DialogTitle>
+          {dialogInteracaoCliente ? TIPO_INTERACAO_ROTULO_PROPOSTA[dialogInteracaoCliente] : 'Registrar resposta'}
+        </DialogTitle>
+        <DialogContent className='flex flex-col gap-4 pbs-2'>
+          {propostaAtual ? (
+            <Typography variant='body2' color='text.secondary'>
+              {projeto.titulo} · v{propostaAtual.versao} · {STATUS_PROPOSTA_ROTULO[propostaAtual.status]}
+            </Typography>
+          ) : null}
+          <CustomTextField
+            fullWidth
+            multiline
+            minRows={3}
+            label='Texto'
+            value={textoInteracaoCliente}
+            onChange={e => setTextoInteracaoCliente(e.target.value)}
+            placeholder='Descreva a resposta ou considerações do cliente.'
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button variant='tonal' color='secondary' onClick={fecharDialogInteracaoCliente} disabled={processando}>
+            Cancelar
+          </Button>
+          <Button
+            variant='contained'
+            color={
+              dialogInteracaoCliente === 'RECUSA_CLIENTE'
+                ? 'error'
+                : dialogInteracaoCliente === 'ACEITE_CLIENTE'
+                  ? 'success'
+                  : 'primary'
+            }
+            onClick={confirmarInteracaoCliente}
+            disabled={processando || !textoInteracaoCliente.trim()}
+          >
+            Registrar
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={dialogParecer != null} onClose={fecharDialogParecer} fullWidth maxWidth='sm'>
         <DialogTitle>{dialogParecer === 'aprovar-socio' ? 'Aprovar proposta' : 'Reprovar proposta'}</DialogTitle>
