@@ -104,7 +104,7 @@ export function resolvePropostaWorkflowActions(
 
   if (status === 'RASCUNHO' && hasAttachment) {
     if (!avaliadaSocioEm) {
-      return [{ key: 'solicitar-revisao', label: 'Enviar para revisão do sócio', color: 'secondary' }]
+      return [{ key: 'solicitar-revisao', label: 'Enviar para revisão', color: 'primary' }]
     }
 
     return [{ key: 'enviar-cliente', label: 'Enviar ao cliente', color: 'primary' }]

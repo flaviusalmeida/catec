@@ -104,8 +104,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
   const mostrarPropostaAtualCard =
     propostaAtual != null &&
     !mostrarUploadCard &&
-    (propostaAtual.status === 'PENDENTE_AVALIACAO' ||
-      STATUS_PROPOSTA_ENVIADA.includes(propostaAtual.status))
+    STATUS_PROPOSTA_ENVIADA.includes(propostaAtual.status)
 
   const versoesAnteriores = useMemo(() => {
     if (!propostaAtual) return data.propostas
@@ -130,6 +129,14 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
   const acoesWorkflowRestantes = workflowActions.filter(
     acao => acao.key !== 'solicitar-revisao' && acao.key !== 'enviar-cliente'
   )
+
+  const mostrarRevisaoSocioCard = propostaAtual?.status === 'PENDENTE_AVALIACAO' && temAnexo
+
+  const acoesRevisaoSocio = acoesWorkflowRestantes.map(acao => ({
+    ...acao,
+    alinhamento: acao.key === 'reprovar-socio' ? ('inicio' as const) : ('fim' as const),
+    onClick: () => handleAcaoWorkflow(acao.key as CatecPropostaWorkflowActionKey, acao.label)
+  }))
 
   const aguardandoRespostaCliente =
     propostaAtual != null && STATUS_PROPOSTA_RESPOSTA_CLIENTE.includes(propostaAtual.status)
@@ -284,6 +291,30 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
         </Grid>
       ) : null}
 
+      {mostrarRevisaoSocioCard ? (
+        <Grid size={{ xs: 12 }}>
+          <ProjetoUploadCard
+            titulo='Revisar proposta'
+            nomeArquivo={documentoAtual?.nomeOriginal}
+            meta={
+              documentoAtual
+                ? `Versão ${propostaAtual?.versao ?? '—'}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ''}`
+                : undefined
+            }
+            tituloExtra={propostaAtual ? <PropostaStatusBadge status={propostaAtual.status} /> : undefined}
+            permitirSubstituir={false}
+            disabled={processando}
+            onUpload={uploadProposta}
+            onDownload={() =>
+              void downloadDocumentoCatec(documentoAtual!.id, documentoAtual!.nomeOriginal).catch(err =>
+                toast.error(err instanceof Error ? err.message : 'Download falhou.')
+              )
+            }
+            acoes={acoesRevisaoSocio.length > 0 ? acoesRevisaoSocio : undefined}
+          />
+        </Grid>
+      ) : null}
+
       {aguardandoAjusteSocio && propostaAtual?.parecerSocio ? (
         <Grid size={{ xs: 12 }}>
           <ProjetoStateCard
@@ -325,7 +356,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
         </Grid>
       ) : null}
 
-      {propostaAtual && !mostrarUploadCard && temAnexo ? (
+      {propostaAtual && !mostrarUploadCard && !mostrarRevisaoSocioCard && temAnexo ? (
         <Grid size={{ xs: 12 }}>
           <Card variant='outlined'>
             <CardHeader
@@ -411,7 +442,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
         </Grid>
       ) : null}
 
-      {acoesWorkflowRestantes.length > 0 ? (
+      {acoesWorkflowRestantes.length > 0 && !mostrarRevisaoSocioCard ? (
         <Grid size={{ xs: 12 }}>
           <Card variant='outlined'>
             <CardContent className='flex flex-wrap gap-3'>

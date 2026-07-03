@@ -24,7 +24,7 @@ const ProjetoFileRow = ({ nomeArquivo, meta, onDownload }: Props) => {
         </div>
       </div>
       {onDownload ? (
-        <Button size='small' variant='tonal' startIcon={<i className='tabler-download' />} onClick={onDownload}>
+        <Button size='small' variant='text' startIcon={<i className='tabler-download' />} onClick={onDownload}>
           Baixar
         </Button>
       ) : null}
