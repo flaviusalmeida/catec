@@ -20,6 +20,8 @@ import Button from '@mui/material/Button'
 // Third-party Imports
 import { signOut, useSession } from 'next-auth/react'
 
+import { CATEC_LOGIN_PATH } from '@/utils/catec/authPaths'
+
 // Type Imports
 
 // Hook Imports
@@ -63,7 +65,7 @@ const UserDropdown = () => {
   const handleUserLogout = async () => {
     try {
       // Sign out from the app
-      await signOut({ callbackUrl: '/login' })
+      await signOut({ callbackUrl: CATEC_LOGIN_PATH })
     } catch (error) {
       console.error(error)
 

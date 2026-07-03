@@ -6,6 +6,7 @@ import type { NextAuthOptions } from 'next-auth'
 // Lib Imports
 import { fetchCatecMe, postCatecLogin } from '@/libs/catecApiServer'
 import { parseCatecLoginResponse } from '@/types/catec/authTypes'
+import { CATEC_LOGIN_PATH, stripLocalePrefix } from '@/utils/catec/authPaths'
 
 const nextAuthSecret = process.env.NEXTAUTH_SECRET
 
@@ -77,10 +78,29 @@ export const authOptions: NextAuthOptions = {
   },
 
   pages: {
-    signIn: '/login'
+    signIn: CATEC_LOGIN_PATH
   },
 
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith('/')) {
+        return `${baseUrl}${stripLocalePrefix(url)}`
+      }
+
+      try {
+        const target = new URL(url)
+
+        if (target.origin === baseUrl) {
+          target.pathname = stripLocalePrefix(target.pathname)
+
+          return target.toString()
+        }
+      } catch {
+        // URL inválida — cair no baseUrl abaixo
+      }
+
+      return baseUrl
+    },
     async jwt({ token, user, trigger, session }) {
       if (trigger === 'update' && session) {
         const patch = session as {

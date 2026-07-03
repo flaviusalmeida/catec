@@ -2,6 +2,7 @@
 
 import { getSession, signOut } from 'next-auth/react'
 
+import { CATEC_LOGIN_PATH } from '@/utils/catec/authPaths'
 import { CATEC_API_BASE_URL } from '@/libs/catecConfig'
 
 type UnauthorizedHandler = () => void
@@ -57,7 +58,7 @@ export async function catecApiFetch(path: string, init: RequestInit = {}): Promi
     unauthorizedHandler?.()
 
     if (!unauthorizedHandler) {
-      await signOut({ callbackUrl: '/login' })
+      await signOut({ callbackUrl: CATEC_LOGIN_PATH })
     }
   }
 

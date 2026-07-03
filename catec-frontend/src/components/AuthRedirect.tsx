@@ -1,15 +1,21 @@
 'use client'
 
-// Next Imports
-import { redirect, usePathname } from 'next/navigation'
+import { useEffect } from 'react'
 
-// Util Imports
-import { getCatecLoginUrl } from '@/utils/catec/authPaths'
+import { usePathname, useRouter } from 'next/navigation'
+
+import { getCatecLoginUrl, stripLocalePrefix } from '@/utils/catec/authPaths'
 
 const AuthRedirect = () => {
   const pathname = usePathname()
+  const router = useRouter()
 
-  redirect(getCatecLoginUrl(pathname))
+  useEffect(() => {
+    const safePath = stripLocalePrefix(pathname)
+    router.replace(getCatecLoginUrl(safePath === '/login' ? undefined : safePath))
+  }, [pathname, router])
+
+  return null
 }
 
 export default AuthRedirect
