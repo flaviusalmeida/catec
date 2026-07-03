@@ -9,8 +9,9 @@ import Typography from '@mui/material/Typography'
 
 import type { CatecPropostaPendenteSocio } from '@/types/catec/socioPropostaTypes'
 
-import SocioPropostaListTable from './SocioPropostaListTable'
 import { listarPropostasPendentesSocioCatec } from '@/libs/catecSocioPropostasApi'
+
+import SocioPropostaListTable from './SocioPropostaListTable'
 
 const SocioPropostaList = () => {
   const [lista, setLista] = useState<CatecPropostaPendenteSocio[]>([])
@@ -42,9 +43,6 @@ const SocioPropostaList = () => {
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
         <Typography variant='h4'>Propostas pendentes</Typography>
-        <Typography color='text.secondary' className='mts-1'>
-          Propostas comerciais aguardando seu parecer.
-        </Typography>
       </Grid>
 
       {erro ? (

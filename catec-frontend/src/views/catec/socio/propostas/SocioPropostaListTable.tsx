@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import Link from 'next/link'
-
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -29,15 +27,10 @@ import {
 } from '@tanstack/react-table'
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 
-import {
-  aprovarPropostaSocioCatec,
-  devolverPropostaSocioCatec,
-  listarPropostasPendentesSocioCatec
-} from '@/libs/catecSocioPropostasApi'
-import { listarDocumentosPropostaCatec } from '@/libs/catecProjetosApi'
+import { aprovarPropostaSocioCatec, devolverPropostaSocioCatec } from '@/libs/catecSocioPropostasApi'
 import type { CatecPropostaPendenteSocio } from '@/types/catec/socioPropostaTypes'
-import { downloadDocumentoCatec } from '@/utils/catec/downloadDocumento'
 
+import CustomAvatar from '@core/components/mui/Avatar'
 import CustomTextField from '@core/components/mui/TextField'
 import TablePaginationComponent from '@components/TablePaginationComponent'
 
@@ -46,6 +39,7 @@ import tableStyles from '@core/styles/table.module.css'
 import { formatarDataCurta } from '@/views/catec/projetos/projetoFluxoHelpers'
 
 import SocioPropostaPreviewDrawer from './SocioPropostaPreviewDrawer'
+import SocioPropostaTableFilters from './SocioPropostaTableFilters'
 
 type Row = CatecPropostaPendenteSocio & { action?: string }
 
@@ -94,12 +88,17 @@ type Props = {
 }
 
 const SocioPropostaListTable = ({ lista, onRecarregar }: Props) => {
+  const [filteredData, setFilteredData] = useState(lista)
   const [globalFilter, setGlobalFilter] = useState('')
   const [processando, setProcessando] = useState(false)
   const [previewItem, setPreviewItem] = useState<CatecPropostaPendenteSocio | null>(null)
   const [dialogItem, setDialogItem] = useState<CatecPropostaPendenteSocio | null>(null)
   const [dialogMode, setDialogMode] = useState<DialogMode>(null)
   const [observacao, setObservacao] = useState('')
+
+  useEffect(() => {
+    setFilteredData(lista)
+  }, [lista])
 
   const abrirPreview = useCallback((item: CatecPropostaPendenteSocio) => {
     setPreviewItem(item)
@@ -118,23 +117,6 @@ const SocioPropostaListTable = ({ lista, onRecarregar }: Props) => {
     setDialogMode(null)
     setObservacao('')
   }, [processando])
-
-  const baixarDocumento = useCallback(async (item: CatecPropostaPendenteSocio) => {
-    try {
-      const docs = await listarDocumentosPropostaCatec(item.projetoId, item.propostaId)
-      const doc = docs[0]
-
-      if (!doc) {
-        toast.error('Nenhum documento anexado a esta proposta.')
-
-        return
-      }
-
-      await downloadDocumentoCatec(doc.id, doc.nomeOriginal)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Download falhou.')
-    }
-  }, [])
 
   const confirmarAcao = useCallback(async () => {
     if (!dialogItem || !dialogMode) return
@@ -177,75 +159,47 @@ const SocioPropostaListTable = ({ lista, onRecarregar }: Props) => {
       columnHelper.accessor('projetoTitulo', {
         header: 'Projeto',
         cell: ({ row }) => (
-          <Typography
-            component={Link}
-            href={`/catec/projetos/${row.original.projetoId}`}
-            color='primary.main'
-            className='font-medium hover:underline'
-          >
-            {row.original.projetoTitulo}
-          </Typography>
+          <div className='flex items-center gap-4'>
+            <CustomAvatar size={34} skin='light' color='primary'>
+              <i className='tabler-file-text' />
+            </CustomAvatar>
+            <div className='flex flex-col'>
+              <Typography color='text.primary' className='font-medium'>
+                {row.original.projetoTitulo}
+              </Typography>
+              <Typography variant='body2' className='line-clamp-1 max-is-[280px]'>
+                {row.original.clienteNome ?? '—'}
+              </Typography>
+            </div>
+          </div>
         )
-      }),
-      columnHelper.accessor('clienteNome', {
-        header: 'Cliente',
-        cell: ({ getValue }) => <Typography>{getValue() ?? '—'}</Typography>
-      }),
-      columnHelper.accessor('versao', {
-        header: 'Versão',
-        cell: ({ getValue }) => <Typography>{`v${getValue()}`}</Typography>
       }),
       columnHelper.accessor('elaboradoPorNome', {
         header: 'Elaborado por',
-        cell: ({ getValue }) => <Typography>{getValue()}</Typography>
+        cell: ({ getValue }) => <Typography color='text.secondary'>{getValue()}</Typography>
       }),
       columnHelper.accessor('criadoEm', {
         header: 'Enviado em',
-        cell: ({ getValue }) => <Typography>{formatarDataCurta(getValue())}</Typography>
+        cell: ({ getValue }) => <Typography color='text.secondary'>{formatarDataCurta(getValue())}</Typography>
       }),
       columnHelper.display({
         id: 'action',
         header: 'Ações',
         cell: ({ row }) => (
-          <div className='flex items-center gap-1'>
-            <IconButton
-              size='small'
-              title='Visualizar documento'
-              onClick={() => abrirPreview(row.original)}
-            >
+          <div className='flex items-center'>
+            <IconButton size='small' title='Visualizar documento' onClick={() => abrirPreview(row.original)}>
               <i className='tabler-eye text-textSecondary' />
-            </IconButton>
-            <IconButton
-              size='small'
-              title='Baixar documento'
-              onClick={() => void baixarDocumento(row.original)}
-            >
-              <i className='tabler-download text-textSecondary' />
-            </IconButton>
-            <IconButton
-              size='small'
-              title='Aprovar'
-              onClick={() => abrirDialog(row.original, 'aprovar')}
-            >
-              <i className='tabler-check text-success' />
-            </IconButton>
-            <IconButton
-              size='small'
-              title='Reprovar'
-              onClick={() => abrirDialog(row.original, 'reprovar')}
-            >
-              <i className='tabler-arrow-back-up text-error' />
             </IconButton>
           </div>
         ),
         enableSorting: false
       })
     ],
-    [abrirDialog, abrirPreview, baixarDocumento]
+    [abrirPreview]
   )
 
   const table = useReactTable({
-    data: lista,
+    data: filteredData,
     columns,
     state: { globalFilter },
     onGlobalFilterChange: setGlobalFilter,
@@ -260,13 +214,24 @@ const SocioPropostaListTable = ({ lista, onRecarregar }: Props) => {
   return (
     <>
       <Card>
-        <CardHeader title='Propostas pendentes' />
-        <div className='p-6 pt-0'>
+        <CardHeader title='Filtros' className='pbe-4' />
+        <SocioPropostaTableFilters setData={setFilteredData} tableData={lista} />
+        <div className='flex justify-between flex-col items-start md:flex-row md:items-center p-6 border-bs gap-4'>
+          <CustomTextField
+            select
+            value={table.getState().pagination.pageSize}
+            onChange={e => table.setPageSize(Number(e.target.value))}
+            className='max-sm:is-full sm:is-[70px]'
+          >
+            <MenuItem value='10'>10</MenuItem>
+            <MenuItem value='25'>25</MenuItem>
+            <MenuItem value='50'>50</MenuItem>
+          </CustomTextField>
           <DebouncedInput
             value={globalFilter ?? ''}
             onChange={value => setGlobalFilter(String(value))}
-            placeholder='Buscar por projeto, cliente ou elaborador'
-            className='max-is-[400px]'
+            placeholder='Buscar proposta'
+            className='max-sm:is-full sm:is-[280px]'
           />
         </div>
         <div className='overflow-x-auto'>
@@ -276,26 +241,51 @@ const SocioPropostaListTable = ({ lista, onRecarregar }: Props) => {
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map(header => (
                     <th key={header.id}>
-                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.isPlaceholder ? null : (
+                        <div
+                          className={classnames({
+                            'flex items-center': header.column.getIsSorted(),
+                            'cursor-pointer select-none': header.column.getCanSort()
+                          })}
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {{
+                            asc: <i className='tabler-chevron-up text-xl' />,
+                            desc: <i className='tabler-chevron-down text-xl' />
+                          }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
+                        </div>
+                      )}
                     </th>
                   ))}
                 </tr>
               ))}
             </thead>
             <tbody>
-              {table.getFilteredRowModel().rows.length === 0 ? (
+              {table.getRowModel().rows.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} className='text-center'>
-                    <Typography className='p-8' color='text.secondary'>
-                      Nenhuma proposta aguardando seu parecer.
+                  <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
+                    <Typography className='p-6' color='text.secondary'>
+                      Nenhuma proposta corresponde aos filtros aplicados.
                     </Typography>
                   </td>
                 </tr>
               ) : (
                 table.getRowModel().rows.map(row => (
-                  <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
+                  <tr
+                    key={row.id}
+                    className='cursor-pointer'
+                    onClick={() => abrirPreview(row.original)}
+                  >
                     {row.getVisibleCells().map(cell => (
-                      <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                      <td
+                        key={cell.id}
+                        onClick={e => {
+                          if (cell.column.id === 'action') e.stopPropagation()
+                        }}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
                     ))}
                   </tr>
                 ))
