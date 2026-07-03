@@ -31,10 +31,10 @@ const Timeline = styled(MuiTimeline)<TimelineProps>({
     }
   },
   '& .MuiTimelineDot-root:has(> i)': {
-    width: 32,
-    height: 32,
-    minWidth: 32,
-    minHeight: 32,
+    width: 28,
+    height: 28,
+    minWidth: 28,
+    minHeight: 28,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -65,7 +65,7 @@ const ProjetoTimeline = ({ items }: Props) => {
                 className='mlb-0'
               >
                 <i
-                  className={`${item.icone} text-xl ${isRecent ? '' : 'text-textSecondary'}`}
+                  className={`${item.icone} text-lg ${isRecent ? '' : 'text-textSecondary'}`}
                   aria-hidden
                 />
               </TimelineDot>

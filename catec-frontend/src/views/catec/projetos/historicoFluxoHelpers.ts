@@ -3,17 +3,19 @@ import type {
   CatecProposta,
   CatecTipoInteracaoFluxo
 } from '@/types/catec/projetoFluxoTypes'
-import {
-  TIPO_INTERACAO_ROTULO_CONTRATO,
-  TIPO_INTERACAO_ROTULO_PROPOSTA
-} from '@/types/catec/projetoFluxoTypes'
+import { TIPO_INTERACAO_ROTULO_PROPOSTA } from '@/types/catec/projetoFluxoTypes'
 
-function rotuloTipoInteracao(tipo: CatecTipoInteracaoFluxo, entidade: string): string {
+function tituloInteracaoHistorico(tipo: CatecTipoInteracaoFluxo, entidade: string): string {
   const ent = entidade.toUpperCase()
 
-  if (ent === 'CONTRATO') return TIPO_INTERACAO_ROTULO_CONTRATO[tipo]
-
-  return TIPO_INTERACAO_ROTULO_PROPOSTA[tipo]
+  switch (tipo) {
+    case 'ACEITE_CLIENTE':
+      return ent === 'CONTRATO' ? 'Contrato aceito pelo cliente' : 'Proposta aceita pelo cliente'
+    case 'RECUSA_CLIENTE':
+      return ent === 'CONTRATO' ? 'Contrato recusado pelo cliente' : 'Proposta recusada pelo cliente'
+    case 'CONSIDERACOES_CLIENTE':
+      return ent === 'CONTRATO' ? 'Cliente solicitou ajustes no contrato' : 'Cliente solicitou ajustes na proposta'
+  }
 }
 
 function tituloRegistroInteracao(acao: string, tipoEntidade: string): string | null {
@@ -23,7 +25,7 @@ function tituloRegistroInteracao(acao: string, tipoEntidade: string): string | n
 
   if (!(tipo in TIPO_INTERACAO_ROTULO_PROPOSTA)) return null
 
-  return rotuloTipoInteracao(tipo, tipoEntidade)
+  return tituloInteracaoHistorico(tipo, tipoEntidade)
 }
 
 function tituloAcaoAuditoria(acao: string, tipoEntidade: string): string {
@@ -39,13 +41,15 @@ function tituloAcaoAuditoria(acao: string, tipoEntidade: string): string {
       if (ent === 'PROPOSTA') return 'Proposta comercial iniciada'
       return 'Projeto criado'
     case 'SINCRONIZAR_PROPOSTA':
-      return 'Status do projeto atualizado'
+    case 'ATUALIZACAO_MANUAL_STATUS':
+      return 'Status atualizado'
     case 'ENVIAR_CLIENTE':
       if (ent === 'CONTRATO') return 'Contrato enviado ao cliente'
       return 'Proposta enviada ao cliente'
     case 'SUBMETER_AVALIACAO_SOCIO':
       return 'Proposta enviada para revisão'
     case 'REPROVAR_SOCIO':
+    case 'DEVOLVER_RASCUNHO_SOCIO':
       return 'Proposta devolvida para ajustes'
     case 'APROVAR_SOCIO':
       return 'Proposta aprovada pelo sócio'
@@ -59,8 +63,6 @@ function tituloAcaoAuditoria(acao: string, tipoEntidade: string): string {
       return 'Contrato aceito pelo cliente'
     case 'CONTRATO_RECUSADO_CLIENTE':
       return 'Contrato recusado pelo cliente'
-    case 'ATUALIZACAO_MANUAL_STATUS':
-      return 'Status alterado manualmente'
     default:
       return acao
         .replaceAll('_', ' ')
@@ -81,7 +83,7 @@ export function formatarDataHoraHistorico(iso: string | null): string {
 
 export function tituloHistoricoItem(item: CatecHistoricoFluxoItem): string {
   if (item.origem === 'INTERACAO' && item.tipoInteracao) {
-    return rotuloTipoInteracao(item.tipoInteracao, item.tipoEntidade)
+    return tituloInteracaoHistorico(item.tipoInteracao, item.tipoEntidade)
   }
 
   if (item.acao) {
@@ -125,7 +127,8 @@ const ICONES_ACAO: Record<string, string> = {
   PROPOSTA_AJUSTE_CLIENTE: 'tabler-message',
   CONTRATO_ACEITO_CLIENTE: 'tabler-file-check',
   CONTRATO_RECUSADO_CLIENTE: 'tabler-file-x',
-  ATUALIZACAO_MANUAL_STATUS: 'tabler-edit'
+  ATUALIZACAO_MANUAL_STATUS: 'tabler-edit',
+  DEVOLVER_RASCUNHO_SOCIO: 'tabler-arrow-back-up'
 }
 
 function iconeInteracao(tipo: CatecTipoInteracaoFluxo, entidade: string): string {
