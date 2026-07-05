@@ -7,6 +7,8 @@ package br.com.catec.domain.proposta;
 public enum PropostaStatus {
     RASCUNHO,
     PENDENTE_AVALIACAO,
+    /** Parecer positivo do sócio; aguardando envio ao cliente pelo administrativo. */
+    AGUARDANDO_ENVIO,
     ENVIADA_AO_CLIENTE,
     AGUARDANDO_AJUSTE,
     ACEITA,

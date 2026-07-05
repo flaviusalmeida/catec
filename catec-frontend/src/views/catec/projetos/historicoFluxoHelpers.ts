@@ -174,6 +174,21 @@ export function historicoTemTransicaoStatus(item: CatecHistoricoFluxoItem): bool
   return Boolean(item.statusAnterior || item.statusNovo)
 }
 
+/** Normaliza status legado ou contextual do histórico para exibição alinhada ao domínio atual. */
+export function statusHistoricoParaExibicao(
+  item: CatecHistoricoFluxoItem,
+  status: string,
+  papel: 'anterior' | 'novo'
+): string {
+  const ent = item.tipoEntidade.toUpperCase()
+
+  if (ent === 'PROPOSTA' && item.acao === 'APROVAR_SOCIO' && papel === 'novo' && (status === 'RASCUNHO' || status === 'APROVADA')) {
+    return 'AGUARDANDO_ENVIO'
+  }
+
+  return status
+}
+
 export function tipoEntidadeHistorico(item: CatecHistoricoFluxoItem): HistoricoEntidadeTipo {
   const ent = item.tipoEntidade.toUpperCase()
 

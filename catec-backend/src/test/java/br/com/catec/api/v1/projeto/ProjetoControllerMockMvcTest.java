@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import br.com.catec.api.v1.proposta.PropostaService;
 import br.com.catec.domain.projeto.ProjetoStatus;
 import br.com.catec.domain.usuario.UsuarioRepository;
 import br.com.catec.security.JwtService;
@@ -48,6 +49,9 @@ class ProjetoControllerMockMvcTest {
 
     @MockBean
     private ProjetoResumoService projetoResumoService;
+
+    @MockBean
+    private PropostaService propostaService;
 
     @MockBean
     private JwtService jwtService;

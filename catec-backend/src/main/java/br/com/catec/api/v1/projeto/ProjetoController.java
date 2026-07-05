@@ -1,6 +1,7 @@
 package br.com.catec.api.v1.projeto;
 
 import br.com.catec.api.v1.common.PageResponse;
+import br.com.catec.api.v1.proposta.PropostaService;
 import br.com.catec.security.UsuarioAutenticado;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -27,14 +28,17 @@ public class ProjetoController {
     private final ProjetoService projetoService;
     private final ProjetoHistoricoService projetoHistoricoService;
     private final ProjetoResumoService projetoResumoService;
+    private final PropostaService propostaService;
 
     public ProjetoController(
             ProjetoService projetoService,
             ProjetoHistoricoService projetoHistoricoService,
-            ProjetoResumoService projetoResumoService) {
+            ProjetoResumoService projetoResumoService,
+            PropostaService propostaService) {
         this.projetoService = projetoService;
         this.projetoHistoricoService = projetoHistoricoService;
         this.projetoResumoService = projetoResumoService;
+        this.propostaService = propostaService;
     }
 
     @Operation(summary = "Listar projetos", description = "Colaborador vê só os que criou; ADM e Sócio veem todos.")
@@ -57,6 +61,7 @@ public class ProjetoController {
     @GetMapping("/{id}")
     @PreAuthorize("@authz.has('tela.projeto.detalhe')")
     public ProjetoResponse obter(@PathVariable Long id, @AuthenticationPrincipal UsuarioAutenticado principal) {
+        propostaService.reconciliarStatusProjeto(id, principal);
         return projetoService.obter(id, principal);
     }
 

@@ -313,6 +313,28 @@ class PropostaServiceTest {
     }
 
     @Test
+    void listarPorProjeto_quandoPropostaAprovada_deveReconciliarProjetoAguardandoEnvio() {
+        projeto.setStatus(ProjetoStatus.ELABORANDO_PROPOSTA);
+        Proposta proposta = proposta(71L, PropostaStatus.AGUARDANDO_ENVIO);
+        proposta.setAvaliadaSocioEm(java.time.Instant.now());
+        when(projetoRepository.findById(10L)).thenReturn(Optional.of(projeto));
+        when(propostaRepository.findByProjetoIdOrderByVersaoDesc(10L)).thenReturn(List.of(proposta));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        service.listarPorProjeto(10L, admin);
+
+        assertEquals(ProjetoStatus.AGUARDANDO_ENVIO_CLIENTE, projeto.getStatus());
+        verify(auditoriaService)
+                .registrarTransicaoStatus(
+                        eq(TipoEntidadeAuditoria.PROJETO),
+                        eq(10L),
+                        eq("SINCRONIZAR_PROPOSTA"),
+                        eq("ELABORANDO_PROPOSTA"),
+                        eq("AGUARDANDO_ENVIO_CLIENTE"),
+                        eq(1L));
+    }
+
+    @Test
     void fluxoComSocio_submeterAprovarEnviar() {
         Proposta proposta = proposta(60L, PropostaStatus.RASCUNHO);
         when(propostaRepository.findById(60L)).thenReturn(Optional.of(proposta));
@@ -324,11 +346,12 @@ class PropostaServiceTest {
 
         proposta.setStatus(PropostaStatus.PENDENTE_AVALIACAO);
         PropostaResponse r2 = service.aprovarPeloSocio(10L, 60L, socio);
-        assertEquals(PropostaStatus.RASCUNHO, r2.status());
+        assertEquals(PropostaStatus.AGUARDANDO_ENVIO, r2.status());
+        assertEquals(ProjetoStatus.AGUARDANDO_ENVIO_CLIENTE, projeto.getStatus());
 
-        proposta.setStatus(PropostaStatus.RASCUNHO);
+        proposta.setStatus(PropostaStatus.AGUARDANDO_ENVIO);
         proposta.setAvaliadaSocioEm(java.time.Instant.now());
-        projeto.setStatus(ProjetoStatus.ELABORANDO_PROPOSTA);
+        projeto.setStatus(ProjetoStatus.AGUARDANDO_ENVIO_CLIENTE);
         when(projetoRepository.save(any(Projeto.class))).thenAnswer(inv -> inv.getArgument(0));
         PropostaResponse r3 = service.enviarAoCliente(10L, 60L, admin);
         assertEquals(PropostaStatus.ENVIADA_AO_CLIENTE, r3.status());

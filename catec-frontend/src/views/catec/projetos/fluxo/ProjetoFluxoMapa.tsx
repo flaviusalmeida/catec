@@ -79,7 +79,7 @@ const LOOP_AJUSTE_PROJETO: FluxoPassoProjeto[] = [
 const FLUXO_PROPOSTA: FluxoPassoEntidade[] = [
   { tipo: 'proposta', status: 'RASCUNHO', acao: 'Criar proposta v1' },
   { tipo: 'proposta', status: 'PENDENTE_AVALIACAO', acao: 'Enviar revisão do sócio' },
-  { tipo: 'proposta', status: 'RASCUNHO', acao: 'Sócio aprova (avaliadaSocioEm)' },
+  { tipo: 'proposta', status: 'AGUARDANDO_ENVIO', acao: 'Sócio aprova' },
   { tipo: 'proposta', status: 'ENVIADA_AO_CLIENTE', acao: 'Enviar ao cliente' },
   { tipo: 'proposta', status: 'ACEITA', acao: 'Cliente aceita' }
 ]
@@ -259,7 +259,10 @@ const ProjetoFluxoMapa = () => {
 
       <Grid size={{ xs: 12, md: 6 }}>
         <Card>
-          <CardHeader title='Tags da proposta (aba Propostas)' subheader='Componente PropostaStatusBadge' />
+          <CardHeader
+            title='Tags da proposta (aba Propostas)'
+            subheader='AGUARDANDO_ENVIO (Aprovada) usa verde — parecer positivo do sócio concluído'
+          />
           <CardContent>
             <Grid container spacing={3}>
               {ORDEM_STATUS_PROPOSTA.map(status => (
@@ -393,7 +396,10 @@ const ProjetoFluxoMapa = () => {
 
       <Grid size={{ xs: 12, md: 6 }}>
         <Card className='h-full'>
-          <CardHeader title='Fase proposta' subheader='PropostaStatusBadge no fluxo' />
+          <CardHeader
+            title='Fase proposta'
+            subheader='AGUARDANDO_ENVIO = Aprovada pelo sócio (verde) · aguardando envio ao cliente'
+          />
           <CardContent className='flex flex-col items-center overflow-x-auto p-6'>
             <ColunaFluxo
               titulo='Caminho feliz'

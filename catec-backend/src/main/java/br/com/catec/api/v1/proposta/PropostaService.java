@@ -30,7 +30,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class PropostaService {
 
     private static final EnumSet<PropostaStatus> STATUS_PROPOSTA_ATIVA = EnumSet.of(
-            PropostaStatus.RASCUNHO, PropostaStatus.PENDENTE_AVALIACAO);
+            PropostaStatus.RASCUNHO, PropostaStatus.PENDENTE_AVALIACAO, PropostaStatus.AGUARDANDO_ENVIO);
 
     private static final EnumSet<PropostaStatus> STATUS_UPLOAD_DOCUMENTO = EnumSet.of(
             PropostaStatus.RASCUNHO, PropostaStatus.PENDENTE_AVALIACAO, PropostaStatus.AGUARDANDO_AJUSTE);
@@ -38,6 +38,7 @@ public class PropostaService {
     private static final EnumSet<PropostaStatus> STATUS_PROPOSTA_REFERENCIA_STATUS_PROJETO = EnumSet.of(
             PropostaStatus.RASCUNHO,
             PropostaStatus.PENDENTE_AVALIACAO,
+            PropostaStatus.AGUARDANDO_ENVIO,
             PropostaStatus.AGUARDANDO_AJUSTE,
             PropostaStatus.ENVIADA_AO_CLIENTE,
             PropostaStatus.ACEITA,
@@ -149,6 +150,15 @@ public class PropostaService {
         return propostas.stream().map(this::toResponse).toList();
     }
 
+    /** Alinha status do projeto com a proposta mais recente (ex.: após carregar detalhe). */
+    @Transactional
+    public void reconciliarStatusProjeto(Long projetoId, UsuarioAutenticado principal) {
+        Projeto projeto = loadProjeto(projetoId);
+        garantirLeitura(projeto, principal);
+        List<Proposta> propostas = propostaRepository.findByProjetoIdOrderByVersaoDesc(projetoId);
+        reconciliarStatusProjetoComProposta(projeto, propostas, principal.id());
+    }
+
     /** RASCUNHO → PENDENTE_AVALIACAO (quando exige avaliação do sócio). */
     @Transactional(readOnly = true)
     public List<DocumentoResponse> listarDocumentos(
@@ -176,9 +186,6 @@ public class PropostaService {
         Proposta proposta = loadPropostaDoProjeto(projetoId, propostaId);
         garantirUploadDocumento(proposta);
         if (proposta.getStatus() == PropostaStatus.RASCUNHO) {
-            if (proposta.getAvaliadaSocioEm() != null) {
-                throw badRequest("Proposta já aprovada pelo sócio; envie ao cliente.");
-            }
             var uploaded =
                     documentoService.uploadPropostaSubstituindo(propostaId, tipoArquivo, file, principal);
             sincronizarProjetoSeElaboracao(proposta.getProjeto(), principal.id());
@@ -218,7 +225,7 @@ public class PropostaService {
         return toResponse(salva);
     }
 
-    /** PENDENTE_AVALIACAO → RASCUNHO (parecer positivo do sócio). */
+    /** PENDENTE_AVALIACAO → AGUARDANDO_ENVIO (parecer positivo do sócio). */
     @Transactional
     public PropostaResponse aprovarPeloSocio(Long projetoId, Long propostaId, UsuarioAutenticado principal) {
         return aprovarPeloSocio(projetoId, propostaId, null, principal);
@@ -232,7 +239,7 @@ public class PropostaService {
         validarPendenteAvaliacaoSocio(proposta);
         Proposta salva = transicionar(
                 proposta,
-                PropostaStatus.RASCUNHO,
+                PropostaStatus.AGUARDANDO_ENVIO,
                 "APROVAR_SOCIO",
                 principal,
                 payloadObservacao(observacao));
@@ -274,7 +281,7 @@ public class PropostaService {
         return toResponse(salva);
     }
 
-    /** RASCUNHO → ENVIADA_AO_CLIENTE. */
+    /** AGUARDANDO_ENVIO → ENVIADA_AO_CLIENTE. */
     @Transactional
     public PropostaResponse enviarAoCliente(Long projetoId, Long propostaId, UsuarioAutenticado principal) {
         authz.require(principal, PermissaoCodigo.ACAO_PROPOSTA_ENVIAR_CLIENTE);
@@ -344,24 +351,19 @@ public class PropostaService {
     }
 
     private void validarEnvioAoCliente(Proposta proposta) {
-        if (proposta.getStatus() != PropostaStatus.RASCUNHO) {
-            throw badRequest("Só é possível enviar ao cliente uma proposta em rascunho.");
-        }
-        if (proposta.getAvaliadaSocioEm() == null) {
-            throw badRequest("Aguarde o parecer do sócio antes de enviar ao cliente.");
+        if (proposta.getStatus() != PropostaStatus.AGUARDANDO_ENVIO) {
+            throw badRequest("Só é possível enviar ao cliente uma proposta aguardando envio.");
         }
     }
 
     private void validarTransicao(PropostaStatus atual, PropostaStatus novo, Proposta proposta) {
         boolean ok =
                 switch (atual) {
-                    case RASCUNHO ->
-                            novo == PropostaStatus.PENDENTE_AVALIACAO
-                                    || (novo == PropostaStatus.ENVIADA_AO_CLIENTE
-                                            && proposta.getAvaliadaSocioEm() != null);
+                    case RASCUNHO -> novo == PropostaStatus.PENDENTE_AVALIACAO;
                     case AGUARDANDO_AJUSTE -> novo == PropostaStatus.PENDENTE_AVALIACAO;
                     case PENDENTE_AVALIACAO ->
-                            novo == PropostaStatus.RASCUNHO || novo == PropostaStatus.AGUARDANDO_AJUSTE;
+                            novo == PropostaStatus.AGUARDANDO_ENVIO || novo == PropostaStatus.AGUARDANDO_AJUSTE;
+                    case AGUARDANDO_ENVIO -> novo == PropostaStatus.ENVIADA_AO_CLIENTE;
                     case ENVIADA_AO_CLIENTE, ACEITA, NEGADA -> false;
                 };
         if (!ok) {
@@ -438,11 +440,9 @@ public class PropostaService {
 
     private ProjetoStatus statusProjetoEsperadoParaProposta(Proposta proposta) {
         return switch (proposta.getStatus()) {
-            case RASCUNHO ->
-                    proposta.getAvaliadaSocioEm() != null
-                            ? ProjetoStatus.AGUARDANDO_ENVIO_CLIENTE
-                            : ProjetoStatus.ELABORANDO_PROPOSTA;
+            case RASCUNHO -> ProjetoStatus.ELABORANDO_PROPOSTA;
             case PENDENTE_AVALIACAO -> ProjetoStatus.AGUARDANDO_REVISAO_PROPOSTA;
+            case AGUARDANDO_ENVIO -> ProjetoStatus.AGUARDANDO_ENVIO_CLIENTE;
             case AGUARDANDO_AJUSTE -> ProjetoStatus.AGUARDANDO_AJUSTE;
             case ENVIADA_AO_CLIENTE -> ProjetoStatus.AGUARDANDO_ACEITE_PROPOSTA;
             case ACEITA -> ProjetoStatus.AGUARDANDO_CONTRATO;
@@ -504,10 +504,11 @@ public class PropostaService {
         return switch (status) {
             case RASCUNHO -> "Em elaboração";
             case PENDENTE_AVALIACAO -> "Pendente avaliação";
+            case AGUARDANDO_ENVIO -> "Aguardando envio";
             case ENVIADA_AO_CLIENTE -> "Enviada ao cliente";
             case AGUARDANDO_AJUSTE -> "Aguardando ajuste";
             case ACEITA -> "Aceita";
-            case NEGADA -> "Negada";
+            case NEGADA -> "Recusada pelo cliente";
         };
     }
 

@@ -69,7 +69,6 @@ public interface PropostaRepository extends JpaRepository<Proposta, Long> {
             """
             SELECT COUNT(pr) FROM Proposta pr
             WHERE pr.status = :status
-            AND pr.avaliadaSocioEm IS NOT NULL
             AND (:criadoPorId IS NULL OR pr.projeto.criadoPor.id = :criadoPorId)
             """)
     long countAguardandoEnvio(@Param("status") PropostaStatus status, @Param("criadoPorId") Long criadoPorId);
@@ -78,7 +77,6 @@ public interface PropostaRepository extends JpaRepository<Proposta, Long> {
             """
             SELECT COUNT(pr) FROM Proposta pr
             WHERE pr.status = :status
-            AND pr.avaliadaSocioEm IS NULL
             AND (:criadoPorId IS NULL OR pr.projeto.criadoPor.id = :criadoPorId)
             """)
     long countEmRascunho(@Param("status") PropostaStatus status, @Param("criadoPorId") Long criadoPorId);

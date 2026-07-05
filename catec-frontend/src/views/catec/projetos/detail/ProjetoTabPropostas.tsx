@@ -22,6 +22,7 @@ import {
   STATUS_PROPOSTA_ROTULO,
   STATUS_PROPOSTA_UPLOAD,
   TIPO_INTERACAO_ROTULO_PROPOSTA,
+  propostaAguardandoEnvioAoCliente,
   type CatecTipoInteracaoFluxo
 } from '@/types/catec/projetoFluxoTypes'
 
@@ -63,11 +64,14 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
   const documentoAtual = propostaAtual?.documentos[0] ?? null
   const temAnexo = Boolean(documentoAtual)
   const temPropostaAtiva = data.propostas.some(
-    p => p.status === 'RASCUNHO' || p.status === 'PENDENTE_AVALIACAO' || p.status === 'AGUARDANDO_AJUSTE'
+    p =>
+      p.status === 'RASCUNHO' ||
+      p.status === 'PENDENTE_AVALIACAO' ||
+      p.status === 'AGUARDANDO_ENVIO' ||
+      p.status === 'AGUARDANDO_AJUSTE'
   )
 
-  const propostaAprovadaSocio =
-    propostaAtual?.status === 'RASCUNHO' && propostaAtual.avaliadaSocioEm != null
+  const propostaAguardandoEnvio = propostaAtual != null && propostaAguardandoEnvioAoCliente(propostaAtual)
 
   const aguardandoAjusteSocio = propostaAtual?.status === 'AGUARDANDO_AJUSTE'
 
@@ -88,7 +92,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
     mostrarUpload &&
     (propostaAtual == null ||
       propostaAtual.status === 'AGUARDANDO_AJUSTE' ||
-      (propostaAtual.status === 'RASCUNHO' && !propostaAprovadaSocio))
+      propostaAtual.status === 'RASCUNHO')
 
   const versoesAnteriores = useMemo(() => {
     if (!propostaAtual) return data.propostas
@@ -101,7 +105,6 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
   const workflowActions = propostaAtual
     ? resolvePropostaWorkflowActions(propostaAtual.status, {
         hasAttachment: temAnexo,
-        avaliadaSocioEm: propostaAtual.avaliadaSocioEm,
         podeAprovarSocio: hasPermission(PermissaoCodigo.ACAO_SOCIO_PROPOSTA_APROVAR),
         podeDevolverSocio: hasPermission(PermissaoCodigo.ACAO_SOCIO_PROPOSTA_DEVOLVER)
       })
@@ -116,11 +119,13 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
 
   const mostrarRevisaoSocioCard = propostaAtual?.status === 'PENDENTE_AVALIACAO' && temAnexo
 
-  const mostrarEnviarClienteCard = propostaAprovadaSocio && temAnexo
+  const mostrarEnviarClienteCard = propostaAguardandoEnvio && temAnexo
 
   const mostrarRespostaClienteCard = propostaAtual?.status === 'ENVIADA_AO_CLIENTE' && temAnexo
 
   const mostrarPropostaAceitaCard = propostaAtual?.status === 'ACEITA' && temAnexo
+
+  const mostrarPropostaNegadaCard = propostaAtual?.status === 'NEGADA' && temAnexo
 
   const acoesRevisaoSocio = [...acoesWorkflowRestantes]
     .sort((a, b) => {
@@ -287,6 +292,11 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
                 ? `Versão ${propostaAtual?.versao ?? '—'}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ''}`
                 : undefined
             }
+            arquivoExtra={
+              propostaAtual?.status === 'AGUARDANDO_AJUSTE' ? (
+                <PropostaStatusBadge status={propostaAtual.status} />
+              ) : undefined
+            }
             onUpload={uploadProposta}
             disabled={processando}
             documentoId={documentoAtual?.id}
@@ -320,7 +330,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
             }
             arquivoExtra={
               propostaAtual ? (
-                <PropostaStatusBadge status={propostaAtual.status} avaliadaSocioEm={propostaAtual.avaliadaSocioEm} />
+                <PropostaStatusBadge status={propostaAtual.status} />
               ) : undefined
             }
             permitirSubstituir={false}
@@ -342,7 +352,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
       {mostrarEnviarClienteCard ? (
         <Grid size={{ xs: 12 }}>
           <ProjetoUploadCard
-            titulo='Enviar proposta'
+            titulo='Proposta aprovada'
             nomeArquivo={documentoAtual?.nomeOriginal}
             meta={
               documentoAtual
@@ -351,7 +361,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
             }
             arquivoExtra={
               propostaAtual ? (
-                <PropostaStatusBadge status={propostaAtual.status} avaliadaSocioEm={propostaAtual.avaliadaSocioEm} />
+                <PropostaStatusBadge status={propostaAtual.status} />
               ) : undefined
             }
             permitirSubstituir={false}
@@ -382,7 +392,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
             }
             arquivoExtra={
               propostaAtual ? (
-                <PropostaStatusBadge status={propostaAtual.status} avaliadaSocioEm={propostaAtual.avaliadaSocioEm} />
+                <PropostaStatusBadge status={propostaAtual.status} />
               ) : undefined
             }
             permitirSubstituir={false}
@@ -413,7 +423,37 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
             }
             arquivoExtra={
               propostaAtual ? (
-                <PropostaStatusBadge status={propostaAtual.status} avaliadaSocioEm={propostaAtual.avaliadaSocioEm} />
+                <PropostaStatusBadge status={propostaAtual.status} />
+              ) : undefined
+            }
+            permitirSubstituir={false}
+            disabled={processando}
+            documentoId={documentoAtual?.id}
+            previewTitulo='Proposta comercial'
+            previewSubtitulo={previewPropostaSubtitulo}
+            onUpload={uploadProposta}
+            onDownload={() =>
+              void downloadDocumentoCatec(documentoAtual!.id, documentoAtual!.nomeOriginal).catch(err =>
+                toast.error(err instanceof Error ? err.message : 'Download falhou.')
+              )
+            }
+          />
+        </Grid>
+      ) : null}
+
+      {mostrarPropostaNegadaCard ? (
+        <Grid size={{ xs: 12 }}>
+          <ProjetoUploadCard
+            titulo='Documento da proposta'
+            nomeArquivo={documentoAtual?.nomeOriginal}
+            meta={
+              documentoAtual
+                ? `Versão ${propostaAtual?.versao ?? '—'}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ''}`
+                : undefined
+            }
+            arquivoExtra={
+              propostaAtual ? (
+                <PropostaStatusBadge status={propostaAtual.status} />
               ) : undefined
             }
             permitirSubstituir={false}
@@ -447,12 +487,13 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
       !mostrarEnviarClienteCard &&
       !mostrarRespostaClienteCard &&
       !mostrarPropostaAceitaCard &&
+      !mostrarPropostaNegadaCard &&
       temAnexo ? (
         <Grid size={{ xs: 12 }}>
           <Card variant='outlined'>
             <CardHeader
               title={
-                propostaAprovadaSocio || STATUS_PROPOSTA_ENVIADA.includes(propostaAtual.status)
+                propostaAguardandoEnvio || STATUS_PROPOSTA_ENVIADA.includes(propostaAtual.status)
                   ? 'Documento da proposta'
                   : 'Documento da proposta em elaboração'
               }
@@ -510,12 +551,6 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
               })}
             </CardContent>
           </Card>
-        </Grid>
-      ) : null}
-
-      {propostaAtual?.status === 'NEGADA' ? (
-        <Grid size={{ xs: 12 }}>
-          <ProjetoStateCard titulo='Proposta reprovada.' tipo='info' />
         </Grid>
       ) : null}
 

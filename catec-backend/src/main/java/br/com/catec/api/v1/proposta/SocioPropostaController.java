@@ -32,7 +32,7 @@ public class SocioPropostaController {
         return propostaService.listarPendentesSocio(principal);
     }
 
-    @Operation(summary = "Aprovar proposta (sócio)", description = "Transição para RASCUNHO com parecer positivo. Corpo: projetoId, observacao opcional.")
+    @Operation(summary = "Aprovar proposta (sócio)", description = "Transição para AGUARDANDO_ENVIO. Corpo: projetoId, observacao opcional.")
     @PostMapping("/{propostaId}/aprovar")
     @PreAuthorize("@authz.has('acao.socio.proposta.aprovar')")
     public PropostaResponse aprovar(

@@ -1,6 +1,7 @@
 export type CatecPropostaStatus =
   | 'RASCUNHO'
   | 'PENDENTE_AVALIACAO'
+  | 'AGUARDANDO_ENVIO'
   | 'ENVIADA_AO_CLIENTE'
   | 'AGUARDANDO_AJUSTE'
   | 'ACEITA'
@@ -18,19 +19,21 @@ export type CatecTipoInteracaoFluxo = 'CONSIDERACOES_CLIENTE' | 'ACEITE_CLIENTE'
 export const STATUS_PROPOSTA_ROTULO: Record<CatecPropostaStatus, string> = {
   RASCUNHO: 'Rascunho',
   PENDENTE_AVALIACAO: 'Pendente avaliação',
+  AGUARDANDO_ENVIO: 'Aguardando envio ao cliente',
   ENVIADA_AO_CLIENTE: 'Enviada ao cliente',
   AGUARDANDO_AJUSTE: 'Aguardando ajuste',
   ACEITA: 'Aceita pelo cliente',
-  NEGADA: 'Negada pelo cliente'
+  NEGADA: 'Recusada pelo cliente'
 }
 
 export const STATUS_PROPOSTA_ROTULO_BADGE: Record<CatecPropostaStatus, string> = {
   RASCUNHO: 'Rascunho',
   PENDENTE_AVALIACAO: 'Pendente avaliação',
+  AGUARDANDO_ENVIO: 'Aprovada',
   ENVIADA_AO_CLIENTE: 'Enviada',
   AGUARDANDO_AJUSTE: 'Aguardando ajuste',
   ACEITA: 'Aceita',
-  NEGADA: 'Negada'
+  NEGADA: 'Recusada pelo cliente'
 }
 
 export const STATUS_CONTRATO_ROTULO: Record<CatecContratoStatus, string> = {
@@ -52,6 +55,7 @@ export const STATUS_CONTRATO_ROTULO_BADGE: Record<CatecContratoStatus, string> =
 export const ORDEM_STATUS_PROPOSTA: CatecPropostaStatus[] = [
   'RASCUNHO',
   'PENDENTE_AVALIACAO',
+  'AGUARDANDO_ENVIO',
   'ENVIADA_AO_CLIENTE',
   'AGUARDANDO_AJUSTE',
   'ACEITA',
@@ -89,6 +93,24 @@ export const STATUS_PROPOSTA_RESPOSTA_CLIENTE: CatecPropostaStatus[] = [
   'ENVIADA_AO_CLIENTE',
   'AGUARDANDO_AJUSTE'
 ]
+
+/** Normaliza status legados da API (ex.: APROVADA, RASCUNHO + avaliadaSocioEm). */
+export function normalizarStatusProposta(
+  status: string,
+  avaliadaSocioEm?: string | null
+): CatecPropostaStatus {
+  if (status === 'APROVADA') return 'AGUARDANDO_ENVIO'
+  if (status === 'RASCUNHO' && avaliadaSocioEm) return 'AGUARDANDO_ENVIO'
+
+  return status as CatecPropostaStatus
+}
+
+export function propostaAguardandoEnvioAoCliente(proposta: {
+  status: string
+  avaliadaSocioEm?: string | null
+}): boolean {
+  return normalizarStatusProposta(proposta.status, proposta.avaliadaSocioEm) === 'AGUARDANDO_ENVIO'
+}
 
 export const STATUS_CONTRATO_UPLOAD: CatecContratoStatus[] = ['RASCUNHO', 'AGUARDANDO_AJUSTE']
 export const STATUS_CONTRATO_INTERACAO_CLIENTE: CatecContratoStatus[] = [
@@ -189,16 +211,17 @@ export function parseCatecDocumentoAnexo(raw: unknown): CatecDocumentoAnexo {
 
 export function parseCatecProposta(raw: unknown): CatecProposta {
   const data = raw as Record<string, unknown>
+  const avaliadaSocioEm = data.avaliadaSocioEm == null ? null : String(data.avaliadaSocioEm)
 
   return {
     id: Number(data.id),
     projetoId: Number(data.projetoId),
-    status: String(data.status ?? 'RASCUNHO') as CatecPropostaStatus,
+    status: normalizarStatusProposta(String(data.status ?? 'RASCUNHO'), avaliadaSocioEm),
     versao: Number(data.versao ?? 1),
     elaboradoPorId: Number(data.elaboradoPorId ?? 0),
     elaboradoPorNome: String(data.elaboradoPorNome ?? ''),
     enviadaClienteEm: data.enviadaClienteEm == null ? null : String(data.enviadaClienteEm),
-    avaliadaSocioEm: data.avaliadaSocioEm == null ? null : String(data.avaliadaSocioEm),
+    avaliadaSocioEm,
     consideracoesPendentes: data.consideracoesPendentes === true,
     parecerSocio: data.parecerSocio == null ? null : String(data.parecerSocio),
     criadoEm: String(data.criadoEm ?? ''),

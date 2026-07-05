@@ -1,4 +1,5 @@
 import type { CatecProjetoFluxoData, CatecProjetoFluxoResumo, CatecProposta } from '@/types/catec/projetoFluxoTypes'
+import { normalizarStatusProposta } from '@/types/catec/projetoFluxoTypes'
 
 export {
   metaHistoricoItem,
@@ -58,22 +59,22 @@ export function resolvePropostaWorkflowActions(
   status: string,
   opts: {
     hasAttachment: boolean
-    avaliadaSocioEm: string | null
     podeAprovarSocio?: boolean
     podeDevolverSocio?: boolean
   }
 ): Array<{ key: string; label: string; color: 'primary' | 'secondary' | 'error' }> {
-  const { hasAttachment, avaliadaSocioEm, podeAprovarSocio = false, podeDevolverSocio = false } = opts
+  const { hasAttachment, podeAprovarSocio = false, podeDevolverSocio = false } = opts
+  const statusNormalizado = normalizarStatusProposta(status)
 
-  if (status === 'RASCUNHO' && hasAttachment) {
-    if (!avaliadaSocioEm) {
-      return [{ key: 'solicitar-revisao', label: 'Enviar para revisão', color: 'primary' }]
-    }
+  if (statusNormalizado === 'RASCUNHO' && hasAttachment) {
+    return [{ key: 'solicitar-revisao', label: 'Enviar para revisão', color: 'primary' }]
+  }
 
+  if (statusNormalizado === 'AGUARDANDO_ENVIO' && hasAttachment) {
     return [{ key: 'enviar-cliente', label: 'Enviar ao cliente', color: 'primary' }]
   }
 
-  if (status === 'PENDENTE_AVALIACAO') {
+  if (statusNormalizado === 'PENDENTE_AVALIACAO') {
     const actions: Array<{ key: string; label: string; color: 'primary' | 'secondary' | 'error' }> = []
 
     if (podeAprovarSocio) {

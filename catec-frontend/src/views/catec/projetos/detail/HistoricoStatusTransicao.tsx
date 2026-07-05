@@ -6,7 +6,7 @@ import type { CatecProjetoStatus } from '@/types/catec/projetoTypes'
 import { STATUS_PROJETO_ROTULO_BADGE } from '@/types/catec/projetoTypes'
 
 import ContratoStatusBadge from '../ContratoStatusBadge'
-import { historicoTemTransicaoStatus } from '../historicoFluxoHelpers'
+import { historicoTemTransicaoStatus, statusHistoricoParaExibicao } from '../historicoFluxoHelpers'
 import ProjetoStatusBadge from '../ProjetoStatusBadge'
 import PropostaStatusBadge from '../PropostaStatusBadge'
 
@@ -14,19 +14,20 @@ type Props = {
   item: CatecHistoricoFluxoItem
 }
 
-function renderBadge(tipoEntidade: string, status: string) {
-  const ent = tipoEntidade.toUpperCase()
+function renderBadge(item: CatecHistoricoFluxoItem, status: string, papel: 'anterior' | 'novo') {
+  const ent = item.tipoEntidade.toUpperCase()
+  const normalizado = statusHistoricoParaExibicao(item, status, papel)
 
-  if (ent === 'PROJETO' && status in STATUS_PROJETO_ROTULO_BADGE) {
-    return <ProjetoStatusBadge status={status as CatecProjetoStatus} />
+  if (ent === 'PROJETO' && normalizado in STATUS_PROJETO_ROTULO_BADGE) {
+    return <ProjetoStatusBadge status={normalizado as CatecProjetoStatus} />
   }
 
-  if (ent === 'PROPOSTA' && status in STATUS_PROPOSTA_ROTULO_BADGE) {
-    return <PropostaStatusBadge status={status as CatecPropostaStatus} />
+  if (ent === 'PROPOSTA' && normalizado in STATUS_PROPOSTA_ROTULO_BADGE) {
+    return <PropostaStatusBadge status={normalizado as CatecPropostaStatus} />
   }
 
-  if (ent === 'CONTRATO' && status in STATUS_CONTRATO_ROTULO_BADGE) {
-    return <ContratoStatusBadge status={status as CatecContratoStatus} />
+  if (ent === 'CONTRATO' && normalizado in STATUS_CONTRATO_ROTULO_BADGE) {
+    return <ContratoStatusBadge status={normalizado as CatecContratoStatus} />
   }
 
   return null
@@ -40,11 +41,11 @@ const HistoricoStatusTransicao = ({ item }: Props) => {
 
   return (
     <div className='mts-2 flex flex-wrap items-center gap-2'>
-      {hasAnterior && item.statusAnterior ? renderBadge(item.tipoEntidade, item.statusAnterior) : null}
+      {hasAnterior && item.statusAnterior ? renderBadge(item, item.statusAnterior, 'anterior') : null}
       {hasAnterior && hasNovo ? (
         <i className='tabler-arrow-right text-base text-textSecondary' aria-hidden />
       ) : null}
-      {hasNovo && item.statusNovo ? renderBadge(item.tipoEntidade, item.statusNovo) : null}
+      {hasNovo && item.statusNovo ? renderBadge(item, item.statusNovo, 'novo') : null}
     </div>
   )
 }
