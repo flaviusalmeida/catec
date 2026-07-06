@@ -24,6 +24,17 @@ type Props = {
   onStatusAlterado?: () => Promise<void>
 }
 
+function DetalheCampo({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className='flex flex-col gap-0.5'>
+      <Typography variant='caption' color='text.secondary'>
+        {label}
+      </Typography>
+      {children}
+    </div>
+  )
+}
+
 const ProjetoDetails = ({ projeto, onStatusAlterado }: Props) => {
   
 
@@ -46,66 +57,58 @@ const ProjetoDetails = ({ projeto, onStatusAlterado }: Props) => {
 
           <div>
             <Typography variant='h5'>Detalhes</Typography>
-          <Divider className='mlb-4' />
-          <div className='flex flex-col gap-2'>
-            <div className='flex items-center flex-wrap gap-x-1.5'>
-              <Typography className='font-medium' color='text.primary'>
-                Cliente:
-              </Typography>
-              {projeto.clienteId && projeto.clienteNome ? (
-                <Typography
-                  component={Link}
-                  href={`/catec/clientes/view/${projeto.clienteId}`}
-                  color='primary.main'
-                >
-                  {projeto.clienteNome}
+            <Divider className='mlb-4' />
+            <div className='flex flex-col gap-3'>
+              <DetalheCampo label='Cliente'>
+                {projeto.clienteId && projeto.clienteNome ? (
+                  <Typography
+                    component={Link}
+                    href={`/catec/clientes/view/${projeto.clienteId}`}
+                    variant='body2'
+                    color='primary.main'
+                  >
+                    {projeto.clienteNome}
+                  </Typography>
+                ) : (
+                  <Typography variant='body2' color='text.primary'>
+                    —
+                  </Typography>
+                )}
+              </DetalheCampo>
+
+              <DetalheCampo label='Status'>
+                <Typography variant='body2' color='text.primary'>
+                  {STATUS_PROJETO_ROTULO[projeto.status]}
                 </Typography>
-              ) : (
-                <Typography>—</Typography>
-              )}
-            </div>
-            <div className='flex items-center flex-wrap gap-x-1.5'>
-              <Typography className='font-medium' color='text.primary'>
-                Criado por:
-              </Typography>
-              <Typography>{projeto.criadoPorNome}</Typography>
-            </div>
-            <div className='flex items-center flex-wrap gap-x-1.5'>
-              <Typography className='font-medium' color='text.primary'>
-                Status:
-              </Typography>
-              <Typography>{STATUS_PROJETO_ROTULO[projeto.status]}</Typography>
-            </div>
-            <div className='flex items-center flex-wrap gap-x-1.5'>
-              <Typography className='font-medium' color='text.primary'>
-                Conclusão prevista:
-              </Typography>
-              <Typography>
-                {projeto.previsaoConclusaoEm ? formatarDataCurta(projeto.previsaoConclusaoEm) : '—'}
-              </Typography>
-            </div>
-            <div className='flex items-center flex-wrap gap-x-1.5'>
-              <Typography className='font-medium' color='text.primary'>
-                Data de conclusão:
-              </Typography>
-              <Typography>
-                {projeto.conclusaoEm ? formatarDataCurta(projeto.conclusaoEm) : '—'}
-              </Typography>
-            </div>
-            <div className='flex items-center flex-wrap gap-x-1.5'>
-              <Typography className='font-medium' color='text.primary'>
-                E-mail:
-              </Typography>
-              <Typography>{projeto.emailContato ?? '—'}</Typography>
-            </div>
-            <div className='flex items-center flex-wrap gap-x-1.5'>
-              <Typography className='font-medium' color='text.primary'>
-                Telefone:
-              </Typography>
-              <Typography>
-                {projeto.telefoneContato ? formatTelefoneBrasil(projeto.telefoneContato) : '—'}
-              </Typography>
-            </div>
+              </DetalheCampo>
+
+              <div className='flex flex-col gap-2'>
+                <DetalheCampo label='Conclusão prevista'>
+                  <Typography variant='body2' color='text.primary'>
+                    {projeto.previsaoConclusaoEm ? formatarDataCurta(projeto.previsaoConclusaoEm) : '—'}
+                  </Typography>
+                </DetalheCampo>
+                {projeto.conclusaoEm ? (
+                  <DetalheCampo label='Data de conclusão'>
+                    <Typography variant='body2' color='text.primary'>
+                      {formatarDataCurta(projeto.conclusaoEm)}
+                    </Typography>
+                  </DetalheCampo>
+                ) : null}
+              </div>
+
+              <div className='flex flex-col gap-2'>
+                <DetalheCampo label='E-mail'>
+                  <Typography variant='body2' color='text.primary'>
+                    {projeto.emailContato ?? '—'}
+                  </Typography>
+                </DetalheCampo>
+                <DetalheCampo label='Telefone'>
+                  <Typography variant='body2' color='text.primary'>
+                    {projeto.telefoneContato ? formatTelefoneBrasil(projeto.telefoneContato) : '—'}
+                  </Typography>
+                </DetalheCampo>
+              </div>
             </div>
           </div>
 
