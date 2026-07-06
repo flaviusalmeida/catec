@@ -1,5 +1,6 @@
 package br.com.catec.mail;
 
+import br.com.catec.config.AppFrontendProperties;
 import br.com.catec.config.AppMailProperties;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
@@ -15,20 +16,28 @@ public class EmailNotificacaoService {
     private static final Logger log = LoggerFactory.getLogger(EmailNotificacaoService.class);
 
     private final AppMailProperties mailProperties;
+    private final AppFrontendProperties frontendProperties;
     private final ObjectProvider<JavaMailSender> mailSenderProvider;
 
-    public EmailNotificacaoService(AppMailProperties mailProperties, ObjectProvider<JavaMailSender> mailSenderProvider) {
+    public EmailNotificacaoService(
+            AppMailProperties mailProperties,
+            AppFrontendProperties frontendProperties,
+            ObjectProvider<JavaMailSender> mailSenderProvider) {
         this.mailProperties = mailProperties;
+        this.frontendProperties = frontendProperties;
         this.mailSenderProvider = mailSenderProvider;
     }
 
     public void enviarSenhaProvisoria(String destinatario, String nomeUsuario, String senhaProvisoria) {
         String assunto = "Acesso ao sistema CATEC — senha provisória";
+        String loginUrl = frontendProperties.loginUrl();
         String texto =
                 """
                 Olá, %s,
 
                 Foi criada uma conta para o seu e-mail no sistema CATEC.
+
+                Acesse: %s
 
                 Senha provisória (use no primeiro acesso e altere em seguida):
                 %s
@@ -40,7 +49,7 @@ public class EmailNotificacaoService {
                 —
                 CATEC
                 """
-                        .formatted(nomeUsuario, senhaProvisoria);
+                        .formatted(nomeUsuario, loginUrl, senhaProvisoria);
 
         JavaMailSender sender = mailSenderProvider.getIfAvailable();
         if (mailProperties.enabled() && sender != null) {

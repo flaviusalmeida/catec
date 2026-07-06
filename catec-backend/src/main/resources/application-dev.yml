@@ -1,4 +1,4 @@
-# Perfil local: PostgreSQL do docker-compose na raiz do repositório (veja README e .env.example).
+# Perfil local — variáveis em catec-backend/.env (veja catec-backend/.env.example).
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/catec}
@@ -10,6 +10,10 @@ spring:
     # `false` evita abortar a subida; o caminho correto é `./mvnw flyway:repair` para alinhar flyway_schema_history.
     # Não use em produção — lá não se edita migração já aplicada; crie sempre um V novo.
     validate-on-migrate: false
+
+app:
+  mail:
+    enabled: ${APP_MAIL_ENABLED:true}
 
 management:
   endpoint:

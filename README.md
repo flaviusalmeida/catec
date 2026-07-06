@@ -13,15 +13,28 @@ Pastas de análise, planos, tarefas e documentação comercial/técnica detalhad
 
 ## Variáveis de ambiente
 
-Na raiz do repositório:
+Cada projeto tem seu próprio `.env`:
+
+| Projeto | Arquivo | Uso |
+|---------|---------|-----|
+| **Raiz** | `.env` | Docker Compose (PostgreSQL, Mailpit) |
+| **Backend** | `catec-backend/.env` | Spring Boot (banco, e-mail, JWT) |
+| **Frontend** | `catec-frontend/.env` | Next.js (NextAuth, URL da API) |
 
 ```bash
-copy .env.example .env
+# Raiz — só infra Docker
+cp .env.example .env
+
+# Backend
+cp catec-backend/.env.example catec-backend/.env
+
+# Frontend
+cp catec-frontend/.env.example catec-frontend/.env
 ```
 
-No Linux/macOS use `cp .env.example .env`. Ajuste senhas em desenvolvimento; **não** faça commit do arquivo `.env`.
+Ajuste senhas em desenvolvimento; **não** faça commit dos arquivos `.env`.
 
-O `docker-compose.yml` lê `POSTGRES_*` do ambiente ou do arquivo `.env` na mesma pasta (o Compose carrega o `.env` automaticamente).
+O `docker-compose.yml` na raiz lê `POSTGRES_*` do `.env` local (o Compose carrega automaticamente).
 
 ## Subir o PostgreSQL
 
@@ -49,7 +62,7 @@ host=localhost port=5432 dbname=catec user=catec
 
 ## Executar o backend
 
-Com o Postgres rodando e o `.env` configurado (ou variáveis exportadas no shell):
+Com o Postgres rodando e `catec-backend/.env` configurado:
 
 **Windows (PowerShell):** defina `JAVA_HOME` para o JDK 17+ antes de executar o wrapper.
 
