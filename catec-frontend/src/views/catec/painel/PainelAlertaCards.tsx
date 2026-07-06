@@ -15,6 +15,7 @@ import type { CatecProjetoPainel } from '@/types/catec/projetoTypes'
 
 type Props = {
   painel: CatecProjetoPainel
+  compact?: boolean
 }
 
 type CardDef = {
@@ -71,20 +72,20 @@ const CARD_DEFS: CardDef[] = [
   }
 ]
 
-const PainelAlertaCards = ({ painel }: Props) => {
+const PainelAlertaCards = ({ painel, compact = false }: Props) => {
   const { alertasPrazo } = painel.totais
 
   return (
-    <Grid container spacing={6}>
+    <Grid container spacing={compact ? 4 : 6}>
       {CARD_DEFS.map(def => (
         <Grid key={def.key} size={{ xs: 12, sm: 6, md: 3 }}>
           <Card bordercolor={def.color}>
-            <CardContent className='flex flex-col gap-1'>
+            <CardContent className={compact ? 'flex flex-col gap-1 !py-4' : 'flex flex-col gap-1'}>
               <div className='flex items-center gap-4'>
-                <CustomAvatar color={def.color} skin='light' variant='rounded'>
-                  <i className={classnames(def.avatarIcon, 'text-[28px]')} />
+                <CustomAvatar color={def.color} skin='light' variant='rounded' size={compact ? 38 : 40}>
+                  <i className={classnames(def.avatarIcon, compact ? 'text-[24px]' : 'text-[28px]')} />
                 </CustomAvatar>
-                <Typography variant='h4'>{alertasPrazo[def.key]}</Typography>
+                <Typography variant={compact ? 'h5' : 'h4'}>{alertasPrazo[def.key]}</Typography>
               </div>
               <div className='flex flex-col gap-1'>
                 <Typography color='text.primary'>{def.title}</Typography>

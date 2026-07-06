@@ -17,16 +17,24 @@ import { corProgressoPrazo, formatarDiasRestantes } from './painelPrazoUtils'
 
 type Props = {
   projetos: CatecProjetoPainelItem[]
+  compact?: boolean
 }
 
-const PainelPrazoProximo = ({ projetos }: Props) => {
+const PainelPrazoProximo = ({ projetos, compact = false }: Props) => {
   return (
-    <Card className='bs-full'>
+    <Card className={compact ? 'flex h-full w-full flex-col' : 'bs-full'}>
       <CardHeader
         title='Projetos vencidos ou com prazo próximo'
         subheader='Ordenados pela previsão de conclusão'
+        className={compact ? '!pb-2' : undefined}
       />
-      <CardContent className='flex flex-col gap-4'>
+      <CardContent
+        className={
+          compact
+            ? 'flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto !pt-0'
+            : 'flex flex-col gap-4'
+        }
+      >
         {projetos.length === 0 ? (
           <Typography color='text.secondary' className='text-center p-4'>
             Nenhum projeto com previsão de conclusão definida.
@@ -34,26 +42,31 @@ const PainelPrazoProximo = ({ projetos }: Props) => {
         ) : (
           projetos.map(item => (
             <div key={item.id} className='flex items-center gap-4'>
-              <CustomAvatar skin='light' color={corProgressoPrazo(item)} variant='rounded' size={34}>
+              <CustomAvatar
+                skin='light'
+                color={corProgressoPrazo(item)}
+                variant='rounded'
+                size={compact ? 32 : 34}
+              >
                 <i className='tabler-calendar-event' />
               </CustomAvatar>
-                <div className='flex flex-col gap-1 min-is-0 is-full'>
-                  <Link
-                    href={`/catec/projetos/${item.id}`}
-                    className='font-medium text-textPrimary hover:text-primary no-underline line-clamp-1'
-                  >
-                    {item.titulo}
-                  </Link>
-                  <Typography variant='body2' color='text.secondary' className='line-clamp-1'>
-                    {item.clienteNome ?? 'Sem cliente'} · {formatarDataCurta(item.previsaoConclusaoEm!)}
+              <div className='flex min-is-0 is-full flex-col gap-1'>
+                <Link
+                  href={`/catec/projetos/${item.id}`}
+                  className='font-medium text-textPrimary hover:text-primary no-underline line-clamp-1'
+                >
+                  {item.titulo}
+                </Link>
+                <Typography variant='body2' color='text.secondary' className='line-clamp-1'>
+                  {item.clienteNome ?? 'Sem cliente'} · {formatarDataCurta(item.previsaoConclusaoEm!)}
+                </Typography>
+                <div className='flex flex-wrap items-center gap-2'>
+                  <ProjetoStatusBadge status={item.status} />
+                  <Typography variant='caption' color='text.secondary'>
+                    {formatarDiasRestantes(item.diasRestantes)}
                   </Typography>
-                  <div className='flex items-center gap-2 flex-wrap'>
-                    <ProjetoStatusBadge status={item.status} />
-                    <Typography variant='caption' color='text.secondary'>
-                      {formatarDiasRestantes(item.diasRestantes)}
-                    </Typography>
-                  </div>
                 </div>
+              </div>
             </div>
           ))
         )}

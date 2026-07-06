@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import dynamic from 'next/dynamic'
 
@@ -21,10 +21,30 @@ type Props = {
   painel: CatecProjetoPainel
   statusSelecionado: CatecProjetoStatus | null
   onStatusClick: (status: CatecProjetoStatus | null) => void
+  compact?: boolean
 }
 
-const PainelStatusDonut = ({ painel, statusSelecionado, onStatusClick }: Props) => {
+const PainelStatusDonut = ({ painel, statusSelecionado, onStatusClick, compact = false }: Props) => {
   const theme = useTheme()
+  const chartAreaRef = useRef<HTMLDivElement>(null)
+  const [chartHeight, setChartHeight] = useState(compact ? 280 : 420)
+
+  useEffect(() => {
+    if (!compact || !chartAreaRef.current) return
+
+    const el = chartAreaRef.current
+    const observer = new ResizeObserver(entries => {
+      const height = entries[0]?.contentRect.height
+
+      if (height > 0) {
+        setChartHeight(Math.round(height))
+      }
+    })
+
+    observer.observe(el)
+
+    return () => observer.disconnect()
+  }, [compact])
 
   const chartData = useMemo(() => {
     const entries = ORDEM_STATUS_PROJETO.map(status => ({
@@ -48,15 +68,15 @@ const PainelStatusDonut = ({ painel, statusSelecionado, onStatusClick }: Props) 
       legend: {
         show: true,
         position: 'bottom',
-        offsetY: 10,
+        offsetY: compact ? 4 : 10,
         markers: {
           width: 8,
           height: 8,
           offsetY: 1,
           offsetX: theme.direction === 'rtl' ? 8 : -4
         },
-        itemMargin: { horizontal: 12, vertical: 4 },
-        fontSize: '12px',
+        itemMargin: { horizontal: compact ? 8 : 12, vertical: compact ? 2 : 4 },
+        fontSize: compact ? '11px' : '12px',
         fontWeight: 400
       },
       plotOptions: {
@@ -66,7 +86,7 @@ const PainelStatusDonut = ({ painel, statusSelecionado, onStatusClick }: Props) 
             labels: {
               show: true,
               value: {
-                fontSize: '24px',
+                fontSize: compact ? '20px' : '24px',
                 color: 'var(--mui-palette-text-primary)',
                 fontWeight: 500,
                 offsetY: -20
@@ -74,7 +94,7 @@ const PainelStatusDonut = ({ painel, statusSelecionado, onStatusClick }: Props) 
               name: { offsetY: 20 },
               total: {
                 show: true,
-                fontSize: '0.9375rem',
+                fontSize: compact ? '0.8125rem' : '0.9375rem',
                 fontWeight: 400,
                 label: 'Total',
                 color: 'var(--mui-palette-text-secondary)',
@@ -95,12 +115,12 @@ const PainelStatusDonut = ({ painel, statusSelecionado, onStatusClick }: Props) 
         }
       }
     }),
-    [chartData, onStatusClick, statusSelecionado, theme.direction, total]
+    [chartData, compact, onStatusClick, statusSelecionado, theme.direction, total]
   )
 
   if (chartData.length === 0) {
     return (
-      <Card className='bs-full'>
+      <Card className={compact ? 'flex h-full w-full flex-col' : 'bs-full'}>
         <CardHeader title='Distribuição por status' />
         <CardContent>
           <p className='text-textSecondary m-0 p-6 text-center'>Nenhum projeto para exibir.</p>
@@ -110,19 +130,25 @@ const PainelStatusDonut = ({ painel, statusSelecionado, onStatusClick }: Props) 
   }
 
   return (
-    <Card className='bs-full'>
+    <Card className={compact ? 'flex h-full w-full flex-col' : 'bs-full'}>
       <CardHeader
         title='Distribuição por status'
         subheader={
           statusSelecionado
             ? `Filtrando: ${STATUS_PROJETO_ROTULO_BADGE[statusSelecionado]} (clique novamente para limpar)`
-            : 'Clique em uma fatia para filtrar a tabela'
+            : compact
+              ? 'Clique em uma fatia para filtrar'
+              : 'Clique em uma fatia para filtrar a tabela'
         }
+        className={compact ? '!pb-2' : undefined}
       />
-      <CardContent>
+      <CardContent
+        ref={chartAreaRef}
+        className={compact ? 'flex min-h-0 flex-1 items-center justify-center !pt-0' : undefined}
+      >
         <AppReactApexCharts
           type='donut'
-          height={420}
+          height={chartHeight}
           width='100%'
           series={chartData.map(e => e.value)}
           options={options}
