@@ -50,6 +50,9 @@ public class Contrato {
     @Column(name = "motivo_recusa_cliente", columnDefinition = "TEXT")
     private String motivoRecusaCliente;
 
+    @Column(name = "consideracoes_cliente", columnDefinition = "TEXT")
+    private String consideracoesCliente;
+
     @Column(name = "consideracoes_pendentes", nullable = false)
     private boolean consideracoesPendentes;
 
@@ -130,6 +133,14 @@ public class Contrato {
 
     public void setMotivoRecusaCliente(String motivoRecusaCliente) {
         this.motivoRecusaCliente = motivoRecusaCliente;
+    }
+
+    public String getConsideracoesCliente() {
+        return consideracoesCliente;
+    }
+
+    public void setConsideracoesCliente(String consideracoesCliente) {
+        this.consideracoesCliente = consideracoesCliente;
     }
 
     public boolean isConsideracoesPendentes() {

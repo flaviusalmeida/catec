@@ -193,6 +193,17 @@ public class PropostaService {
         }
         if (proposta.getStatus() == PropostaStatus.AGUARDANDO_AJUSTE) {
             var uploaded = documentoService.uploadPropostaSubstituindo(propostaId, tipoArquivo, file, principal);
+            PropostaStatus anterior = proposta.getStatus();
+            proposta.setStatus(PropostaStatus.RASCUNHO);
+            proposta.setAtualizadoEm(Instant.now());
+            propostaRepository.save(proposta);
+            auditoriaService.registrarTransicaoStatus(
+                    TipoEntidadeAuditoria.PROPOSTA,
+                    propostaId,
+                    "AJUSTAR_APOS_PARECER",
+                    anterior.name(),
+                    PropostaStatus.RASCUNHO.name(),
+                    principal.id());
             sincronizarProjetoSeElaboracao(proposta.getProjeto(), principal.id());
             return uploaded;
         }
@@ -218,6 +229,8 @@ public class PropostaService {
         Proposta salva =
                 transicionar(proposta, PropostaStatus.PENDENTE_AVALIACAO, "SUBMETER_AVALIACAO_SOCIO", principal);
         salva.setParecerSocio(null);
+        salva.setConsideracoesCliente(null);
+        salva.setConsideracoesPendentes(false);
         salva = propostaRepository.save(salva);
         sincronizarProjeto(salva.getProjeto(), ProjetoStatus.AGUARDANDO_REVISAO_PROPOSTA, principal.id());
         socioPropostaNotificacaoService.propostaSubmetidaParaAvaliacaoSocio(
@@ -524,6 +537,7 @@ public class PropostaService {
                 p.getAvaliadaSocioEm(),
                 p.getAvaliadaPorSocio() != null ? p.getAvaliadaPorSocio().getId() : null,
                 p.isConsideracoesPendentes(),
+                p.getConsideracoesCliente(),
                 p.getParecerSocio(),
                 p.getCobrancaPropostaInicioEm(),
                 p.getCriadoEm(),

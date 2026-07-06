@@ -279,6 +279,34 @@ async function listarInteracoesPropostaCatec(
   }))
 }
 
+async function obterUltimaConsideracaoClienteProposta(
+  projetoId: number,
+  propostaId: number
+): Promise<string | null> {
+  const res = await catecApiFetch(`/api/v1/projetos/${projetoId}/propostas/${propostaId}/interacoes`)
+  const data = await readCatecJsonBody(res)
+
+  if (!res.ok || !Array.isArray(data)) return null
+
+  const ultima = (data as InteracaoApi[]).find(i => i.tipoInteracao === 'CONSIDERACOES_CLIENTE')
+
+  return ultima?.texto?.trim() ? ultima.texto.trim() : null
+}
+
+async function obterUltimaConsideracaoClienteContrato(
+  projetoId: number,
+  contratoId: number
+): Promise<string | null> {
+  const res = await catecApiFetch(`/api/v1/projetos/${projetoId}/contratos/${contratoId}/interacoes`)
+  const data = await readCatecJsonBody(res)
+
+  if (!res.ok || !Array.isArray(data)) return null
+
+  const ultima = (data as InteracaoApi[]).find(i => i.tipoInteracao === 'CONSIDERACOES_CLIENTE')
+
+  return ultima?.texto?.trim() ? ultima.texto.trim() : null
+}
+
 async function listarInteracoesContratoCatec(
   projetoId: number,
   contratoId: number
@@ -379,8 +407,17 @@ export async function carregarPropostasComDocumentosCatec(projetoId: number): Pr
   return Promise.all(
     propostas.map(async proposta => {
       const documentos = await listarDocumentosPropostaCatec(projetoId, proposta.id)
+      let consideracoesCliente = proposta.consideracoesCliente
 
-      return { ...proposta, documentos }
+      if (
+        !consideracoesCliente &&
+        proposta.consideracoesPendentes &&
+        proposta.status === 'AGUARDANDO_AJUSTE'
+      ) {
+        consideracoesCliente = await obterUltimaConsideracaoClienteProposta(projetoId, proposta.id)
+      }
+
+      return { ...proposta, documentos, consideracoesCliente }
     })
   )
 }
@@ -392,8 +429,17 @@ export async function carregarContratoComDocumentosCatec(projetoId: number): Pro
   if (!contrato) return null
 
   const documentos = await listarDocumentosContratoCatec(projetoId, contrato.id)
+  let consideracoesCliente = contrato.consideracoesCliente
 
-  return { ...contrato, documentos }
+  if (
+    !consideracoesCliente &&
+    contrato.consideracoesPendentes &&
+    (contrato.status === 'AGUARDANDO_AJUSTE' || contrato.status === 'RASCUNHO')
+  ) {
+    consideracoesCliente = await obterUltimaConsideracaoClienteContrato(projetoId, contrato.id)
+  }
+
+  return { ...contrato, documentos, consideracoesCliente }
 }
 
 export function propostaParaRegistroInteracao(propostas: CatecProposta[]): CatecProposta | null {
@@ -403,5 +449,5 @@ export function propostaParaRegistroInteracao(propostas: CatecProposta[]): Catec
 export function contratoParaRegistroInteracao(contrato: CatecContrato | null): CatecContrato | null {
   if (!contrato) return null
 
-  return contrato.status === 'ENVIADO_AO_CLIENTE' || contrato.status === 'AGUARDANDO_AJUSTE' ? contrato : null
+  return contrato.status === 'ENVIADO_AO_CLIENTE' ? contrato : null
 }

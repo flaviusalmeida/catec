@@ -14,6 +14,7 @@ public record PropostaResponse(
         Instant avaliadaSocioEm,
         Long avaliadaPorSocioId,
         boolean consideracoesPendentes,
+        String consideracoesCliente,
         String parecerSocio,
         Instant cobrancaPropostaInicioEm,
         Instant criadoEm,

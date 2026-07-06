@@ -96,6 +96,7 @@ class SocioPropostaControllerMockMvcTest {
                 false,
                 null,
                 null,
+                null,
                 Instant.parse("2026-05-19T10:00:00Z"),
                 Instant.parse("2026-05-19T12:00:00Z"));
     }

@@ -130,7 +130,23 @@ public class ContratoService {
         if (contrato.getStatus() == ContratoStatus.RASCUNHO) {
             return documentoService.uploadContratoSubstituindo(contrato.getId(), tipoArquivo, file, principal);
         }
-        return documentoService.uploadContrato(contrato.getId(), tipoArquivo, file, principal);
+        if (contrato.getStatus() == ContratoStatus.AGUARDANDO_AJUSTE) {
+            var uploaded =
+                    documentoService.uploadContratoSubstituindo(contrato.getId(), tipoArquivo, file, principal);
+            ContratoStatus anterior = contrato.getStatus();
+            contrato.setStatus(ContratoStatus.RASCUNHO);
+            contrato.setAtualizadoEm(Instant.now());
+            contratoRepository.save(contrato);
+            auditoriaService.registrarTransicaoStatus(
+                    TipoEntidadeAuditoria.CONTRATO,
+                    contrato.getId(),
+                    "AJUSTAR_APOS_CLIENTE",
+                    anterior.name(),
+                    ContratoStatus.RASCUNHO.name(),
+                    principal.id());
+            return uploaded;
+        }
+        throw badRequest("Não é possível anexar documentos no estado atual do contrato.");
     }
 
     /** RASCUNHO com documento → ENVIADO_AO_CLIENTE. */
@@ -150,6 +166,8 @@ public class ContratoService {
         Instant agora = Instant.now();
         contrato.setStatus(ContratoStatus.ENVIADO_AO_CLIENTE);
         contrato.setEnviadoClienteEm(agora);
+        contrato.setConsideracoesPendentes(false);
+        contrato.setConsideracoesCliente(null);
         contrato.setAtualizadoEm(agora);
         Contrato salvo = contratoRepository.save(contrato);
         auditoriaService.registrarTransicaoStatus(
@@ -223,6 +241,7 @@ public class ContratoService {
                 c.getAceitoClienteEm(),
                 c.getRecusadoClienteEm(),
                 c.isConsideracoesPendentes(),
+                c.getConsideracoesCliente(),
                 c.getCriadoEm(),
                 c.getAtualizadoEm());
     }

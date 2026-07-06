@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -59,6 +59,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
   const [dialogInteracaoCliente, setDialogInteracaoCliente] = useState<DialogInteracaoCliente>(null)
   const [observacao, setObservacao] = useState('')
   const [textoInteracaoCliente, setTextoInteracaoCliente] = useState('')
+  const [arquivoSubstituidoNoAjuste, setArquivoSubstituidoNoAjuste] = useState(false)
   const projetoTemCliente = projeto.clienteId != null
 
   const documentoAtual = propostaAtual?.documentos[0] ?? null
@@ -73,7 +74,16 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
 
   const propostaAguardandoEnvio = propostaAtual != null && propostaAguardandoEnvioAoCliente(propostaAtual)
 
-  const aguardandoAjusteSocio = propostaAtual?.status === 'AGUARDANDO_AJUSTE'
+  const ajustandoProposta =
+    propostaAtual?.status === 'AGUARDANDO_AJUSTE' ||
+    (propostaAtual?.status === 'RASCUNHO' &&
+      Boolean(propostaAtual.parecerSocio || propostaAtual.consideracoesPendentes))
+
+  useEffect(() => {
+    if (!ajustandoProposta) {
+      setArquivoSubstituidoNoAjuste(false)
+    }
+  }, [propostaAtual?.id, ajustandoProposta])
 
   const aguardandoAjusteCliente = data.propostas.some(
     p => p.consideracoesPendentes && p.status !== 'AGUARDANDO_AJUSTE'
@@ -112,6 +122,19 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
 
   const acoesElaboracao = workflowActions.filter(acao => acao.key === 'solicitar-revisao')
   const acoesEnviarCliente = workflowActions.filter(acao => acao.key === 'enviar-cliente')
+
+  const mostrarEnviarParaRevisao =
+    temAnexo &&
+    ((!ajustandoProposta && propostaAtual?.status === 'RASCUNHO') ||
+      (ajustandoProposta &&
+        (propostaAtual?.status === 'RASCUNHO' || arquivoSubstituidoNoAjuste)))
+
+  const acoesAjustarPropostaCard = mostrarEnviarParaRevisao
+    ? acoesElaboracao.map(acao => ({
+        ...acao,
+        onClick: () => handleAcaoWorkflow(acao.key as CatecPropostaWorkflowActionKey, acao.label)
+      }))
+    : undefined
 
   const acoesWorkflowRestantes = workflowActions.filter(
     acao => acao.key !== 'solicitar-revisao' && acao.key !== 'enviar-cliente'
@@ -263,6 +286,16 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
     executarAcaoProposta(key, label)
   }
 
+  async function handleUploadProposta(file: File) {
+    const eraAjustePendente = ajustandoProposta && propostaAtual?.status === 'AGUARDANDO_AJUSTE'
+
+    await uploadProposta(file)
+
+    if (eraAjustePendente) {
+      setArquivoSubstituidoNoAjuste(true)
+    }
+  }
+
   if (!projetoTemCliente) {
     return (
       <ProjetoStateCard
@@ -285,7 +318,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
       {mostrarUploadCard ? (
         <Grid size={{ xs: 12 }}>
           <ProjetoUploadCard
-            titulo='Enviar proposta'
+            titulo={ajustandoProposta ? 'Ajustar proposta' : 'Enviar proposta'}
             nomeArquivo={documentoAtual?.nomeOriginal}
             meta={
               documentoAtual
@@ -297,7 +330,7 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
                 <PropostaStatusBadge status={propostaAtual.status} />
               ) : undefined
             }
-            onUpload={uploadProposta}
+            onUpload={handleUploadProposta}
             disabled={processando}
             documentoId={documentoAtual?.id}
             previewTitulo='Proposta comercial'
@@ -310,11 +343,40 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
                     )
                 : undefined
             }
-            acoes={acoesElaboracao.map(acao => ({
-              ...acao,
-              onClick: () => handleAcaoWorkflow(acao.key as CatecPropostaWorkflowActionKey, acao.label)
-            }))}
+            acoes={acoesAjustarPropostaCard}
           />
+        </Grid>
+      ) : null}
+
+      {propostaAtual?.parecerSocio ? (
+        <Grid size={{ xs: 12 }}>
+          <Card variant='outlined'>
+            <CardHeader
+              title='Parecer do sócio'
+              subheader='Ajuste a proposta conforme os comentários abaixo e reenvie para revisão.'
+            />
+            <CardContent className='pts-0'>
+              <Typography variant='body1' color='text.primary' sx={{ whiteSpace: 'pre-wrap' }}>
+                {propostaAtual.parecerSocio}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      ) : null}
+
+      {propostaAtual?.consideracoesCliente ? (
+        <Grid size={{ xs: 12 }}>
+          <Card variant='outlined'>
+            <CardHeader
+              title='Considerações do cliente'
+              subheader='Ajuste a proposta conforme os comentários abaixo e reenvie para revisão.'
+            />
+            <CardContent className='pts-0'>
+              <Typography variant='body1' color='text.primary' sx={{ whiteSpace: 'pre-wrap' }}>
+                {propostaAtual.consideracoesCliente}
+              </Typography>
+            </CardContent>
+          </Card>
         </Grid>
       ) : null}
 
@@ -467,16 +529,6 @@ const ProjetoTabPropostas = ({ projeto, fluxo }: Props) => {
                 toast.error(err instanceof Error ? err.message : 'Download falhou.')
               )
             }
-          />
-        </Grid>
-      ) : null}
-
-      {aguardandoAjusteSocio && propostaAtual?.parecerSocio ? (
-        <Grid size={{ xs: 12 }}>
-          <ProjetoStateCard
-            titulo='Reprovação do sócio'
-            descricao={propostaAtual.parecerSocio}
-            tipo='info'
           />
         </Grid>
       ) : null}

@@ -102,15 +102,20 @@ public class InteracaoFluxoService {
         proposta.setStatus(novoStatus);
         proposta.setAtualizadoEm(agora);
         switch (request.tipoInteracao()) {
-            case CONSIDERACOES_CLIENTE -> proposta.setConsideracoesPendentes(true);
+            case CONSIDERACOES_CLIENTE -> {
+                proposta.setConsideracoesPendentes(true);
+                proposta.setConsideracoesCliente(texto);
+            }
             case ACEITE_CLIENTE -> {
                 proposta.setAceitaClienteEm(agora);
                 proposta.setConsideracoesPendentes(false);
+                proposta.setConsideracoesCliente(null);
             }
             case RECUSA_CLIENTE -> {
                 proposta.setNegadaClienteEm(agora);
                 proposta.setMotivoNegativaCliente(texto);
                 proposta.setConsideracoesPendentes(false);
+                proposta.setConsideracoesCliente(null);
             }
         }
 
@@ -180,15 +185,20 @@ public class InteracaoFluxoService {
         contrato.setStatus(novoStatus);
         contrato.setAtualizadoEm(agora);
         switch (request.tipoInteracao()) {
-            case CONSIDERACOES_CLIENTE -> contrato.setConsideracoesPendentes(true);
+            case CONSIDERACOES_CLIENTE -> {
+                contrato.setConsideracoesPendentes(true);
+                contrato.setConsideracoesCliente(texto);
+            }
             case ACEITE_CLIENTE -> {
                 contrato.setAceitoClienteEm(agora);
                 contrato.setConsideracoesPendentes(false);
+                contrato.setConsideracoesCliente(null);
             }
             case RECUSA_CLIENTE -> {
                 contrato.setRecusadoClienteEm(agora);
                 contrato.setMotivoRecusaCliente(texto);
                 contrato.setConsideracoesPendentes(false);
+                contrato.setConsideracoesCliente(null);
             }
         }
 
@@ -368,6 +378,7 @@ public class InteracaoFluxoService {
                 p.getAvaliadaSocioEm(),
                 p.getAvaliadaPorSocio() != null ? p.getAvaliadaPorSocio().getId() : null,
                 p.isConsideracoesPendentes(),
+                p.getConsideracoesCliente(),
                 p.getParecerSocio(),
                 p.getCobrancaPropostaInicioEm(),
                 p.getCriadoEm(),
@@ -389,6 +400,7 @@ public class InteracaoFluxoService {
                 c.getAceitoClienteEm(),
                 c.getRecusadoClienteEm(),
                 c.isConsideracoesPendentes(),
+                c.getConsideracoesCliente(),
                 c.getCriadoEm(),
                 c.getAtualizadoEm());
     }

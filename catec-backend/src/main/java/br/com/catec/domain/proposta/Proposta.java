@@ -57,6 +57,9 @@ public class Proposta {
     @Column(name = "motivo_negativa_cliente", columnDefinition = "TEXT")
     private String motivoNegativaCliente;
 
+    @Column(name = "consideracoes_cliente", columnDefinition = "TEXT")
+    private String consideracoesCliente;
+
     @Column(name = "consideracoes_pendentes", nullable = false)
     private boolean consideracoesPendentes;
 
@@ -154,6 +157,14 @@ public class Proposta {
 
     public void setMotivoNegativaCliente(String motivoNegativaCliente) {
         this.motivoNegativaCliente = motivoNegativaCliente;
+    }
+
+    public String getConsideracoesCliente() {
+        return consideracoesCliente;
+    }
+
+    public void setConsideracoesCliente(String consideracoesCliente) {
+        this.consideracoesCliente = consideracoesCliente;
     }
 
     public boolean isConsideracoesPendentes() {

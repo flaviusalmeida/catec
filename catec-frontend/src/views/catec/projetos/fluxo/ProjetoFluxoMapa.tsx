@@ -291,7 +291,7 @@ const ProjetoFluxoMapa = () => {
 
       <Grid size={{ xs: 12, md: 6 }}>
         <Card>
-          <CardHeader title='Tags do contrato (aba Contrato)' subheader='Componente ContratoStatusBadge' />
+          <CardHeader title='Tags do contrato (aba Contrato)' subheader='RECUSADO exibe tag Recusado pelo cliente no documento' />
           <CardContent>
             <Grid container spacing={3}>
               {ORDEM_STATUS_CONTRATO.map(status => (
@@ -418,7 +418,7 @@ const ProjetoFluxoMapa = () => {
 
       <Grid size={{ xs: 12, md: 6 }}>
         <Card className='h-full'>
-          <CardHeader title='Fase contrato' subheader='ContratoStatusBadge no fluxo' />
+          <CardHeader title='Fase contrato' subheader='Sem revisão interna — RASCUNHO → envio → resposta do cliente' />
           <CardContent className='flex flex-col items-center overflow-x-auto p-6'>
             <ColunaFluxo
               titulo='Caminho feliz'

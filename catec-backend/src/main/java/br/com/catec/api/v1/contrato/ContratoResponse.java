@@ -13,5 +13,6 @@ public record ContratoResponse(
         Instant aceitoClienteEm,
         Instant recusadoClienteEm,
         boolean consideracoesPendentes,
+        String consideracoesCliente,
         Instant criadoEm,
         Instant atualizadoEm) {}

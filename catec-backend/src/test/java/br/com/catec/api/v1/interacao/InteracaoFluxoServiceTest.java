@@ -139,6 +139,7 @@ class InteracaoFluxoServiceTest {
         var res = service.registrarRespostaCliente(10L, 7L, req, admin());
 
         assertEquals(PropostaStatus.AGUARDANDO_AJUSTE, res.proposta().status());
+        assertEquals("Pediu ajuste.", res.proposta().consideracoesCliente());
         assertEquals(ProjetoStatus.AGUARDANDO_AJUSTE, proposta.getProjeto().getStatus());
         verify(auditoriaService)
                 .registrarTransicaoStatus(

@@ -48,8 +48,8 @@ export const STATUS_CONTRATO_ROTULO_BADGE: Record<CatecContratoStatus, string> =
   RASCUNHO: 'Elaborando',
   ENVIADO_AO_CLIENTE: 'Enviado',
   AGUARDANDO_AJUSTE: 'Aguardando ajuste',
-  ACEITO: 'Aceito',
-  RECUSADO: 'Recusado'
+  ACEITO: 'Aceito pelo cliente',
+  RECUSADO: 'Recusado pelo cliente'
 }
 
 export const ORDEM_STATUS_PROPOSTA: CatecPropostaStatus[] = [
@@ -113,10 +113,7 @@ export function propostaAguardandoEnvioAoCliente(proposta: {
 }
 
 export const STATUS_CONTRATO_UPLOAD: CatecContratoStatus[] = ['RASCUNHO', 'AGUARDANDO_AJUSTE']
-export const STATUS_CONTRATO_INTERACAO_CLIENTE: CatecContratoStatus[] = [
-  'ENVIADO_AO_CLIENTE',
-  'AGUARDANDO_AJUSTE'
-]
+export const STATUS_CONTRATO_INTERACAO_CLIENTE: CatecContratoStatus[] = ['ENVIADO_AO_CLIENTE']
 
 export type CatecDocumentoAnexo = {
   id: number
@@ -136,6 +133,7 @@ export type CatecProposta = {
   enviadaClienteEm: string | null
   avaliadaSocioEm: string | null
   consideracoesPendentes: boolean
+  consideracoesCliente: string | null
   parecerSocio: string | null
   criadoEm: string
   atualizadoEm: string
@@ -149,6 +147,8 @@ export type CatecContrato = {
   elaboradoPorId: number
   elaboradoPorNome: string
   enviadoClienteEm: string | null
+  consideracoesPendentes: boolean
+  consideracoesCliente: string | null
   criadoEm: string
   atualizadoEm: string
   documentos: CatecDocumentoAnexo[]
@@ -223,6 +223,7 @@ export function parseCatecProposta(raw: unknown): CatecProposta {
     enviadaClienteEm: data.enviadaClienteEm == null ? null : String(data.enviadaClienteEm),
     avaliadaSocioEm,
     consideracoesPendentes: data.consideracoesPendentes === true,
+    consideracoesCliente: data.consideracoesCliente == null ? null : String(data.consideracoesCliente),
     parecerSocio: data.parecerSocio == null ? null : String(data.parecerSocio),
     criadoEm: String(data.criadoEm ?? ''),
     atualizadoEm: String(data.atualizadoEm ?? ''),
@@ -246,6 +247,8 @@ export function parseCatecContrato(raw: unknown): CatecContrato {
     elaboradoPorId: Number(data.elaboradoPorId ?? 0),
     elaboradoPorNome: String(data.elaboradoPorNome ?? ''),
     enviadoClienteEm: data.enviadoClienteEm == null ? null : String(data.enviadoClienteEm),
+    consideracoesPendentes: data.consideracoesPendentes === true,
+    consideracoesCliente: data.consideracoesCliente == null ? null : String(data.consideracoesCliente),
     criadoEm: String(data.criadoEm ?? ''),
     atualizadoEm: String(data.atualizadoEm ?? ''),
     documentos: []

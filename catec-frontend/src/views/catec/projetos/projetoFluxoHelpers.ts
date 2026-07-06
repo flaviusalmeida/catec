@@ -66,7 +66,7 @@ export function resolvePropostaWorkflowActions(
   const { hasAttachment, podeAprovarSocio = false, podeDevolverSocio = false } = opts
   const statusNormalizado = normalizarStatusProposta(status)
 
-  if (statusNormalizado === 'RASCUNHO' && hasAttachment) {
+  if ((statusNormalizado === 'RASCUNHO' || statusNormalizado === 'AGUARDANDO_AJUSTE') && hasAttachment) {
     return [{ key: 'solicitar-revisao', label: 'Enviar para revisão', color: 'primary' }]
   }
 

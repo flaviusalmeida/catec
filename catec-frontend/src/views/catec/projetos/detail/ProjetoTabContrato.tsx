@@ -68,42 +68,26 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
     label: string
     color: 'primary' | 'success' | 'error' | 'secondary'
     variant: 'contained' | 'tonal'
-  }> =
-    contrato?.status === 'AGUARDANDO_AJUSTE'
-      ? [
-          {
-            tipo: 'ACEITE_CLIENTE',
-            label: TIPO_INTERACAO_ROTULO_CONTRATO.ACEITE_CLIENTE,
-            color: 'success',
-            variant: 'contained'
-          },
-          {
-            tipo: 'RECUSA_CLIENTE',
-            label: TIPO_INTERACAO_ROTULO_CONTRATO.RECUSA_CLIENTE,
-            color: 'error',
-            variant: 'tonal'
-          }
-        ]
-      : [
-          {
-            tipo: 'CONSIDERACOES_CLIENTE',
-            label: TIPO_INTERACAO_ROTULO_CONTRATO.CONSIDERACOES_CLIENTE,
-            color: 'secondary',
-            variant: 'tonal'
-          },
-          {
-            tipo: 'ACEITE_CLIENTE',
-            label: TIPO_INTERACAO_ROTULO_CONTRATO.ACEITE_CLIENTE,
-            color: 'success',
-            variant: 'contained'
-          },
-          {
-            tipo: 'RECUSA_CLIENTE',
-            label: TIPO_INTERACAO_ROTULO_CONTRATO.RECUSA_CLIENTE,
-            color: 'error',
-            variant: 'tonal'
-          }
-        ]
+  }> = [
+    {
+      tipo: 'CONSIDERACOES_CLIENTE',
+      label: TIPO_INTERACAO_ROTULO_CONTRATO.CONSIDERACOES_CLIENTE,
+      color: 'secondary',
+      variant: 'tonal'
+    },
+    {
+      tipo: 'ACEITE_CLIENTE',
+      label: TIPO_INTERACAO_ROTULO_CONTRATO.ACEITE_CLIENTE,
+      color: 'success',
+      variant: 'contained'
+    },
+    {
+      tipo: 'RECUSA_CLIENTE',
+      label: TIPO_INTERACAO_ROTULO_CONTRATO.RECUSA_CLIENTE,
+      color: 'error',
+      variant: 'tonal'
+    }
+  ]
 
   const acoesRespostaClienteCard = podeRegistrarRespostaCliente
     ? acoesRespostaCliente.map(acao => ({
@@ -164,19 +148,40 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
   const podeUploadExistente =
     podeEditarContrato && contrato != null && STATUS_CONTRATO_UPLOAD.includes(contrato.status)
 
+  const ajustandoContratoCliente =
+    contrato?.status === 'AGUARDANDO_AJUSTE' ||
+    (contrato?.status === 'RASCUNHO' && contrato.consideracoesPendentes)
+
   const podeEnviarCliente = podeEditarContrato && contrato?.status === 'RASCUNHO' && temAnexo
 
-  const mostrarEnviarContratoCard = Boolean(contrato && contrato.status === 'RASCUNHO' && temAnexo && podeEnviarCliente)
+  const mostrarEnviarContratoCard = Boolean(
+    contrato && contrato.status === 'RASCUNHO' && temAnexo && podeEnviarCliente && !contrato.consideracoesPendentes
+  )
 
   const mostrarRespostaClienteCard = contrato?.status === 'ENVIADO_AO_CLIENTE' && temAnexo
 
   const mostrarContratoAceitoCard = contrato?.status === 'ACEITO' && temAnexo
 
+  const mostrarContratoRecusadoCard = contrato?.status === 'RECUSADO' && temAnexo
+
   const mostrarUploadCard = Boolean(
     podeIniciarContrato ||
       (podeUploadExistente &&
-        (contrato?.status === 'AGUARDANDO_AJUSTE' || (contrato?.status === 'RASCUNHO' && !temAnexo)))
+        (ajustandoContratoCliente || (contrato?.status === 'RASCUNHO' && !temAnexo)))
   )
+
+  const acoesAjustarContratoCard =
+    contrato?.status === 'RASCUNHO' && contrato.consideracoesPendentes && temAnexo
+      ? [
+          {
+            key: 'enviar-cliente',
+            label: 'Enviar ao cliente',
+            color: 'primary' as const,
+            alinhamento: 'fim' as const,
+            onClick: handleEnviarContratoCliente
+          }
+        ]
+      : undefined
 
   const metaDocumento = documentoAtual
     ? `Versão ${documentoAtual.versao}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ''}`
@@ -210,20 +215,36 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
       {mostrarUploadCard ? (
         <Grid size={{ xs: 12 }}>
           <ProjetoUploadCard
-            titulo='Enviar contrato'
+            titulo={ajustandoContratoCliente ? 'Ajustar contrato' : 'Enviar contrato'}
             nomeArquivo={documentoAtual?.nomeOriginal}
             meta={metaDocumento}
-            arquivoExtra={contrato ? <ContratoStatusBadge status={contrato.status} /> : undefined}
+            arquivoExtra={
+              contrato?.status === 'AGUARDANDO_AJUSTE' ? (
+                <ContratoStatusBadge status={contrato.status} />
+              ) : undefined
+            }
             onUpload={uploadContrato}
             disabled={processando}
             onDownload={downloadDocumento}
             {...previewDocumentoProps}
-            acoes={
-              contrato?.status === 'AGUARDANDO_AJUSTE' && acoesRespostaClienteCard.length > 0
-                ? acoesRespostaClienteCard
-                : undefined
-            }
+            acoes={acoesAjustarContratoCard}
           />
+        </Grid>
+      ) : null}
+
+      {contrato?.consideracoesCliente ? (
+        <Grid size={{ xs: 12 }}>
+          <Card variant='outlined'>
+            <CardHeader
+              title='Considerações do cliente'
+              subheader='Ajuste o contrato conforme os comentários abaixo e reenvie ao cliente.'
+            />
+            <CardContent className='pts-0'>
+              <Typography variant='body1' color='text.primary' sx={{ whiteSpace: 'pre-wrap' }}>
+                {contrato.consideracoesCliente}
+              </Typography>
+            </CardContent>
+          </Card>
         </Grid>
       ) : null}
 
@@ -233,7 +254,6 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
             titulo='Enviar contrato'
             nomeArquivo={documentoAtual?.nomeOriginal}
             meta={metaDocumento}
-            arquivoExtra={contrato ? <ContratoStatusBadge status={contrato.status} /> : undefined}
             onUpload={uploadContrato}
             disabled={processando}
             onDownload={downloadDocumento}
@@ -284,18 +304,29 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
         </Grid>
       ) : null}
 
-      {contrato?.status === 'RECUSADO' ? (
+      {mostrarContratoRecusadoCard ? (
         <Grid size={{ xs: 12 }}>
-          <ProjetoStateCard titulo='Contrato recusado.' tipo='info' />
+          <ProjetoUploadCard
+            titulo='Documento do contrato'
+            nomeArquivo={documentoAtual?.nomeOriginal}
+            meta={metaDocumento}
+            arquivoExtra={contrato ? <ContratoStatusBadge status={contrato.status} /> : undefined}
+            permitirSubstituir={false}
+            disabled={processando}
+            onUpload={uploadContrato}
+            onDownload={downloadDocumento}
+            {...previewDocumentoProps}
+          />
         </Grid>
       ) : null}
 
       {contrato &&
       !mostrarUploadCard &&
+      !ajustandoContratoCliente &&
       !mostrarEnviarContratoCard &&
       !mostrarRespostaClienteCard &&
       !mostrarContratoAceitoCard &&
-      contrato.status !== 'RECUSADO' &&
+      !mostrarContratoRecusadoCard &&
       temAnexo ? (
         <Grid size={{ xs: 12 }}>
           <Card variant='outlined'>
