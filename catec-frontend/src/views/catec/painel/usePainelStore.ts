@@ -5,11 +5,17 @@ import { useCallback, useEffect, useSyncExternalStore } from 'react'
 import { obterProjetosPainelCatec } from '@/libs/catecProjetosApi'
 import type { CatecProjetoPainel } from '@/types/catec/projetoTypes'
 
+const INTERVALO_ATUALIZACAO_MS = 5 * 60 * 1000
+
 type StoreState = {
   painel: CatecProjetoPainel | null
   carregando: boolean
   erro: string | null
   inicializado: boolean
+}
+
+type CarregarOpcoes = {
+  silencioso?: boolean
 }
 
 const initialState: StoreState = { painel: null, carregando: false, erro: null, inicializado: false }
@@ -37,17 +43,25 @@ function getSnapshot() {
   return state
 }
 
-async function carregarStore() {
+async function carregarStore(opcoes: CarregarOpcoes = {}) {
+  const silencioso = opcoes.silencioso ?? false
+
   if (carregarPromise) return carregarPromise
 
   carregarPromise = (async () => {
-    setState({ carregando: true, erro: null })
+    if (!silencioso) {
+      setState({ carregando: true, erro: null })
+    }
 
     try {
       const painel = await obterProjetosPainelCatec()
 
       setState({ painel, carregando: false, erro: null, inicializado: true })
     } catch (err) {
+      if (silencioso) {
+        return
+      }
+
       setState({
         painel: null,
         carregando: false,
@@ -71,8 +85,8 @@ export function usePainelStore() {
     }
   }, [snapshot.inicializado, snapshot.carregando])
 
-  const carregar = useCallback(async () => {
-    await carregarStore()
+  const carregar = useCallback(async (opcoes?: CarregarOpcoes) => {
+    await carregarStore(opcoes)
   }, [])
 
   return {
@@ -81,4 +95,44 @@ export function usePainelStore() {
     erro: snapshot.erro,
     carregar
   }
+}
+
+/** Atualiza o painel a cada 5 min enquanto a página estiver montada e a aba visível. */
+export function usePainelAutoAtualizacao(carregar: (opcoes?: CarregarOpcoes) => Promise<void>) {
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval> | null = null
+
+    const parar = () => {
+      if (intervalId !== null) {
+        clearInterval(intervalId)
+        intervalId = null
+      }
+    }
+
+    const iniciar = () => {
+      parar()
+      intervalId = setInterval(() => {
+        void carregar({ silencioso: true })
+      }, INTERVALO_ATUALIZACAO_MS)
+    }
+
+    const onVisibilidade = () => {
+      if (document.visibilityState === 'visible') {
+        iniciar()
+      } else {
+        parar()
+      }
+    }
+
+    if (document.visibilityState === 'visible') {
+      iniciar()
+    }
+
+    document.addEventListener('visibilitychange', onVisibilidade)
+
+    return () => {
+      parar()
+      document.removeEventListener('visibilitychange', onVisibilidade)
+    }
+  }, [carregar])
 }

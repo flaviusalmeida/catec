@@ -17,10 +17,12 @@ import PainelPrazoProximo from './PainelPrazoProximo'
 import PainelProjetosTable from './PainelProjetosTable'
 import PainelStatusDonut from './PainelStatusDonut'
 import { useFullscreen } from './useFullscreen'
-import { usePainelStore } from './usePainelStore'
+import { usePainelAutoAtualizacao, usePainelStore } from './usePainelStore'
 
 const PainelView = () => {
-  const { painel, carregando, erro } = usePainelStore()
+  const { painel, carregando, erro, carregar } = usePainelStore()
+
+  usePainelAutoAtualizacao(carregar)
   const [statusFiltro, setStatusFiltro] = useState<CatecProjetoStatus | null>(null)
   const { ref, ativo: telaCheia, alternar: alternarTelaCheia } = useFullscreen<HTMLDivElement>()
 
