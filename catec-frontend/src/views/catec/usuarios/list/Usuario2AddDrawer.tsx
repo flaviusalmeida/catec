@@ -3,12 +3,13 @@
 import { useState } from 'react'
 
 import Button from '@mui/material/Button'
-import Checkbox from '@mui/material/Checkbox'
 import Divider from '@mui/material/Divider'
 import Drawer from '@mui/material/Drawer'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Grid from '@mui/material/Grid'
 import IconButton from '@mui/material/IconButton'
+import Radio from '@mui/material/Radio'
+import RadioGroup from '@mui/material/RadioGroup'
 import Typography from '@mui/material/Typography'
 import { toast } from 'react-toastify'
 
@@ -27,14 +28,14 @@ const Usuario2AddDrawer = ({ open, onClose, onAdd }: Props) => {
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [telefone, setTelefone] = useState('')
-  const [grupos, setGrupos] = useState<Set<CatecGrupoValor>>(new Set(['COLABORADOR']))
+  const [grupo, setGrupo] = useState<CatecGrupoValor>('COLABORADOR')
   const [salvando, setSalvando] = useState(false)
 
   function reset() {
     setNome('')
     setEmail('')
     setTelefone('')
-    setGrupos(new Set(['COLABORADOR']))
+    setGrupo('COLABORADOR')
   }
 
   function handleClose() {
@@ -42,17 +43,6 @@ const Usuario2AddDrawer = ({ open, onClose, onAdd }: Props) => {
 
     reset()
     onClose()
-  }
-
-  function toggleGrupo(valor: CatecGrupoValor) {
-    setGrupos(prev => {
-      const next = new Set(prev)
-
-      if (next.has(valor)) next.delete(valor)
-      else next.add(valor)
-
-      return next
-    })
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -64,8 +54,8 @@ const Usuario2AddDrawer = ({ open, onClose, onAdd }: Props) => {
       return
     }
 
-    if (grupos.size === 0) {
-      toast.error('Selecione pelo menos um grupo.')
+    if (!grupo) {
+      toast.error('Selecione um grupo.')
 
       return
     }
@@ -77,7 +67,7 @@ const Usuario2AddDrawer = ({ open, onClose, onAdd }: Props) => {
         nome: nome.trim(),
         email: email.trim(),
         telefone: telefone.trim() || null,
-        grupos: [...grupos]
+        grupos: [grupo]
       })
 
       toast.success('Usuário criado. Senha provisória enviada por e-mail.')
@@ -131,20 +121,17 @@ const Usuario2AddDrawer = ({ open, onClose, onAdd }: Props) => {
 
         <div>
           <Typography variant='subtitle2' className='mbe-3 font-medium'>
-            Grupos de acesso
+            Grupo de acesso
           </Typography>
-          <Grid container spacing={1}>
-            {GRUPOS_OPCOES.map(g => (
-              <Grid size={{ xs: 12 }} key={g.valor}>
-                <FormControlLabel
-                  control={
-                    <Checkbox checked={grupos.has(g.valor)} onChange={() => toggleGrupo(g.valor)} />
-                  }
-                  label={g.rotulo}
-                />
-              </Grid>
-            ))}
-          </Grid>
+          <RadioGroup value={grupo} onChange={e => setGrupo(e.target.value as CatecGrupoValor)}>
+            <Grid container spacing={1}>
+              {GRUPOS_OPCOES.map(g => (
+                <Grid size={{ xs: 12 }} key={g.valor}>
+                  <FormControlLabel value={g.valor} control={<Radio />} label={g.rotulo} />
+                </Grid>
+              ))}
+            </Grid>
+          </RadioGroup>
         </div>
 
         <Typography variant='body2' color='text.secondary'>
