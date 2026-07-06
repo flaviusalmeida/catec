@@ -62,6 +62,9 @@ public class Projeto {
     @Column(name = "previsao_conclusao_em")
     private Instant previsaoConclusaoEm;
 
+    @Column(name = "conclusao_em")
+    private Instant conclusaoEm;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "cliente_associado_por_id", nullable = true)
     private Usuario clienteAssociadoPor;
@@ -168,6 +171,14 @@ public class Projeto {
 
     public void setPrevisaoConclusaoEm(Instant previsaoConclusaoEm) {
         this.previsaoConclusaoEm = previsaoConclusaoEm;
+    }
+
+    public Instant getConclusaoEm() {
+        return conclusaoEm;
+    }
+
+    public void setConclusaoEm(Instant conclusaoEm) {
+        this.conclusaoEm = conclusaoEm;
     }
 
     public void setClienteAssociadoPor(Usuario clienteAssociadoPor) {

@@ -201,6 +201,9 @@ public class ProjetoService {
             validarTransicao(p.getStatus(), req.status());
             ProjetoStatus statusAnterior = p.getStatus();
             p.setStatus(req.status());
+            if (req.status() == ProjetoStatus.FINALIZADO) {
+                p.setConclusaoEm(agora);
+            }
             auditoriaService.registrarTransicaoStatus(
                     TipoEntidadeAuditoria.PROJETO,
                     p.getId(),
@@ -316,7 +319,8 @@ public class ProjetoService {
                     associadoPorId,
                     associadoPorNome,
                     p.getPrazoConclusaoDias(),
-                    p.getPrevisaoConclusaoEm());
+                    p.getPrevisaoConclusaoEm(),
+                    p.getConclusaoEm());
         }
         return new ProjetoResponse(
                 p.getId(),
@@ -335,7 +339,8 @@ public class ProjetoService {
                 associadoPorId,
                 associadoPorNome,
                 p.getPrazoConclusaoDias(),
-                p.getPrevisaoConclusaoEm());
+                p.getPrevisaoConclusaoEm(),
+                p.getConclusaoEm());
     }
 
     private static String emailContatoParaResposta(Cliente c, Projeto p) {

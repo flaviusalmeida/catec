@@ -102,6 +102,8 @@ class ProjetoServiceTest {
         ProjetoResponse out = service.atualizar(1L, req, adminPrincipal());
 
         assertEquals(ProjetoStatus.FINALIZADO, out.status());
+        assertEquals(ProjetoStatus.FINALIZADO, p.getStatus());
+        assertEquals(p.getConclusaoEm(), out.conclusaoEm());
         verify(auditoriaService)
                 .registrarTransicaoStatus(
                         TipoEntidadeAuditoria.PROJETO,

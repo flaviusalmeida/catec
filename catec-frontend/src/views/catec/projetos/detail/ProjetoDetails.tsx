@@ -16,6 +16,7 @@ import { formatTelefoneBrasil } from '@/utils/catec/brFormat'
 import { getInitials } from '@/utils/getInitials'
 
 import ProjetoStatusBadge from '../ProjetoStatusBadge'
+import { formatarDataCurta } from '../projetoFluxoHelpers'
 import ProjetoEncerrarStatus from './ProjetoEncerrarStatus'
 
 type Props = {
@@ -74,6 +75,22 @@ const ProjetoDetails = ({ projeto, onStatusAlterado }: Props) => {
                 Status:
               </Typography>
               <Typography>{STATUS_PROJETO_ROTULO[projeto.status]}</Typography>
+            </div>
+            <div className='flex items-center flex-wrap gap-x-1.5'>
+              <Typography className='font-medium' color='text.primary'>
+                Conclusão prevista:
+              </Typography>
+              <Typography>
+                {projeto.previsaoConclusaoEm ? formatarDataCurta(projeto.previsaoConclusaoEm) : '—'}
+              </Typography>
+            </div>
+            <div className='flex items-center flex-wrap gap-x-1.5'>
+              <Typography className='font-medium' color='text.primary'>
+                Data de conclusão:
+              </Typography>
+              <Typography>
+                {projeto.conclusaoEm ? formatarDataCurta(projeto.conclusaoEm) : '—'}
+              </Typography>
             </div>
             <div className='flex items-center flex-wrap gap-x-1.5'>
               <Typography className='font-medium' color='text.primary'>

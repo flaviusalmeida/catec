@@ -95,6 +95,7 @@ class ProjetoControllerMockMvcTest {
                 2L,
                 "Colab",
                 null,
+                null,
                 null);
         when(projetoService.criar(eq(body), eq(colab(2L)))).thenReturn(res);
 
@@ -129,6 +130,7 @@ class ProjetoControllerMockMvcTest {
                 Instant.parse("2026-01-01T12:00:00Z"),
                 2L,
                 "Colab",
+                null,
                 null,
                 null);
         when(projetoService.atualizar(eq(5L), eq(body), eq(adm(1L)))).thenReturn(res);
