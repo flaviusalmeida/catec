@@ -29,7 +29,7 @@ class EmailNotificacaoServiceTest {
     @Test
     void enviarSenhaProvisoria_quandoMailDesabilitado_naoDeveTentarEnviar() {
         var service = new EmailNotificacaoService(
-                new AppMailProperties(false, "noreply@catec.local"), mailSenderProvider, environment);
+                new AppMailProperties(false, "noreply@catec.local", false), mailSenderProvider, environment);
         when(mailSenderProvider.getIfAvailable()).thenReturn(mailSender);
 
         assertDoesNotThrow(() -> service.enviarSenhaProvisoria("user@catec.local", "User", "Senha@123"));
@@ -39,7 +39,7 @@ class EmailNotificacaoServiceTest {
     @Test
     void enviarSenhaProvisoria_quandoSenderIndisponivel_naoDeveFalhar() {
         var service = new EmailNotificacaoService(
-                new AppMailProperties(true, "noreply@catec.local"), mailSenderProvider, environment);
+                new AppMailProperties(true, "noreply@catec.local", false), mailSenderProvider, environment);
         when(mailSenderProvider.getIfAvailable()).thenReturn(null);
 
         assertDoesNotThrow(() -> service.enviarSenhaProvisoria("user@catec.local", "User", "Senha@123"));
@@ -48,7 +48,7 @@ class EmailNotificacaoServiceTest {
     @Test
     void enviarSenhaProvisoria_quandoDevSemPermissao_naoDeveEnviar() {
         var service = new EmailNotificacaoService(
-                new AppMailProperties(true, "noreply@catec.local"), mailSenderProvider, environment);
+                new AppMailProperties(true, "noreply@catec.local", false), mailSenderProvider, environment);
         when(environment.acceptsProfiles(Profiles.of("dev"))).thenReturn(true);
         when(mailSenderProvider.getIfAvailable()).thenReturn(mailSender);
 
@@ -72,7 +72,7 @@ class EmailNotificacaoServiceTest {
     @Test
     void enviarSenhaProvisoria_quandoMailHabilitadoForaDeDev_deveEnviarMensagem() {
         var service = new EmailNotificacaoService(
-                new AppMailProperties(true, "noreply@catec.local"), mailSenderProvider, environment);
+                new AppMailProperties(true, "noreply@catec.local", false), mailSenderProvider, environment);
         MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
         when(environment.acceptsProfiles(Profiles.of("dev"))).thenReturn(false);
         when(mailSenderProvider.getIfAvailable()).thenReturn(mailSender);
@@ -85,7 +85,7 @@ class EmailNotificacaoServiceTest {
     @Test
     void enviarSenhaProvisoria_quandoEnvioFalha_deveLancarIllegalState() {
         var service = new EmailNotificacaoService(
-                new AppMailProperties(true, "noreply@catec.local"), mailSenderProvider, environment);
+                new AppMailProperties(true, "noreply@catec.local", false), mailSenderProvider, environment);
         MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
         when(environment.acceptsProfiles(Profiles.of("dev"))).thenReturn(false);
         when(mailSenderProvider.getIfAvailable()).thenReturn(mailSender);

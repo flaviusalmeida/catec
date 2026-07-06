@@ -8,8 +8,4 @@ public record AppMailProperties(boolean enabled, String from, boolean allowInDev
     public AppMailProperties {
         from = from == null || from.isBlank() ? "noreply@catec.local" : from;
     }
-
-    public AppMailProperties(boolean enabled, String from) {
-        this(enabled, from, false);
-    }
 }
