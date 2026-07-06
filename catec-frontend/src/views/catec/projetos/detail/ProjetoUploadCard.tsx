@@ -31,6 +31,7 @@ type Props = {
   previewTitulo?: string
   previewSubtitulo?: string
   arquivoExtra?: ReactNode
+  areaEntreArquivoEAcoes?: ReactNode
   acoes?: AcaoUpload[]
 }
 
@@ -46,6 +47,7 @@ const ProjetoUploadCard = ({
   previewTitulo,
   previewSubtitulo,
   arquivoExtra,
+  areaEntreArquivoEAcoes,
   acoes
 }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -120,6 +122,7 @@ const ProjetoUploadCard = ({
         ) : (
           <Typography color='text.secondary'>Nenhum documento anexado.</Typography>
         )}
+        {areaEntreArquivoEAcoes}
         {temLinhaAcoes ? (
           permitirSubstituir ? (
             <div className='flex flex-wrap items-center justify-between gap-3'>

@@ -314,7 +314,9 @@ public class ProjetoService {
                     p.getAtualizadoEm(),
                     p.getClienteAssociadoEm(),
                     associadoPorId,
-                    associadoPorNome);
+                    associadoPorNome,
+                    p.getPrazoConclusaoDias(),
+                    p.getPrevisaoConclusaoEm());
         }
         return new ProjetoResponse(
                 p.getId(),
@@ -331,7 +333,9 @@ public class ProjetoService {
                 p.getAtualizadoEm(),
                 p.getClienteAssociadoEm(),
                 associadoPorId,
-                associadoPorNome);
+                associadoPorNome,
+                p.getPrazoConclusaoDias(),
+                p.getPrevisaoConclusaoEm());
     }
 
     private static String emailContatoParaResposta(Cliente c, Projeto p) {

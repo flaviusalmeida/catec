@@ -249,10 +249,17 @@ export async function uploadDocumentoContratoCatec(
   assertCatecOk(res, data, 'Erro no upload do contrato.')
 }
 
-export async function enviarContratoClienteCatec(projetoId: number, contratoId: number): Promise<void> {
+export async function enviarContratoClienteCatec(
+  projetoId: number,
+  contratoId: number,
+  prazoConclusaoDias: number
+): Promise<void> {
   const res = await catecApiFetch(
     `/api/v1/projetos/${projetoId}/contratos/${contratoId}/enviar-cliente`,
-    { method: 'POST' }
+    {
+      method: 'POST',
+      body: JSON.stringify({ prazoConclusaoDias })
+    }
   )
 
   const data = await readCatecJsonBody(res)

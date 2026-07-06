@@ -56,6 +56,12 @@ public class Projeto {
     @Column(name = "cliente_associado_em")
     private Instant clienteAssociadoEm;
 
+    @Column(name = "prazo_conclusao_dias")
+    private Integer prazoConclusaoDias;
+
+    @Column(name = "previsao_conclusao_em")
+    private Instant previsaoConclusaoEm;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "cliente_associado_por_id", nullable = true)
     private Usuario clienteAssociadoPor;
@@ -146,6 +152,22 @@ public class Projeto {
 
     public void setClienteAssociadoEm(Instant clienteAssociadoEm) {
         this.clienteAssociadoEm = clienteAssociadoEm;
+    }
+
+    public Integer getPrazoConclusaoDias() {
+        return prazoConclusaoDias;
+    }
+
+    public void setPrazoConclusaoDias(Integer prazoConclusaoDias) {
+        this.prazoConclusaoDias = prazoConclusaoDias;
+    }
+
+    public Instant getPrevisaoConclusaoEm() {
+        return previsaoConclusaoEm;
+    }
+
+    public void setPrevisaoConclusaoEm(Instant previsaoConclusaoEm) {
+        this.previsaoConclusaoEm = previsaoConclusaoEm;
     }
 
     public void setClienteAssociadoPor(Usuario clienteAssociadoPor) {

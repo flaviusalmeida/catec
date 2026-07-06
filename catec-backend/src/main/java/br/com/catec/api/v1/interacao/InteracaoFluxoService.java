@@ -26,6 +26,8 @@ import br.com.catec.security.AuthorizationService;
 import br.com.catec.security.PermissaoCodigo;
 import br.com.catec.security.UsuarioAutenticado;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.EnumSet;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -226,6 +228,7 @@ public class InteracaoFluxoService {
         if (novoStatus == ContratoStatus.RECUSADO) {
             sincronizarProjeto(salvo.getProjeto(), ProjetoStatus.CANCELADO, "CONTRATO_RECUSADO_CLIENTE", principal.id());
         } else if (novoStatus == ContratoStatus.ACEITO) {
+            aplicarPrevisaoConclusaoProjeto(salvo.getProjeto(), agora);
             sincronizarProjeto(salvo.getProjeto(), ProjetoStatus.AGUARDANDO_EXECUCAO, "CONTRATO_ACEITO_CLIENTE", principal.id());
         }
 
@@ -247,6 +250,18 @@ public class InteracaoFluxoService {
                 anterior.name(),
                 novoStatus.name(),
                 usuarioId);
+    }
+
+    private void aplicarPrevisaoConclusaoProjeto(Projeto projeto, Instant aceiteEm) {
+        Integer prazoDias = projeto.getPrazoConclusaoDias();
+        if (prazoDias == null || prazoDias < 1) {
+            return;
+        }
+        ZoneId zona = ZoneId.of("America/Sao_Paulo");
+        LocalDate inicio = aceiteEm.atZone(zona).toLocalDate();
+        projeto.setPrevisaoConclusaoEm(inicio.plusDays(prazoDias).atStartOfDay(zona).toInstant());
+        projeto.setAtualizadoEm(Instant.now());
+        projetoRepository.save(projeto);
     }
 
     private PropostaStatus aplicarTransicaoPorTipo(Proposta proposta, TipoInteracaoFluxo tipo) {

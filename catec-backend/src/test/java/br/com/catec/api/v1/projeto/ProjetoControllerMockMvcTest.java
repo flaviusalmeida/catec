@@ -93,7 +93,9 @@ class ProjetoControllerMockMvcTest {
                 Instant.parse("2026-01-01T12:00:00Z"),
                 Instant.parse("2026-01-01T12:00:00Z"),
                 2L,
-                "Colab");
+                "Colab",
+                null,
+                null);
         when(projetoService.criar(eq(body), eq(colab(2L)))).thenReturn(res);
 
         mockMvc.perform(post("/api/v1/projetos")
@@ -126,7 +128,9 @@ class ProjetoControllerMockMvcTest {
                 Instant.parse("2026-01-02T12:00:00Z"),
                 Instant.parse("2026-01-01T12:00:00Z"),
                 2L,
-                "Colab");
+                "Colab",
+                null,
+                null);
         when(projetoService.atualizar(eq(5L), eq(body), eq(adm(1L)))).thenReturn(res);
 
         mockMvc.perform(put("/api/v1/projetos/5")

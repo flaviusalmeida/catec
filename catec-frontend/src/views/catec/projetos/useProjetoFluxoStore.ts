@@ -153,18 +153,21 @@ export function useProjetoFluxoStore(projetoId: number, onAfterMutation?: () => 
     [projetoId, data.contrato?.id, recarregar]
   )
 
-  const enviarContratoCliente = useCallback(async () => {
-    if (!data.contrato) return
+  const enviarContratoCliente = useCallback(
+    async (prazoConclusaoDias: number) => {
+      if (!data.contrato) return
 
-    setProcessando(true)
+      setProcessando(true)
 
-    try {
-      await enviarContratoClienteCatec(projetoId, data.contrato.id)
-      await recarregar()
-    } finally {
-      setProcessando(false)
-    }
-  }, [projetoId, data.contrato, recarregar])
+      try {
+        await enviarContratoClienteCatec(projetoId, data.contrato.id, prazoConclusaoDias)
+        await recarregar()
+      } finally {
+        setProcessando(false)
+      }
+    },
+    [projetoId, data.contrato, recarregar]
+  )
 
   const registrarInteracao = useCallback(
     async (tipo: CatecTipoInteracaoFluxo, texto: string) => {

@@ -92,8 +92,9 @@ public class ContratoController {
     public ContratoResponse enviarAoCliente(
             @PathVariable Long projetoId,
             @PathVariable Long contratoId,
+            @Valid @RequestBody EnviarContratoClienteRequest body,
             @AuthenticationPrincipal UsuarioAutenticado principal) {
-        return contratoService.enviarAoCliente(projetoId, contratoId, principal);
+        return contratoService.enviarAoCliente(projetoId, contratoId, body, principal);
     }
 
     @GetMapping("/{contratoId}/interacoes")

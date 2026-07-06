@@ -28,6 +28,8 @@ export type CatecProjeto = {
   clienteAssociadoEm?: string | null
   clienteAssociadoPorId?: number | null
   clienteAssociadoPorNome?: string | null
+  prazoConclusaoDias: number | null
+  previsaoConclusaoEm: string | null
 }
 
 export type CatecProjetoCreateInput = {
@@ -62,7 +64,9 @@ export function parseCatecProjeto(raw: unknown): CatecProjeto {
     clienteAssociadoEm: data.clienteAssociadoEm == null ? null : String(data.clienteAssociadoEm),
     clienteAssociadoPorId: data.clienteAssociadoPorId == null ? null : Number(data.clienteAssociadoPorId),
     clienteAssociadoPorNome:
-      data.clienteAssociadoPorNome == null ? null : String(data.clienteAssociadoPorNome)
+      data.clienteAssociadoPorNome == null ? null : String(data.clienteAssociadoPorNome),
+    prazoConclusaoDias: data.prazoConclusaoDias == null ? null : Number(data.prazoConclusaoDias),
+    previsaoConclusaoEm: data.previsaoConclusaoEm == null ? null : String(data.previsaoConclusaoEm)
   }
 }
 

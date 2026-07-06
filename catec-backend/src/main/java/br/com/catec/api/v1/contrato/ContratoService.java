@@ -151,7 +151,11 @@ public class ContratoService {
 
     /** RASCUNHO com documento → ENVIADO_AO_CLIENTE. */
     @Transactional
-    public ContratoResponse enviarAoCliente(Long projetoId, Long contratoId, UsuarioAutenticado principal) {
+    public ContratoResponse enviarAoCliente(
+            Long projetoId,
+            Long contratoId,
+            EnviarContratoClienteRequest request,
+            UsuarioAutenticado principal) {
         authz.require(principal, PermissaoCodigo.ACAO_CONTRATO_ENVIAR);
         Contrato contrato = loadContratoDoProjeto(projetoId, contratoId, principal);
         if (contrato.getStatus() != ContratoStatus.RASCUNHO) {
@@ -162,6 +166,18 @@ public class ContratoService {
                 .isEmpty()) {
             throw badRequest("Anexe o documento do contrato antes de enviar ao cliente.");
         }
+        Integer prazoDias = request.prazoConclusaoDias();
+        if (prazoDias == null || prazoDias < 1) {
+            throw badRequest("Informe o prazo para conclusão do projeto em dias.");
+        }
+
+        Projeto projeto = contrato.getProjeto();
+        Instant agoraProjeto = Instant.now();
+        projeto.setPrazoConclusaoDias(prazoDias);
+        projeto.setPrevisaoConclusaoEm(null);
+        projeto.setAtualizadoEm(agoraProjeto);
+        projetoRepository.save(projeto);
+
         ContratoStatus anterior = contrato.getStatus();
         Instant agora = Instant.now();
         contrato.setStatus(ContratoStatus.ENVIADO_AO_CLIENTE);

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import Button from '@mui/material/Button'
 import Card from '@mui/material/Card'
@@ -49,6 +49,15 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
   const { hasPermission } = useCatecPermission()
   const [dialogInteracaoCliente, setDialogInteracaoCliente] = useState<DialogInteracaoCliente>(null)
   const [textoInteracaoCliente, setTextoInteracaoCliente] = useState('')
+  const [prazoConclusaoDias, setPrazoConclusaoDias] = useState(
+    projeto.prazoConclusaoDias != null ? String(projeto.prazoConclusaoDias) : ''
+  )
+
+  useEffect(() => {
+    if (projeto.prazoConclusaoDias != null) {
+      setPrazoConclusaoDias(String(projeto.prazoConclusaoDias))
+    }
+  }, [projeto.id, projeto.prazoConclusaoDias])
 
   const contrato = data.contrato
   const documentoAtual = contrato?.documentos[0] ?? null
@@ -129,7 +138,15 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
   }
 
   function handleEnviarContratoCliente() {
-    void enviarContratoCliente()
+    const dias = Number.parseInt(prazoConclusaoDias.trim(), 10)
+
+    if (!Number.isFinite(dias) || dias < 1) {
+      toast.error('Informe o prazo para conclusão do projeto em dias.')
+
+      return
+    }
+
+    void enviarContratoCliente(dias)
       .then(() => toast.success('Contrato enviado ao cliente.'))
       .catch(err => toast.error(err instanceof Error ? err.message : 'Envio falhou.'))
   }
@@ -183,6 +200,36 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
         ]
       : undefined
 
+  const mostrarCampoPrazoConclusao =
+    temAnexo &&
+    (mostrarEnviarContratoCard ||
+      (ajustandoContratoCliente && contrato?.status === 'RASCUNHO' && contrato.consideracoesPendentes))
+
+  const campoPrazoConclusao = mostrarCampoPrazoConclusao ? (
+    <div className='flex flex-col gap-2'>
+      <Typography variant='body2' color='text.primary'>
+        Prazo para conclusão do projeto
+      </Typography>
+      <div className='flex flex-wrap items-center gap-2'>
+        <CustomTextField
+          type='number'
+          inputProps={{ min: 1, step: 1 }}
+          placeholder='Ex.: 90'
+          value={prazoConclusaoDias}
+          onChange={e => setPrazoConclusaoDias(e.target.value)}
+          disabled={processando}
+          sx={{ width: 130, flexShrink: 0 }}
+        />
+        <Typography variant='body1' color='text.secondary'>
+          dias
+        </Typography>
+      </div>
+      <Typography variant='body2' color='text.secondary'>
+        O prazo começará a ser contado automaticamente após o aceite do contrato pelo cliente.
+      </Typography>
+    </div>
+  ) : null
+
   const metaDocumento = documentoAtual
     ? `Versão ${documentoAtual.versao}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ''}`
     : undefined
@@ -227,6 +274,7 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
             disabled={processando}
             onDownload={downloadDocumento}
             {...previewDocumentoProps}
+            areaEntreArquivoEAcoes={campoPrazoConclusao}
             acoes={acoesAjustarContratoCard}
           />
         </Grid>
@@ -258,6 +306,7 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
             disabled={processando}
             onDownload={downloadDocumento}
             {...previewDocumentoProps}
+            areaEntreArquivoEAcoes={campoPrazoConclusao}
             acoes={[
               {
                 key: 'enviar-cliente',

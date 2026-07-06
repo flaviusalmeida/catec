@@ -18,4 +18,6 @@ public record ProjetoResponse(
         Instant atualizadoEm,
         Instant clienteAssociadoEm,
         Long clienteAssociadoPorId,
-        String clienteAssociadoPorNome) {}
+        String clienteAssociadoPorNome,
+        Integer prazoConclusaoDias,
+        Instant previsaoConclusaoEm) {}
