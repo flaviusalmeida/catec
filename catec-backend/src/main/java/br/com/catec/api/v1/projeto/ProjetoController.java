@@ -28,16 +28,19 @@ public class ProjetoController {
     private final ProjetoService projetoService;
     private final ProjetoHistoricoService projetoHistoricoService;
     private final ProjetoResumoService projetoResumoService;
+    private final ProjetoPainelService projetoPainelService;
     private final PropostaService propostaService;
 
     public ProjetoController(
             ProjetoService projetoService,
             ProjetoHistoricoService projetoHistoricoService,
             ProjetoResumoService projetoResumoService,
+            ProjetoPainelService projetoPainelService,
             PropostaService propostaService) {
         this.projetoService = projetoService;
         this.projetoHistoricoService = projetoHistoricoService;
         this.projetoResumoService = projetoResumoService;
+        this.projetoPainelService = projetoPainelService;
         this.propostaService = propostaService;
     }
 
@@ -55,6 +58,15 @@ public class ProjetoController {
     @PreAuthorize("@authz.has('tela.projetos')")
     public ProjetoResumoResponse resumo(@AuthenticationPrincipal UsuarioAutenticado principal) {
         return projetoResumoService.resumo(principal);
+    }
+
+    @Operation(
+            summary = "Painel de visibilidade dos projetos",
+            description = "Totais por status, alertas de prazo e lista para o dashboard.")
+    @GetMapping("/painel")
+    @PreAuthorize("@authz.hasAny('tela.painel', 'tela.projetos')")
+    public ProjetoPainelResponse painel(@AuthenticationPrincipal UsuarioAutenticado principal) {
+        return projetoPainelService.painel(principal);
     }
 
     @Operation(summary = "Detalhe do projeto")

@@ -23,7 +23,7 @@ import { getSession, signIn } from 'next-auth/react'
 import CustomTextField from '@core/components/mui/TextField'
 
 // Util Imports
-import { getPostAuthDestination } from '@/utils/catec/authPaths'
+import { getCatecHomeUrl, getPostAuthDestination } from '@/utils/catec/authPaths'
 
 // Styled Component Imports
 import AuthIllustrationWrapper from '@views/pages/auth/AuthIllustrationWrapper'
@@ -71,7 +71,7 @@ const CatecLogin = () => {
 
     if (res?.ok && !res.error) {
       const session = await getSession()
-      const redirectURL = searchParams.get('redirectTo') ?? '/catec/projetos'
+      const redirectURL = searchParams.get('redirectTo') ?? getCatecHomeUrl()
 
       if (session) {
         router.replace(getPostAuthDestination(session, redirectURL))

@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
       ...legacyLocaleRedirect,
       {
         source: '/',
-        destination: '/catec/projetos',
+        destination: '/catec/dashboard',
         permanent: true
       }
     ]

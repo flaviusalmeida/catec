@@ -16,6 +16,11 @@ const CatecNavMenuItems = ({ withIcons = false }: Props) => {
 
   return (
     <>
+      <CanPermission code={PermissaoCodigo.TELA_PAINEL}>
+        <MenuItem href='/catec/dashboard' icon={icon('tabler-chart-dots')}>
+          Dashboard
+        </MenuItem>
+      </CanPermission>
       <CanPermission code={PermissaoCodigo.TELA_PROJETOS}>
         <MenuItem href='/catec/projetos' icon={icon('tabler-briefcase')}>
           Projetos

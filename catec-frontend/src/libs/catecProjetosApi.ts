@@ -24,10 +24,11 @@ import {
 import type {
   CatecProjeto,
   CatecProjetoCreateInput,
+  CatecProjetoPainel,
   CatecProjetoResumo,
   CatecProjetoUpdateInput
 } from '@/types/catec/projetoTypes'
-import { parseCatecProjeto, parseCatecProjetoList, parseCatecProjetoResumo } from '@/types/catec/projetoTypes'
+import { parseCatecProjeto, parseCatecProjetoList, parseCatecProjetoPainel, parseCatecProjetoResumo } from '@/types/catec/projetoTypes'
 
 import { formatarDataHora } from '@/views/catec/projetos/projetoFluxoHelpers'
 
@@ -59,6 +60,15 @@ export async function obterProjetosResumoCatec(): Promise<CatecProjetoResumo> {
   assertCatecOk(res, data, 'Não foi possível carregar o resumo dos projetos.')
 
   return parseCatecProjetoResumo(data)
+}
+
+export async function obterProjetosPainelCatec(): Promise<CatecProjetoPainel> {
+  const res = await catecApiFetch('/api/v1/projetos/painel')
+  const data = await readCatecJsonBody(res)
+
+  assertCatecOk(res, data, 'Não foi possível carregar o painel de projetos.')
+
+  return parseCatecProjetoPainel(data)
 }
 
 export async function obterProjetoCatec(id: number): Promise<CatecProjeto> {

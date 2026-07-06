@@ -12,6 +12,15 @@ export type CatecNavItem = {
 
 export const catecNavItems: CatecNavItem[] = [
   {
+    id: 'dashboard',
+    name: 'Dashboard',
+    url: '/catec/dashboard',
+    icon: 'tabler-chart-dots',
+    section: 'Dashboard',
+    subtitle: 'Visão geral dos projetos',
+    permission: PermissaoCodigo.TELA_PAINEL
+  },
+  {
     id: 'projetos',
     name: 'Projetos',
     url: '/catec/projetos',
