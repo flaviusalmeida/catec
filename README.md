@@ -17,7 +17,7 @@ Cada projeto tem seu próprio `.env`:
 
 | Projeto | Arquivo | Uso |
 |---------|---------|-----|
-| **Raiz** | `.env` | Docker Compose (PostgreSQL, Mailpit) |
+| **Raiz** | `.env` | Docker Compose (PostgreSQL) |
 | **Backend** | `catec-backend/.env` | Spring Boot (banco, e-mail, JWT) |
 | **Frontend** | `catec-frontend/.env` | Next.js (NextAuth, URL da API) |
 
