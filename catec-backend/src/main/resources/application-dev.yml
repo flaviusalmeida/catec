@@ -13,7 +13,8 @@ spring:
 
 app:
   mail:
-    enabled: ${APP_MAIL_ENABLED:true}
+    enabled: ${APP_MAIL_ENABLED:false}
+    allow-in-dev: ${APP_MAIL_ALLOW_IN_DEV:false}
 
 management:
   endpoint:

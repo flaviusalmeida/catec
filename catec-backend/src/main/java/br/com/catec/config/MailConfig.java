@@ -26,6 +26,18 @@ public class MailConfig {
                                 + "Configure SPRING_MAIL_HOST em catec-backend/.env");
                 return;
             }
+
+            if (env.acceptsProfiles(org.springframework.core.env.Profiles.of("dev"))
+                    && !mailProperties.allowInDev()) {
+                log.info(
+                        "Perfil dev: envio de e-mail bloqueado (smtp={}:{}, auth={}). "
+                                + "Defina APP_MAIL_ALLOW_IN_DEV=true para testar envio local.",
+                        host,
+                        env.getProperty("spring.mail.port", "587"),
+                        env.getProperty("spring.mail.properties.mail.smtp.auth", "true"));
+                return;
+            }
+
             log.info(
                     "Envio de e-mail ativo (from={}, smtp={}:{}, auth={})",
                     mailProperties.from(),

@@ -3,9 +3,13 @@ package br.com.catec.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "app.mail")
-public record AppMailProperties(boolean enabled, String from) {
+public record AppMailProperties(boolean enabled, String from, boolean allowInDev) {
 
     public AppMailProperties {
         from = from == null || from.isBlank() ? "noreply@catec.local" : from;
+    }
+
+    public AppMailProperties(boolean enabled, String from) {
+        this(enabled, from, false);
     }
 }

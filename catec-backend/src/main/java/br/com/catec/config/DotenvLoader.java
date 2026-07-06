@@ -73,6 +73,7 @@ public final class DotenvLoader {
                 System.setProperty("spring.mail.properties.mail.smtp.starttls.required", value);
             }
             case "APP_MAIL_ENABLED" -> System.setProperty("app.mail.enabled", value);
+            case "APP_MAIL_ALLOW_IN_DEV" -> System.setProperty("app.mail.allow-in-dev", value);
             case "APP_MAIL_FROM" -> System.setProperty("app.mail.from", value);
             case "APP_FRONTEND_URL" -> System.setProperty("app.frontend.url", value);
             case "JWT_SECRET" -> System.setProperty("app.security.jwt.secret", value);

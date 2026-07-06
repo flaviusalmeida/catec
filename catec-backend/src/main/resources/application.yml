@@ -36,6 +36,7 @@ app:
   mail:
     enabled: ${APP_MAIL_ENABLED:false}
     from: ${APP_MAIL_FROM:noreply@catec.local}
+    allow-in-dev: ${APP_MAIL_ALLOW_IN_DEV:false}
   frontend:
     url: ${APP_FRONTEND_URL:http://localhost:3000}
   documento:
