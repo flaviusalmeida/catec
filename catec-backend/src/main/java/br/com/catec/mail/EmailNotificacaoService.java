@@ -1,6 +1,5 @@
 package br.com.catec.mail;
 
-import br.com.catec.config.AppFrontendProperties;
 import br.com.catec.config.AppMailProperties;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
@@ -16,40 +15,18 @@ public class EmailNotificacaoService {
     private static final Logger log = LoggerFactory.getLogger(EmailNotificacaoService.class);
 
     private final AppMailProperties mailProperties;
-    private final AppFrontendProperties frontendProperties;
     private final ObjectProvider<JavaMailSender> mailSenderProvider;
 
     public EmailNotificacaoService(
-            AppMailProperties mailProperties,
-            AppFrontendProperties frontendProperties,
-            ObjectProvider<JavaMailSender> mailSenderProvider) {
+            AppMailProperties mailProperties, ObjectProvider<JavaMailSender> mailSenderProvider) {
         this.mailProperties = mailProperties;
-        this.frontendProperties = frontendProperties;
         this.mailSenderProvider = mailSenderProvider;
     }
 
     public void enviarSenhaProvisoria(String destinatario, String nomeUsuario, String senhaProvisoria) {
-        String assunto = "Acesso ao sistema CATEC — senha provisória";
-        String loginUrl = frontendProperties.loginUrl();
-        String texto =
-                """
-                Olá, %s,
-
-                Foi criada uma conta para o seu e-mail no sistema CATEC.
-
-                Acesse: %s
-
-                Senha provisória (use no primeiro acesso e altere em seguida):
-                %s
-
-                No primeiro acesso será obrigatório definir uma nova senha forte.
-
-                Se você não reconhece esta solicitação, ignore este e-mail.
-
-                —
-                CATEC
-                """
-                        .formatted(nomeUsuario, loginUrl, senhaProvisoria);
+        String assunto = "Bem-vindo ao CATEC";
+        String html = EmailSenhaProvisoriaLayout.render(nomeUsuario, destinatario, senhaProvisoria);
+        String textoPlano = EmailSenhaProvisoriaLayout.textoPlano(nomeUsuario, destinatario, senhaProvisoria);
 
         JavaMailSender sender = mailSenderProvider.getIfAvailable();
         if (mailProperties.enabled() && sender != null) {
@@ -59,7 +36,7 @@ public class EmailNotificacaoService {
                 helper.setFrom(mailProperties.from());
                 helper.setTo(destinatario);
                 helper.setSubject(assunto);
-                helper.setText(texto, false);
+                helper.setText(textoPlano, html);
                 sender.send(message);
                 log.info("E-mail de senha provisória enviado para {}", destinatario);
             } catch (Exception ex) {

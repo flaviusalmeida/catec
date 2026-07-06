@@ -3,7 +3,6 @@ package br.com.catec.mail;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import br.com.catec.config.AppFrontendProperties;
 import br.com.catec.config.AppMailProperties;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
@@ -18,8 +17,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 @ExtendWith(MockitoExtension.class)
 class EmailNotificacaoServiceTest {
 
-    private static final AppFrontendProperties FRONTEND = new AppFrontendProperties("http://localhost:3000");
-
     @Mock
     private ObjectProvider<JavaMailSender> mailSenderProvider;
     @Mock
@@ -27,8 +24,7 @@ class EmailNotificacaoServiceTest {
 
     @Test
     void enviarSenhaProvisoria_quandoMailDesabilitado_naoDeveTentarEnviar() {
-        var service =
-                new EmailNotificacaoService(new AppMailProperties(false, "noreply@catec.local"), FRONTEND, mailSenderProvider);
+        var service = new EmailNotificacaoService(new AppMailProperties(false, "noreply@catec.local"), mailSenderProvider);
         when(mailSenderProvider.getIfAvailable()).thenReturn(mailSender);
 
         assertDoesNotThrow(() -> service.enviarSenhaProvisoria("user@catec.local", "User", "Senha@123"));
@@ -37,8 +33,7 @@ class EmailNotificacaoServiceTest {
 
     @Test
     void enviarSenhaProvisoria_quandoSenderIndisponivel_naoDeveFalhar() {
-        var service =
-                new EmailNotificacaoService(new AppMailProperties(true, "noreply@catec.local"), FRONTEND, mailSenderProvider);
+        var service = new EmailNotificacaoService(new AppMailProperties(true, "noreply@catec.local"), mailSenderProvider);
         when(mailSenderProvider.getIfAvailable()).thenReturn(null);
 
         assertDoesNotThrow(() -> service.enviarSenhaProvisoria("user@catec.local", "User", "Senha@123"));
@@ -46,8 +41,7 @@ class EmailNotificacaoServiceTest {
 
     @Test
     void enviarSenhaProvisoria_quandoMailHabilitado_deveEnviarMensagem() {
-        var service =
-                new EmailNotificacaoService(new AppMailProperties(true, "noreply@catec.local"), FRONTEND, mailSenderProvider);
+        var service = new EmailNotificacaoService(new AppMailProperties(true, "noreply@catec.local"), mailSenderProvider);
         MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
         when(mailSenderProvider.getIfAvailable()).thenReturn(mailSender);
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
@@ -58,8 +52,7 @@ class EmailNotificacaoServiceTest {
 
     @Test
     void enviarSenhaProvisoria_quandoEnvioFalha_deveLancarIllegalState() {
-        var service =
-                new EmailNotificacaoService(new AppMailProperties(true, "noreply@catec.local"), FRONTEND, mailSenderProvider);
+        var service = new EmailNotificacaoService(new AppMailProperties(true, "noreply@catec.local"), mailSenderProvider);
         MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
         when(mailSenderProvider.getIfAvailable()).thenReturn(mailSender);
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
