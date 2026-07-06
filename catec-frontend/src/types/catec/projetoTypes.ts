@@ -152,7 +152,7 @@ export const STATUS_PROJETO_ROTULO_BADGE: Record<CatecProjetoStatus, string> = {
   AGUARDANDO_ENVIO_CLIENTE: 'Aguardando envio da proposta',
   AGUARDANDO_ACEITE_PROPOSTA: 'Aguardando aceite da proposta',
   AGUARDANDO_CONTRATO: 'Aguardando elaboração do contrato',
-  AGUARDANDO_EXECUCAO: 'Aguardando execução do contrato',
+  AGUARDANDO_EXECUCAO: 'Aguardando execução',
   EM_EXECUCAO: 'Em execução',
   CANCELADO: 'Cancelado',
   FINALIZADO: 'Finalizado'

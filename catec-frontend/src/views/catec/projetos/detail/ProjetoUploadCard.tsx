@@ -10,6 +10,7 @@ import Typography from '@mui/material/Typography'
 import { toast } from 'react-toastify'
 
 import ProjetoFileRow from './ProjetoFileRow'
+import type { ProjetoMetaItem } from './ProjetoMetaItensGrid'
 
 type AcaoUpload = {
   key: string
@@ -31,6 +32,9 @@ type Props = {
   previewTitulo?: string
   previewSubtitulo?: string
   arquivoExtra?: ReactNode
+  metaComplementar?: ReactNode
+  metaItens?: ProjetoMetaItem[]
+  statusDocumento?: ReactNode
   areaEntreArquivoEAcoes?: ReactNode
   acoes?: AcaoUpload[]
 }
@@ -47,6 +51,9 @@ const ProjetoUploadCard = ({
   previewTitulo,
   previewSubtitulo,
   arquivoExtra,
+  metaComplementar,
+  metaItens,
+  statusDocumento,
   areaEntreArquivoEAcoes,
   acoes
 }: Props) => {
@@ -113,6 +120,9 @@ const ProjetoUploadCard = ({
           <ProjetoFileRow
             nomeArquivo={nomeArquivo}
             meta={meta}
+            metaComplementar={metaComplementar}
+            metaItens={metaItens}
+            status={statusDocumento}
             extra={arquivoExtra}
             documentoId={documentoId}
             previewTitulo={previewTitulo}

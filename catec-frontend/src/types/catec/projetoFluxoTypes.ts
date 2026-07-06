@@ -147,6 +147,7 @@ export type CatecContrato = {
   elaboradoPorId: number
   elaboradoPorNome: string
   enviadoClienteEm: string | null
+  aceitoClienteEm: string | null
   consideracoesPendentes: boolean
   consideracoesCliente: string | null
   criadoEm: string
@@ -247,6 +248,7 @@ export function parseCatecContrato(raw: unknown): CatecContrato {
     elaboradoPorId: Number(data.elaboradoPorId ?? 0),
     elaboradoPorNome: String(data.elaboradoPorNome ?? ''),
     enviadoClienteEm: data.enviadoClienteEm == null ? null : String(data.enviadoClienteEm),
+    aceitoClienteEm: data.aceitoClienteEm == null ? null : String(data.aceitoClienteEm),
     consideracoesPendentes: data.consideracoesPendentes === true,
     consideracoesCliente: data.consideracoesCliente == null ? null : String(data.consideracoesCliente),
     criadoEm: String(data.criadoEm ?? ''),

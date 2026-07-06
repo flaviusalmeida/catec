@@ -31,6 +31,7 @@ import { PermissaoCodigo } from '@/types/catec/permissao'
 import { formatarDataCurta, projetoPermiteEditarContrato, projetoPermiteVisualizarContrato } from '../projetoFluxoHelpers'
 import ContratoStatusBadge from '../ContratoStatusBadge'
 import type { UseProjetoFluxoStore } from '../useProjetoFluxoStore'
+import { buildContratoDocumentoMetaItens, metaDocumentoResumo } from './contratoDocumentoHelpers'
 import ProjetoFileRow from './ProjetoFileRow'
 import ProjetoStateCard from './ProjetoStateCard'
 import ProjetoUploadCard from './ProjetoUploadCard'
@@ -230,9 +231,19 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
     </div>
   ) : null
 
-  const metaDocumento = documentoAtual
-    ? `Versão ${documentoAtual.versao}${documentoAtual.criadoEm ? ` • ${formatarDataCurta(documentoAtual.criadoEm)}` : ''}`
-    : undefined
+  const metaDocumento = documentoAtual ? metaDocumentoResumo(documentoAtual) : undefined
+
+  const usaLayoutContratoEstruturado =
+    contrato != null &&
+    ['ENVIADO_AO_CLIENTE', 'ACEITO', 'RECUSADO', 'AGUARDANDO_AJUSTE'].includes(contrato.status)
+
+  const propsDocumentoEstruturado =
+    documentoAtual && usaLayoutContratoEstruturado && contrato
+      ? {
+          metaItens: buildContratoDocumentoMetaItens(projeto, contrato),
+          statusDocumento: <ContratoStatusBadge status={contrato.status} />
+        }
+      : {}
 
   const downloadDocumento = documentoAtual
     ? () =>
@@ -265,11 +276,7 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
             titulo={ajustandoContratoCliente ? 'Ajustar contrato' : 'Enviar contrato'}
             nomeArquivo={documentoAtual?.nomeOriginal}
             meta={metaDocumento}
-            arquivoExtra={
-              contrato?.status === 'AGUARDANDO_AJUSTE' ? (
-                <ContratoStatusBadge status={contrato.status} />
-              ) : undefined
-            }
+            {...propsDocumentoEstruturado}
             onUpload={uploadContrato}
             disabled={processando}
             onDownload={downloadDocumento}
@@ -323,10 +330,9 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
       {mostrarRespostaClienteCard ? (
         <Grid size={{ xs: 12 }}>
           <ProjetoUploadCard
-            titulo='Resposta do cliente'
+            titulo='Contrato'
             nomeArquivo={documentoAtual?.nomeOriginal}
-            meta={metaDocumento}
-            arquivoExtra={contrato ? <ContratoStatusBadge status={contrato.status} /> : undefined}
+            {...propsDocumentoEstruturado}
             permitirSubstituir={false}
             disabled={processando}
             onUpload={uploadContrato}
@@ -340,10 +346,9 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
       {mostrarContratoAceitoCard ? (
         <Grid size={{ xs: 12 }}>
           <ProjetoUploadCard
-            titulo='Contrato aceito'
+            titulo='Contrato'
             nomeArquivo={documentoAtual?.nomeOriginal}
-            meta={metaDocumento}
-            arquivoExtra={contrato ? <ContratoStatusBadge status={contrato.status} /> : undefined}
+            {...propsDocumentoEstruturado}
             permitirSubstituir={false}
             disabled={processando}
             onUpload={uploadContrato}
@@ -356,10 +361,9 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
       {mostrarContratoRecusadoCard ? (
         <Grid size={{ xs: 12 }}>
           <ProjetoUploadCard
-            titulo='Documento do contrato'
+            titulo='Contrato'
             nomeArquivo={documentoAtual?.nomeOriginal}
-            meta={metaDocumento}
-            arquivoExtra={contrato ? <ContratoStatusBadge status={contrato.status} /> : undefined}
+            {...propsDocumentoEstruturado}
             permitirSubstituir={false}
             disabled={processando}
             onUpload={uploadContrato}
@@ -379,14 +383,14 @@ const ProjetoTabContrato = ({ projeto, fluxo }: Props) => {
       temAnexo ? (
         <Grid size={{ xs: 12 }}>
           <Card variant='outlined'>
-            <CardHeader title='Documento do contrato' />
+            <CardHeader title='Contrato' />
             <CardContent className='flex flex-col gap-3'>
               {contrato.documentos.map(doc => (
                 <ProjetoFileRow
                   key={doc.id}
                   nomeArquivo={doc.nomeOriginal}
-                  meta={`Versão ${doc.versao}${doc.criadoEm ? ` • ${formatarDataCurta(doc.criadoEm)}` : ''}`}
-                  extra={<ContratoStatusBadge status={contrato.status} />}
+                  metaItens={buildContratoDocumentoMetaItens(projeto, contrato)}
+                  status={<ContratoStatusBadge status={contrato.status} />}
                   documentoId={doc.id}
                   previewTitulo='Contrato'
                   previewSubtitulo={previewContratoSubtitulo}
