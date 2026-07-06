@@ -21,7 +21,7 @@ final class EmailSenhaProvisoriaLayout {
         return """
                 Olá, %s,
 
-                Sua conta foi criada com sucesso no CATEC.
+                Sua conta foi criada com sucesso na CATEC.
 
                 Usuário: %s
                 Senha temporária: %s

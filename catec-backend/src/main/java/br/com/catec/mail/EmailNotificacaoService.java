@@ -24,7 +24,7 @@ public class EmailNotificacaoService {
     }
 
     public void enviarSenhaProvisoria(String destinatario, String nomeUsuario, String senhaProvisoria) {
-        String assunto = "Bem-vindo ao CATEC";
+        String assunto = "Bem-vindo a CATEC";
         String html = EmailSenhaProvisoriaLayout.render(nomeUsuario, destinatario, senhaProvisoria);
         String textoPlano = EmailSenhaProvisoriaLayout.textoPlano(nomeUsuario, destinatario, senhaProvisoria);
 
