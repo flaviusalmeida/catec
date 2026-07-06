@@ -83,7 +83,7 @@ const DefinirSenha = () => {
             Definir senha
           </Typography>
           <Typography variant='body2' color='text.secondary' className='mbe-6'>
-            Escolha uma senha forte: pelo menos 12 caracteres, com maiúsculas, minúsculas, um dígito e um símbolo.
+            Escolha uma senha forte: pelo menos 8 caracteres, com maiúsculas, minúsculas, um dígito e um símbolo.
           </Typography>
 
           <form noValidate autoComplete='off' onSubmit={handleSubmit} className='flex flex-col gap-5'>
@@ -95,7 +95,7 @@ const DefinirSenha = () => {
               value={senha}
               onChange={e => setSenha(e.target.value)}
               disabled={loading}
-              slotProps={{ htmlInput: { minLength: 12 } }}
+              slotProps={{ htmlInput: { minLength: 8 } }}
             />
 
             <CustomTextField
@@ -105,7 +105,7 @@ const DefinirSenha = () => {
               value={confirmacao}
               onChange={e => setConfirmacao(e.target.value)}
               disabled={loading}
-              slotProps={{ htmlInput: { minLength: 12 } }}
+              slotProps={{ htmlInput: { minLength: 8 } }}
             />
 
             {error ? (

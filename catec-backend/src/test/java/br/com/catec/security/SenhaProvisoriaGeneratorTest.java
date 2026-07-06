@@ -11,8 +11,8 @@ class SenhaProvisoriaGeneratorTest {
         var generator = new SenhaProvisoriaGenerator();
         String senha = generator.gerar();
 
-        assertEquals(24, senha.length());
-        assertTrue(senha.matches("[ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*\\-_=+?]{24}"));
+        assertEquals(8, senha.length());
+        assertTrue(senha.matches("[ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*\\-_=+?]{8}"));
     }
 
     @Test

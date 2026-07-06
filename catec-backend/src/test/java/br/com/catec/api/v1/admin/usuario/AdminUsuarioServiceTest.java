@@ -113,8 +113,8 @@ class AdminUsuarioServiceTest {
     @Test
     void criar_comDadosValidos_deveSalvarInativoComTrocaSenhaPendente() {
         when(usuarioRepository.existsByEmailIgnoreCase("novo@catec.local")).thenReturn(false);
-        when(senhaProvisoriaGenerator.gerar()).thenReturn("Senha@Provisoria123");
-        when(passwordEncoder.encode("Senha@Provisoria123")).thenReturn("hash-gerado");
+        when(senhaProvisoriaGenerator.gerar()).thenReturn("Senha@12");
+        when(passwordEncoder.encode("Senha@12")).thenReturn("hash-gerado");
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> {
             Usuario saved = invocation.getArgument(0);
             ReflectionTestUtils.setField(saved, "id", 10L);
@@ -131,7 +131,7 @@ class AdminUsuarioServiceTest {
         assertTrue(response.requerTrocaSenha());
         verify(usuarioGrupoRepository).deleteByUsuarioId(10L);
         verify(usuarioGrupoRepository).save(any(UsuarioGrupo.class));
-        verify(emailNotificacaoService).enviarSenhaProvisoria("novo@catec.local", "Novo Usuário", "Senha@Provisoria123");
+        verify(emailNotificacaoService).enviarSenhaProvisoria("novo@catec.local", "Novo Usuário", "Senha@12");
     }
 
     @Test
@@ -160,8 +160,8 @@ class AdminUsuarioServiceTest {
     @Test
     void criar_quandoSalvarFalhaPorIntegridade_deveLancarConflict() {
         when(usuarioRepository.existsByEmailIgnoreCase("erro@catec.local")).thenReturn(false);
-        when(senhaProvisoriaGenerator.gerar()).thenReturn("Senha@Provisoria123");
-        when(passwordEncoder.encode("Senha@Provisoria123")).thenReturn("hash");
+        when(senhaProvisoriaGenerator.gerar()).thenReturn("Senha@12");
+        when(passwordEncoder.encode("Senha@12")).thenReturn("hash");
         when(usuarioRepository.save(any(Usuario.class))).thenThrow(new DataIntegrityViolationException("unique"));
 
         var req = new UsuarioCreateRequest("Erro", "erro@catec.local", null, List.of("COLABORADOR"));
@@ -287,15 +287,15 @@ class AdminUsuarioServiceTest {
     void resetarSenhaProvisoria_comSucesso_deveDesativarEEnviarEmail() {
         var u = usuario(4L, "Fulano", "fulano@catec.local", true, false, "COLABORADOR");
         when(usuarioRepository.findById(4L)).thenReturn(java.util.Optional.of(u));
-        when(senhaProvisoriaGenerator.gerar()).thenReturn("Nova@Senha123");
-        when(passwordEncoder.encode("Nova@Senha123")).thenReturn("hash-nova");
+        when(senhaProvisoriaGenerator.gerar()).thenReturn("Nova@12");
+        when(passwordEncoder.encode("Nova@12")).thenReturn("hash-nova");
 
         service.resetarSenhaProvisoria(4L);
 
         assertFalse(u.isAtivo());
         assertTrue(u.isRequerTrocaSenha());
         verify(usuarioRepository).save(u);
-        verify(emailNotificacaoService).enviarSenhaProvisoria("fulano@catec.local", "Fulano", "Nova@Senha123");
+        verify(emailNotificacaoService).enviarSenhaProvisoria("fulano@catec.local", "Fulano", "Nova@12");
     }
 
     private static Usuario usuario(

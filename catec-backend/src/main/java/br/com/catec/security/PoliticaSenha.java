@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 /** Regras para senha definida pelo usuário (não provisória). */
 public final class PoliticaSenha {
 
-    private static final int MIN = 12;
+    private static final int MIN = 8;
     private static final int MAX = 128;
     private static final Pattern TEM_MAIUSCULA = Pattern.compile("[A-Z]");
     private static final Pattern TEM_MINUSCULA = Pattern.compile("[a-z]");

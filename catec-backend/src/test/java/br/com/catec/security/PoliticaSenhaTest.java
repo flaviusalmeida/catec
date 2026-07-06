@@ -9,7 +9,7 @@ class PoliticaSenhaTest {
 
     @Test
     void validarSenhaDefinitiva_quandoValida_naoDeveLancarExcecao() {
-        assertDoesNotThrow(() -> PoliticaSenha.validarSenhaDefinitiva("Senha@Definitiva123"));
+        assertDoesNotThrow(() -> PoliticaSenha.validarSenhaDefinitiva("Senha@12"));
     }
 
     @Test
@@ -19,7 +19,7 @@ class PoliticaSenhaTest {
 
     @Test
     void validarSenhaDefinitiva_quandoMuitoCurta_deveLancarExcecao() {
-        assertThrows(IllegalArgumentException.class, () -> PoliticaSenha.validarSenhaDefinitiva("Aa1@curta"));
+        assertThrows(IllegalArgumentException.class, () -> PoliticaSenha.validarSenhaDefinitiva("Aa1@cur"));
     }
 
     @Test
