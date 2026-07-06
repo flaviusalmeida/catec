@@ -31,7 +31,7 @@ const PainelPrazoProximo = ({ projetos, compact = false }: Props) => {
       <CardContent
         className={
           compact
-            ? 'flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto !pt-0'
+            ? 'flex min-h-0 flex-1 flex-col justify-evenly gap-4 overflow-y-auto !pt-0'
             : 'flex flex-col gap-4'
         }
       >
@@ -46,7 +46,7 @@ const PainelPrazoProximo = ({ projetos, compact = false }: Props) => {
                 skin='light'
                 color={corProgressoPrazo(item)}
                 variant='rounded'
-                size={compact ? 32 : 34}
+                size={compact ? 36 : 34}
               >
                 <i className='tabler-calendar-event' />
               </CustomAvatar>

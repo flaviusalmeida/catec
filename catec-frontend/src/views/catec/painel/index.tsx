@@ -24,58 +24,69 @@ const PainelView = () => {
   const [statusFiltro, setStatusFiltro] = useState<CatecProjetoStatus | null>(null)
   const { ref, ativo: telaCheia, alternar: alternarTelaCheia } = useFullscreen<HTMLDivElement>()
 
-  const gridSpacing = telaCheia ? 4 : 6
+  const gridSpacing = telaCheia ? 3 : 6
 
   const conteudo =
     carregando || !painel ? (
       <div className='flex flex-1 items-center justify-center'>
         <CircularProgress />
       </div>
+    ) : telaCheia ? (
+      <div className='flex min-h-0 flex-1 flex-col gap-3'>
+        <div className='shrink-0'>
+          <PainelAlertaCards painel={painel} compact />
+        </div>
+        <div className='shrink-0'>
+          <PainelKpiCards
+            painel={painel}
+            statusSelecionado={statusFiltro}
+            onStatusClick={setStatusFiltro}
+            compact
+          />
+        </div>
+        <div className='grid min-h-0 flex-1 grid-cols-12 gap-3'>
+          <div className='col-span-12 flex min-h-0 w-full md:col-span-5 lg:col-span-4'>
+            <PainelStatusDonut
+              painel={painel}
+              statusSelecionado={statusFiltro}
+              onStatusClick={setStatusFiltro}
+              compact
+            />
+          </div>
+          <div className='col-span-12 flex min-h-0 w-full md:col-span-7 lg:col-span-8'>
+            <PainelPrazoProximo projetos={painel.projetosPrazoProximo} compact />
+          </div>
+        </div>
+      </div>
     ) : (
-      <Grid
-        container
-        spacing={gridSpacing}
-        className={telaCheia ? 'min-h-0 flex-1 content-start' : undefined}
-        sx={telaCheia ? { display: 'flex', flex: '1 1 auto', minHeight: 0 } : undefined}
-      >
+      <Grid container spacing={gridSpacing}>
         <Grid size={{ xs: 12 }}>
-          <PainelAlertaCards painel={painel} compact={telaCheia} />
+          <PainelAlertaCards painel={painel} />
         </Grid>
         <Grid size={{ xs: 12 }}>
           <PainelKpiCards
             painel={painel}
             statusSelecionado={statusFiltro}
             onStatusClick={setStatusFiltro}
-            compact={telaCheia}
           />
         </Grid>
-        <Grid
-          size={{ xs: 12 }}
-          sx={telaCheia ? { display: 'flex', flex: '1 1 auto', minHeight: 0, width: '100%' } : undefined}
-        >
-          <Grid container spacing={gridSpacing} className={telaCheia ? 'min-h-0 w-full flex-1' : 'is-full'}>
-            <Grid size={{ xs: 12, md: 5, lg: 4 }} className={telaCheia ? 'flex min-h-0' : undefined}>
-              <PainelStatusDonut
-                painel={painel}
-                statusSelecionado={statusFiltro}
-                onStatusClick={setStatusFiltro}
-                compact={telaCheia}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 7, lg: 8 }} className={telaCheia ? 'flex min-h-0' : undefined}>
-              <PainelPrazoProximo projetos={painel.projetosPrazoProximo} compact={telaCheia} />
-            </Grid>
-          </Grid>
+        <Grid size={{ xs: 12, md: 5, lg: 4 }}>
+          <PainelStatusDonut
+            painel={painel}
+            statusSelecionado={statusFiltro}
+            onStatusClick={setStatusFiltro}
+          />
         </Grid>
-        {!telaCheia ? (
-          <Grid size={{ xs: 12 }}>
-            <PainelProjetosTable
-              projetos={painel.projetos}
-              statusFiltro={statusFiltro}
-              onStatusFiltroChange={setStatusFiltro}
-            />
-          </Grid>
-        ) : null}
+        <Grid size={{ xs: 12, md: 7, lg: 8 }}>
+          <PainelPrazoProximo projetos={painel.projetosPrazoProximo} />
+        </Grid>
+        <Grid size={{ xs: 12 }}>
+          <PainelProjetosTable
+            projetos={painel.projetos}
+            statusFiltro={statusFiltro}
+            onStatusFiltroChange={setStatusFiltro}
+          />
+        </Grid>
       </Grid>
     )
 
@@ -84,7 +95,7 @@ const PainelView = () => {
       ref={ref}
       className={
         telaCheia
-          ? 'flex h-dvh w-full flex-col overflow-hidden bg-[var(--mui-palette-background-default)] p-5'
+          ? 'flex h-dvh w-full flex-col overflow-hidden bg-[var(--mui-palette-background-default)] p-4'
           : undefined
       }
     >
@@ -102,12 +113,12 @@ const PainelView = () => {
       </div>
 
       {erro ? (
-        <Alert severity='error' variant='outlined' className='mt-4 shrink-0'>
+        <Alert severity='error' variant='outlined' className='mt-3 shrink-0'>
           {erro}
         </Alert>
       ) : null}
 
-      <div className={telaCheia ? 'mt-4 flex min-h-0 flex-1 flex-col' : 'mt-6'}>{conteudo}</div>
+      <div className={telaCheia ? 'mt-3 flex min-h-0 flex-1 flex-col' : 'mt-6'}>{conteudo}</div>
     </div>
   )
 }

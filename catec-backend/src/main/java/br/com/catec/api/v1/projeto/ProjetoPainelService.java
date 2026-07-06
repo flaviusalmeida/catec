@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ProjetoPainelService {
 
-    static final int TOP_PRAZO_PROXIMO = 10;
+    static final int TOP_PRAZO_PROXIMO = 5;
 
     private final ProjetoRepository projetoRepository;
     private final AuthorizationService authz;

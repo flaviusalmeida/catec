@@ -27,19 +27,25 @@ type Props = {
 const PainelStatusDonut = ({ painel, statusSelecionado, onStatusClick, compact = false }: Props) => {
   const theme = useTheme()
   const chartAreaRef = useRef<HTMLDivElement>(null)
-  const [chartHeight, setChartHeight] = useState(compact ? 280 : 420)
+  const [chartSize, setChartSize] = useState({ width: 320, height: 360 })
 
   useEffect(() => {
     if (!compact || !chartAreaRef.current) return
 
     const el = chartAreaRef.current
-    const observer = new ResizeObserver(entries => {
-      const height = entries[0]?.contentRect.height
 
-      if (height > 0) {
-        setChartHeight(Math.round(height))
-      }
-    })
+    const updateSize = () => {
+      const { width, height } = el.getBoundingClientRect()
+      const legendReserve = 72
+      const maxDonut = Math.min(width - 16, height - legendReserve - 16)
+      const donut = Math.max(200, Math.floor(maxDonut))
+
+      setChartSize({ width: donut, height: donut + legendReserve })
+    }
+
+    updateSize()
+
+    const observer = new ResizeObserver(updateSize)
 
     observer.observe(el)
 
@@ -68,6 +74,7 @@ const PainelStatusDonut = ({ painel, statusSelecionado, onStatusClick, compact =
       legend: {
         show: true,
         position: 'bottom',
+        horizontalAlign: 'center',
         offsetY: compact ? 4 : 10,
         markers: {
           width: 8,
@@ -76,7 +83,7 @@ const PainelStatusDonut = ({ painel, statusSelecionado, onStatusClick, compact =
           offsetX: theme.direction === 'rtl' ? 8 : -4
         },
         itemMargin: { horizontal: compact ? 8 : 12, vertical: compact ? 2 : 4 },
-        fontSize: compact ? '11px' : '12px',
+        fontSize: '12px',
         fontWeight: 400
       },
       plotOptions: {
@@ -86,7 +93,7 @@ const PainelStatusDonut = ({ painel, statusSelecionado, onStatusClick, compact =
             labels: {
               show: true,
               value: {
-                fontSize: compact ? '20px' : '24px',
+                fontSize: compact ? '22px' : '24px',
                 color: 'var(--mui-palette-text-primary)',
                 fontWeight: 500,
                 offsetY: -20
@@ -148,8 +155,9 @@ const PainelStatusDonut = ({ painel, statusSelecionado, onStatusClick, compact =
       >
         <AppReactApexCharts
           type='donut'
-          height={chartHeight}
-          width='100%'
+          height={compact ? chartSize.height : 420}
+          width={compact ? chartSize.width : '100%'}
+          boxProps={compact ? { sx: { mx: 'auto' } } : undefined}
           series={chartData.map(e => e.value)}
           options={options}
         />

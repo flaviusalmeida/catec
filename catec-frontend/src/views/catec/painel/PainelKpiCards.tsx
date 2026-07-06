@@ -36,7 +36,7 @@ const ICON_POR_STATUS: Record<CatecProjetoStatus, string> = {
 
 const PainelKpiCards = ({ painel, statusSelecionado, onStatusClick, compact = false }: Props) => {
   return (
-    <Grid container spacing={compact ? 4 : 6}>
+    <Grid container spacing={compact ? 3 : 6}>
       {ORDEM_STATUS_PROJETO.map(status => {
         const total = painel.totais.porStatus[status] ?? 0
         const selecionado = statusSelecionado === status
@@ -58,17 +58,17 @@ const PainelKpiCards = ({ painel, statusSelecionado, onStatusClick, compact = fa
               style={{ cursor: 'pointer' }}
             >
               <Card>
-                <CardContent className={compact ? 'flex justify-between gap-1 !py-4' : 'flex justify-between gap-1'}>
+                <CardContent className={compact ? 'flex justify-between gap-1 !py-3 last:pb-3' : 'flex justify-between gap-1'}>
                   <div className='flex grow flex-col gap-1'>
                     <Typography color='text.primary'>{STATUS_PROJETO_ROTULO_BADGE[status]}</Typography>
-                    <Typography variant={compact ? 'h5' : 'h4'}>{total}</Typography>
+                    <Typography variant='h4'>{total}</Typography>
                   </div>
                   <CustomAvatar
                     variant='rounded'
-                    size={compact ? 38 : 42}
+                    size={42}
                     sx={{ bgcolor: cores.light, color: cores.main }}
                   >
-                    <i className={classnames(ICON_POR_STATUS[status], compact ? 'text-[22px]' : 'text-[26px]')} />
+                    <i className={classnames(ICON_POR_STATUS[status], 'text-[26px]')} />
                   </CustomAvatar>
                 </CardContent>
               </Card>
